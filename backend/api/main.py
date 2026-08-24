@@ -293,7 +293,7 @@ async def chat(body: dict):
         if LANGFUSE_ENABLED:
             try:
                 latency_ms = int((time.monotonic() - _t_start) * 1000)
-                _lf.trace(
+                trace = _lf.trace(
                     name     = "gyaan_chat",
                     user_id  = student_id or "anonymous",
                     input    = {"message": student_message, "subconcept": subconcept_name},
@@ -307,8 +307,9 @@ async def chat(body: dict):
                         "chapter":        chapter_name,
                     },
                 )
-            except Exception:
-                pass
+                _lf.flush()   # force-send — don't wait for batch timer
+            except Exception as lf_err:
+                print(f"⚠️  Langfuse trace failed: {lf_err}")
 
         return result
 
