@@ -1,0 +1,33 @@
+# ── Secrets — NEVER commit these ──────────────────────────────────────────
+.env
+.env.*
+!.env.production   # keep this (has no real keys, just placeholder)
+
+# ── Python ────────────────────────────────────────────────────────────────
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# ── ChromaDB (local vector store — too large for git) ─────────────────────
+data/chroma_db/
+
+# ── Node / Next.js ────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local     # local dev env — has real localhost URL, not needed in repo
+
+# ── macOS ─────────────────────────────────────────────────────────────────
+.DS_Store
+
+# ── IDE ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ── Logs ──────────────────────────────────────────────────────────────────
+*.log
+uvicorn.log

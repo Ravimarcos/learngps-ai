@@ -1,0 +1,39 @@
+# LearnGPS Backend Dependencies
+# Install: pip install -r requirements.txt
+
+# Web framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9   # required for file/form uploads
+
+# Anthropic (Claude)
+anthropic==0.34.2
+
+# Neo4j Knowledge Graph
+neo4j==5.24.0
+
+# Supabase (student data, sessions, progress)
+supabase==2.7.4
+
+# Qdrant (NCERT vector embeddings)
+qdrant-client==1.11.3
+
+# Settings & validation
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# Observability
+langfuse==2.27.0
+
+# Content ingestion (Day 4)
+httpx==0.27.2      # DIKSHA API calls
+pypdf2==3.0.1      # NCERT PDF parsing
+
+# RAG pipeline (Day 6b)
+chromadb==0.5.3
+sentence-transformers==3.0.1
+
+# Dev / testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+httpx                  # also used as async test client
