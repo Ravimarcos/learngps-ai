@@ -38,13 +38,15 @@ async def lifespan(app: FastAPI):
     """Startup: connect Neo4j, build RAG index, apply constraints. Shutdown: close driver."""
     global _driver
 
-    # Build ChromaDB RAG index (runs in thread so it doesn't block event loop)
-    try:
-        from backend.rag.embedder import build_index
-        await asyncio.to_thread(build_index, False)   # False = skip if already built
-        print("✅ RAG index ready")
-    except Exception as e:
-        print(f"⚠️  RAG index build failed (non-fatal): {e}")
+    # Build ChromaDB RAG index in background — don't block server startup
+    async def _build_rag_background():
+        try:
+            from backend.rag.embedder import build_index
+            await asyncio.to_thread(build_index, False)
+            print("✅ RAG index ready")
+        except Exception as e:
+            print(f"⚠️  RAG index build failed (non-fatal): {e}")
+    asyncio.create_task(_build_rag_background())
 
     _driver = AsyncGraphDatabase.driver(
         settings.neo4j_uri,
