@@ -218,60 +218,45 @@ async def chat(body: dict):
     subconcept_name = body.get("subconcept_name", "Contact Force")
     chapter_name    = body.get("chapter_name", "Force & Pressure")
     distress_count  = body.get("distress_count", 0)
-    _t_start        = time.monotonic()   # for latency tracking
+    _t_start        = time.monotonic()
 
-    # ── GUARDRAILS: run before Gyaan ever sees the message ────────────────
-    guard = await check_guardrails(
-        message         = student_message,
-        student_name    = student_name,
-        subconcept_name = subconcept_name,
-        chapter_name    = chapter_name,
-        distress_count  = distress_count,
-    )
-
-    # If a parent flag is needed, write to Supabase (fire-and-forget)
-    if guard.get("flag_parent") and student_id:
-        try:
-            from backend.config.settings import get_settings
-            from supabase import create_client
-            cfg = get_settings()
-            sb  = create_client(cfg.supabase_url, cfg.supabase_service_key)
-            sb.table("student_vark").upsert(
-                {"student_id": student_id, "distress_flag": True},
-                on_conflict="student_id",
-            ).execute()
-        except Exception:
-            pass  # never crash chat over a flag write
-
-    # If blocked — return the guardrail reply directly, skip Gyaan
-    if guard["blocked"]:
-        return {
-            "reply":          guard["reply"],
-            "xp_earned":      0,
-            "bloom_level":    body.get("bloom_level", "Remember"),
-            "session_note":   "",
-            "guardrail_rule": guard["rule"],
-            "distress_count": guard["distress_count"],
-        }
-
-    # ── GYAAN AGENT + VARK UPDATE (concurrent) ────────────────────────────
-    if student_id:
-        gyaan_task = gyaan_chat(
-            student_name         = student_name,
-            student_message      = student_message,
-            conversation_history = body.get("conversation_history", []),
-            subconcept_id        = body.get("subconcept_id", "sc_contact_force"),
-            subconcept_name      = subconcept_name,
-            chapter_name         = chapter_name,
-            bloom_level          = body.get("bloom_level", "Remember"),
-            vark_style           = body.get("vark_style", "K"),
-            last_session_note    = body.get("last_session_note", ""),
+    try:
+        # ── GUARDRAILS ────────────────────────────────────────────────────
+        guard = await check_guardrails(
+            message         = student_message,
+            student_name    = student_name,
+            subconcept_name = subconcept_name,
+            chapter_name    = chapter_name,
+            distress_count  = distress_count,
         )
-        vark_task = update_vark_profile(student_id, student_message)
-        result, vark = await asyncio.gather(gyaan_task, vark_task)
-        result["vark_updated"] = vark.get("dominant", "K")
-    else:
-        result = await gyaan_chat(
+
+        # Parent flag → write to Supabase (fire-and-forget)
+        if guard.get("flag_parent") and student_id:
+            try:
+                from backend.config.settings import get_settings
+                from supabase import create_client
+                cfg = get_settings()
+                sb  = create_client(cfg.supabase_url, cfg.supabase_service_key)
+                sb.table("student_vark").upsert(
+                    {"student_id": student_id, "distress_flag": True},
+                    on_conflict="student_id",
+                ).execute()
+            except Exception:
+                pass
+
+        # Blocked → return guardrail reply directly, skip Gyaan
+        if guard["blocked"]:
+            return {
+                "reply":          guard["reply"],
+                "xp_earned":      0,
+                "bloom_level":    body.get("bloom_level", "Remember"),
+                "session_note":   "",
+                "guardrail_rule": guard["rule"],
+                "distress_count": guard["distress_count"],
+            }
+
+        # ── GYAAN AGENT + VARK UPDATE (concurrent) ───────────────────────
+        common_kwargs = dict(
             student_name         = student_name,
             student_message      = student_message,
             conversation_history = body.get("conversation_history", []),
@@ -283,33 +268,54 @@ async def chat(body: dict):
             last_session_note    = body.get("last_session_note", ""),
         )
 
-    # ── Append adult safety warning if experiment keyword detected ────────
-    if guard.get("add_adult_warning"):
-        result["reply"] = result.get("reply", "") + ADULT_WARNING
-
-    # Pass guardrail metadata back to frontend
-    result["guardrail_rule"]  = guard["rule"]       # None = no rule triggered
-    result["distress_count"]  = guard["distress_count"]
-
-    # ── Langfuse trace ────────────────────────────────────────────────────
-    if LANGFUSE_ENABLED:
-        try:
-            latency_ms = int((time.monotonic() - _t_start) * 1000)
-            _lf.trace(
-                name       = "gyaan_chat",
-                user_id    = student_id or "anonymous",
-                input      = {"message": student_message, "subconcept": subconcept_name},
-                output     = {"reply": result.get("reply", "")[:200]},   # first 200 chars
-                metadata   = {
-                    "guardrail_rule" : guard["rule"],
-                    "bloom_level"    : body.get("bloom_level", "Remember"),
-                    "vark_style"     : body.get("vark_style", "K"),
-                    "xp_earned"      : result.get("xp_earned", 0),
-                    "latency_ms"     : latency_ms,
-                    "chapter"        : chapter_name,
-                },
+        if student_id:
+            # gather with return_exceptions so VARK failure never kills Gyaan
+            results = await asyncio.gather(
+                gyaan_chat(**common_kwargs),
+                update_vark_profile(student_id, student_message),
+                return_exceptions=True,
             )
-        except Exception:
-            pass   # never crash chat over a trace failure
+            result = results[0]
+            if isinstance(result, Exception):
+                raise result   # Gyaan failure is a real error
+            vark = results[1]
+            if not isinstance(vark, Exception):
+                result["vark_updated"] = vark.get("dominant", "K")
+        else:
+            result = await gyaan_chat(**common_kwargs)
 
-    return result
+        # Append adult safety warning if experiment keyword detected
+        if guard.get("add_adult_warning"):
+            result["reply"] = result.get("reply", "") + ADULT_WARNING
+
+        result["guardrail_rule"] = guard["rule"]
+        result["distress_count"] = guard["distress_count"]
+
+        # ── Langfuse trace ────────────────────────────────────────────────
+        if LANGFUSE_ENABLED:
+            try:
+                latency_ms = int((time.monotonic() - _t_start) * 1000)
+                _lf.trace(
+                    name     = "gyaan_chat",
+                    user_id  = student_id or "anonymous",
+                    input    = {"message": student_message, "subconcept": subconcept_name},
+                    output   = {"reply": result.get("reply", "")[:200]},
+                    metadata = {
+                        "guardrail_rule": guard["rule"],
+                        "bloom_level":    body.get("bloom_level", "Remember"),
+                        "vark_style":     body.get("vark_style", "K"),
+                        "xp_earned":      result.get("xp_earned", 0),
+                        "latency_ms":     latency_ms,
+                        "chapter":        chapter_name,
+                    },
+                )
+            except Exception:
+                pass
+
+        return result
+
+    except Exception as exc:
+        import traceback
+        print(f"❌ /chat error: {exc}\n{traceback.format_exc()}")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=str(exc))

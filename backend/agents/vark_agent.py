@@ -234,8 +234,12 @@ async def update_vark_profile(student_id: str, student_message: str) -> dict:
     """
     sb = _get_supabase()
 
-    # 1. Get current profile
-    profile = await get_vark_profile(student_id)
+    # 1. Get current profile (safe — returns default if Supabase unreachable)
+    try:
+        profile = await get_vark_profile(student_id)
+    except Exception as e:
+        print(f"⚠️  VARK get_profile skipped: {e}")
+        profile = {"v_score": 0.25, "a_score": 0.25, "r_score": 0.25, "k_score": 0.25, "session_count": 0, "dominant": "K"}
     current_scores = {
         "v_score": profile["v_score"],
         "a_score": profile["a_score"],
