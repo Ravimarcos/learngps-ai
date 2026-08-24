@@ -11,4 +11,6 @@ COPY . .
 
 EXPOSE 8000
 
-CMD sh -c "uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT"
+COPY start.sh .
+RUN chmod +x start.sh
+CMD ["./start.sh"]
