@@ -21,13 +21,18 @@ from backend.config.settings import get_settings
 from backend.graph.schema import create_constraints
 
 # Langfuse — observability (initialised once at startup)
+import os as _os
 try:
     from langfuse import Langfuse
     _lf = Langfuse()          # reads LANGFUSE_PUBLIC_KEY / SECRET_KEY / HOST from env
     LANGFUSE_ENABLED = True
-except Exception:
+    _lf_host = _os.environ.get("LANGFUSE_HOST", "https://cloud.langfuse.com")
+    _lf_pk   = _os.environ.get("LANGFUSE_PUBLIC_KEY", "")[:12]  # first 12 chars only
+    print(f"✅ Langfuse enabled — host={_lf_host} pk={_lf_pk}...")
+except Exception as e:
     _lf = None
     LANGFUSE_ENABLED = False
+    print(f"⚠️  Langfuse disabled: {e}")
 
 settings = get_settings()
 _driver = None
