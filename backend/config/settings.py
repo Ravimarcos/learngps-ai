@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_key: str
 
-    # Qdrant (vector store for NCERT embeddings)
-    qdrant_url: str
+    # Qdrant (replaced by ChromaDB in Day 6b — kept optional for backward compat)
+    qdrant_url: str = ""
     qdrant_api_key: str = ""
 
     # Langfuse (AI observability)

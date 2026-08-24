@@ -13,8 +13,9 @@ dist/
 build/
 .pytest_cache/
 
-# ── ChromaDB (local vector store — too large for git) ─────────────────────
+# ── ChromaDB (local vector store — rebuilt on startup, too large for git) ──
 data/chroma_db/
+# data/sources/ is intentionally tracked — contains NCERT PDF + questions JSON
 
 # ── Node / Next.js ────────────────────────────────────────────────────────
 frontend/node_modules/

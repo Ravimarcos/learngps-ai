@@ -30,13 +30,10 @@ except ImportError:
 
 # ── Paths ──────────────────────────────────────────────────────────────────
 
-BASE = Path(__file__).parents[3]   # "Building application with AI agents" folder
+BASE = Path(__file__).parents[3]   # learngps/ root
 
-NCERT_PDF = BASE / "ai-learning-platform" / "data" / "ncert" / "Text book" / \
-            "8-Sci-NCERT-Book-Force-Pressure.pdf"
-
-QUESTIONS_JSON = BASE / "ai-learning-platform" / "data" / "knowledge_graph" / \
-                 "levelwise_questions.json"
+NCERT_PDF      = BASE / "data" / "sources" / "8-Sci-NCERT-Book-Force-Pressure.pdf"
+QUESTIONS_JSON = BASE / "data" / "sources" / "levelwise_questions.json"
 
 # ── Keyword → SubConcept mapping (for tagging chunks) ─────────────────────
 

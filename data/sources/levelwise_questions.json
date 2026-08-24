@@ -1,0 +1,3240 @@
+{
+  "metadata": {
+    "source": "52 WhatsApp worksheet images — Class 8 Physics workbook, extracted July 2026",
+    "subject": "Class 8 Physics / Science",
+    "topic": "Force, Pressure and Area",
+    "description": "Unified question bank covering Force, Friction, Newton's Laws, Weight, Pressure, Atmospheric Pressure, Buoyancy, Bernoulli, Winds, Thunderstorms, Lightning, and Cyclones.",
+    "bloom_tags": {
+      "R": "Remember",
+      "U": "Understand",
+      "Ap": "Apply",
+      "An": "Analyse",
+      "Ev": "Evaluate"
+    },
+    "extracted_by": "Learning GPS extraction pipeline — all 52 images read",
+    "content_summary": {
+      "questions": 181,
+      "activities": 15,
+      "misconceptions": 12,
+      "solved_examples": 35
+    }
+  },
+  "activities": [
+    {
+      "id": "ACT_01",
+      "title": "Study net effect of forces in different directions (Ants activity)",
+      "concept_ids": [
+        "resultant_force"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Observe a group of ants trying to pull a dead insect toward their anthill. If all ants pull in the same direction, forces add up. But ants pull in different directions — insect moves toward anthill when net force is in desired direction.",
+      "conclusion": "The effect of multiple forces depends on magnitude and direction of the net (resultant) force.",
+      "materials": "Observe real ants, or use a rope with multiple students pulling"
+    },
+    {
+      "id": "ACT_02",
+      "title": "Build a friction tester using spring balance and brick",
+      "concept_ids": [
+        "friction"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Tie a strong string around a brick. Attach to spring balance. Keep brick on rough surface (carpet). Pull until brick just starts to move — note reading = limiting friction. Repeat on smooth table. Compare readings.",
+      "observation": "Reading is higher on rough surface.",
+      "conclusion": "Friction depends on nature of surfaces in contact.",
+      "materials": "Brick, string, spring balance, carpet, smooth table"
+    },
+    {
+      "id": "ACT_03",
+      "title": "Show magnetic force acts from a distance",
+      "concept_ids": [
+        "magnetic_force"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Put iron nails on paper. Bring a small magnet near (without touching). Observe nails get pulled. Take two bar magnets — bring north poles together (repel), then south pole of one near north of other (attract).",
+      "conclusion": "Magnetic force is a non-contact force — it acts at a distance.",
+      "materials": "Iron nails, bar magnets, sheet of paper"
+    },
+    {
+      "id": "ACT_04",
+      "title": "Study electrostatic force using a rubbed pen",
+      "concept_ids": [
+        "electrostatic_force"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Take a plastic pen. Rub vigorously on dry hair. Bring rubbed end near tiny bits of paper. Observe bits get attracted.",
+      "conclusion": "Pen acquires electric charge while rubbing — exerts electrostatic force at a distance.",
+      "materials": "Plastic pen, dry hair, tiny bits of paper"
+    },
+    {
+      "id": "ACT_05",
+      "title": "Investigate buoyant force using a plastic bottle",
+      "concept_ids": [
+        "liquid_pressure"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Take empty plastic bottle (lid tightly closed). Put in bucket of water. Push bottle in and release — it bounces back to surface.",
+      "conclusion": "Liquids apply an upward force (buoyant force) on objects immersed in them.",
+      "materials": "Empty plastic bottle with lid, bucket of water"
+    },
+    {
+      "id": "ACT_06",
+      "title": "Show air moves from high to low pressure (balloon straw)",
+      "concept_ids": [
+        "atmospheric_pressure"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Insert one end of straw into an un-inflated balloon, other end into an inflated balloon. Seal. Air moves from inflated (high pressure) to uninflated (low pressure) until pressure equalizes.",
+      "conclusion": "Air moves from regions of high pressure to low pressure.",
+      "materials": "2 balloons, drinking straw, tape"
+    },
+    {
+      "id": "ACT_07",
+      "title": "Bernoulli demonstration — two balloons come together",
+      "concept_ids": [
+        "atmospheric_pressure"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Inflate two identical balloons and hang 6–10 cm apart. Blow a steady stream of air into the space between them. Observe: balloons move TOWARD each other.",
+      "conclusion": "Fast-moving air creates low pressure between the balloons. Higher external pressure pushes them together. This is Bernoulli's principle.",
+      "materials": "2 identical inflated balloons, string, stick"
+    },
+    {
+      "id": "ACT_08",
+      "title": "Show liquids exert pressure on all sides",
+      "concept_ids": [
+        "liquid_pressure"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "(a) Tie balloon to lower end of glass tube, pour water from top — balloon bulges DOWNWARD. (b) Take vessel with side tap, fill with water — balloon tied to tap bulges OUTWARD sideways.",
+      "conclusion": "Liquids exert pressure not only downward but sideways on the walls too.",
+      "materials": "Wide glass tube, rubber balloons, vessel with side tap"
+    },
+    {
+      "id": "ACT_09",
+      "title": "Show liquid pressure varies with depth",
+      "concept_ids": [
+        "liquid_pressure"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Make four holes at different heights on a plastic container. Fill with water. Water from the bottom hole shoots out with greatest force and farthest distance.",
+      "conclusion": "Pressure in a liquid increases with increasing depth: P = hρg.",
+      "materials": "Plastic container, tap/water source"
+    },
+    {
+      "id": "ACT_10",
+      "title": "Pressure depends on area — nail and knife activity",
+      "concept_ids": [
+        "pressure"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Drive a nail using (a) head vs (b) pointed end. Cut apple with (a) sharp edge vs (b) blunt edge. Record which mode is easier.",
+      "conclusion": "Smaller area of contact → greater pressure for same force. Pressure = Force / Area.",
+      "materials": "Iron nail, hammer, apple, knife"
+    },
+    {
+      "id": "ACT_11",
+      "title": "Study atmospheric pressure using rubber sucker",
+      "concept_ids": [
+        "atmospheric_pressure"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Press a good-quality rubber sucker hard on a smooth plane surface. Air between cup and surface escapes. Now try to pull it off — you need a large force.",
+      "conclusion": "Atmospheric pressure holds the sucker against the surface.",
+      "materials": "Rubber sucker, smooth surface"
+    },
+    {
+      "id": "ACT_12",
+      "title": "Atmospheric pressure affects lifting force (paper plate activity)",
+      "concept_ids": [
+        "atmospheric_pressure"
+      ],
+      "bloom_level": "Analyse",
+      "instructions": "Take a paper plate inverted on a stick. Cover (a) with folded chart paper — lift with stick. (b) Replace with unfolded chart paper — try to lift. Compare effort.",
+      "conclusion": "Unfolded paper has greater area → atmospheric pressure acts on greater area → greater total force pushing down → harder to lift.",
+      "materials": "Paper plate, stick, chart paper (70 cm × 56 cm)"
+    },
+    {
+      "id": "ACT_13",
+      "title": "Study gravitational force by Earth",
+      "concept_ids": [
+        "gravity"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Take a ball and throw it vertically upwards. Note whether it comes down. Throw again with more force. Think about different situations where objects thrown up in any direction always fall back.",
+      "conclusion": "Earth applies a force on every object — this is gravitational force. It always acts downward.",
+      "materials": "Ball"
+    },
+    {
+      "id": "ACT_14",
+      "title": "Determine the weight of an object using a spring",
+      "concept_ids": [
+        "gravity"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Take a spring. Hang one end from nail, attach object to other end. Observe spring stretches due to force applied by object (its weight). Increase mass — spring stretches more.",
+      "conclusion": "When object is hung from spring, spring stretches due to the gravitational force (weight) on the object. W = mg.",
+      "materials": "Spring, nail, various objects of different masses"
+    },
+    {
+      "id": "ACT_15",
+      "title": "Study friction on different surfaces with brick",
+      "concept_ids": [
+        "friction"
+      ],
+      "bloom_level": "Apply",
+      "instructions": "Push a heavy box from left to right. Does it move with small force? Now increase force until it starts moving. Push from opposite side — are observations same? Force of friction always opposes relative motion.",
+      "conclusion": "Friction acts opposite to the direction of applied force / motion. It prevents stationary objects from moving and slows moving objects.",
+      "materials": "Heavy box, floor"
+    }
+  ],
+  "misconceptions": [
+    {
+      "id": "MISC_01",
+      "concept_id": "gravity",
+      "misconception": "Heavier objects fall faster than lighter objects.",
+      "correction": "All objects fall with the same acceleration due to gravity (g ≈ 9.8 m/s²) regardless of mass, in the absence of air resistance.",
+      "analogy": "A feather and a coin dropped in a vacuum reach the ground at the same time.",
+      "bloom_level": "Understand"
+    },
+    {
+      "id": "MISC_02",
+      "concept_id": "friction",
+      "misconception": "Friction is always bad and harmful.",
+      "correction": "Friction is also helpful — it enables walking, writing with chalk, braking vehicles, burning matches, tying knots.",
+      "analogy": "Try walking on a perfectly frictionless floor — you would slip immediately! We NEED friction.",
+      "bloom_level": "Evaluate"
+    },
+    {
+      "id": "MISC_03",
+      "concept_id": "magnetic_force",
+      "misconception": "Magnetic force is a contact force.",
+      "correction": "Magnetic force is a NON-contact force — it acts at a distance without physical contact.",
+      "analogy": "A magnet can attract a pin from across a table without touching it.",
+      "bloom_level": "Remember"
+    },
+    {
+      "id": "MISC_04",
+      "concept_id": "gravity",
+      "misconception": "There is no gravity in space / astronauts are weightless because there is no gravity.",
+      "correction": "Gravity exists everywhere in space. Astronauts appear weightless because they are in free fall (orbiting).",
+      "bloom_level": "Understand"
+    },
+    {
+      "id": "MISC_05",
+      "concept_id": "gravity",
+      "misconception": "When a ball is thrown upward, there is an upward force acting on it during its upward motion.",
+      "correction": "Once the ball leaves the hand, ONLY gravity (downward) acts on it — both during upward and downward motion.",
+      "analogy": "The hand is no longer touching the ball after release, so it cannot push it anymore.",
+      "bloom_level": "Understand"
+    },
+    {
+      "id": "MISC_06",
+      "concept_id": "resultant_force",
+      "misconception": "Action and reaction forces cancel each other out.",
+      "correction": "Action and reaction forces act on DIFFERENT objects — they cannot cancel. Two forces cancel only when they act on the SAME object.",
+      "analogy": "When you push a wall (action), the wall pushes back on you (reaction). These act on different objects.",
+      "bloom_level": "Understand"
+    },
+    {
+      "id": "MISC_07",
+      "concept_id": "atmospheric_pressure",
+      "misconception": "The eye of a cyclone is the most dangerous part.",
+      "correction": "The eye is actually the calmest part — clear skies, low winds. The most dangerous zone is the eye WALL surrounding the eye.",
+      "bloom_level": "Understand"
+    },
+    {
+      "id": "MISC_08",
+      "concept_id": "liquid_pressure",
+      "misconception": "Pressure in a liquid only acts downward (because of weight).",
+      "correction": "Liquid pressure acts in ALL directions — downward, upward, and sideways.",
+      "analogy": "If you squeeze a water balloon, it bulges in all directions, not just downward.",
+      "bloom_level": "Understand"
+    },
+    {
+      "id": "MISC_09",
+      "concept_id": "liquid_pressure",
+      "misconception": "Objects float because they are light.",
+      "correction": "Objects float because their DENSITY is less than the fluid's density. A huge steel ship floats because its average density (including air spaces) is less than water.",
+      "bloom_level": "Apply"
+    },
+    {
+      "id": "MISC_10",
+      "concept_id": "atmospheric_pressure",
+      "misconception": "We feel the enormous atmospheric pressure (~100,000 N/m²) pressing on our bodies.",
+      "correction": "We don't feel it because the fluids inside our body exert an equal outward pressure, perfectly balancing external atmospheric pressure.",
+      "bloom_level": "Analyse"
+    },
+    {
+      "id": "MISC_11",
+      "concept_id": "friction",
+      "misconception": "CGS unit of force is Newton.",
+      "correction": "The SI unit of force is Newton. The CGS unit of force is dyne. 1 N = 10⁵ dynes.",
+      "bloom_level": "Remember"
+    },
+    {
+      "id": "MISC_12",
+      "concept_id": "friction",
+      "misconception": "Friction only occurs between solid surfaces.",
+      "correction": "Friction occurs between any two surfaces in relative motion — solid-solid, solid-liquid, solid-gas. It is not restricted to solid surfaces.",
+      "bloom_level": "Understand"
+    }
+  ],
+  "solved_examples": [
+    {
+      "id": "SE_01",
+      "question": "How much would a 70 kg man weigh on the Moon? What will be his mass on the Moon? (g on moon = 1.7 m s⁻²)",
+      "type": "numerical",
+      "concept_id": "gravity",
+      "bloom_level": "Apply",
+      "solution": "Mass of man, m = 70 kg (mass stays same anywhere). Weight on Moon: W = mg = 70 × 1.7 = 119 N. The man's weight on the Moon is 119 N, but his mass remains 70 kg.",
+      "key_formula": "W = mg",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_02",
+      "question": "A student is pulling a load up an inclined plane. What are the forces the student has to overcome?",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Understand",
+      "solution": "(a) Frictional force — opposing the motion of the load along the incline. (b) Gravitational force — pulling the load downward.",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_03",
+      "question": "Why are carts with rubber tyres easier to ply than those with iron tyres?",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Understand",
+      "solution": "The friction between rubber and road is less than that between iron and road. Therefore, it is easier to ply a cart with rubber tyres than with iron tyres.",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_04",
+      "question": "Why are all the things attracted towards the Earth?",
+      "type": "short_answer",
+      "concept_id": "gravity",
+      "bloom_level": "Remember",
+      "solution": "Because of the huge mass of the Earth and its gravity. Earth's gravitational force of attraction acts on every object and pulls it toward Earth's centre.",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_05",
+      "question": "What is the effect of force on the shape of an object?",
+      "type": "short_answer",
+      "concept_id": "force",
+      "bloom_level": "Understand",
+      "solution": "A force can change or try to change the shape of an object. When a force is applied on an object, change in shape takes place — it may become smaller or greater. The application of force on an object may change its shape.",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_06",
+      "question": "If several forces act in different directions on a body, in which direction will the body move?",
+      "type": "short_answer",
+      "concept_id": "resultant_force",
+      "bloom_level": "Understand",
+      "solution": "When several forces act on a body in different directions, the effect on the object is due to the magnitude and direction of the net force (resultant) acting on it.",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_07",
+      "question": "What do you mean by state of motion of a body?",
+      "type": "short_answer",
+      "concept_id": "force",
+      "bloom_level": "Remember",
+      "solution": "The state of motion of a body is described by its speed and direction of motion. The state of motion of an object at rest is the state of zero speed.",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_08",
+      "question": "How do we feel force in our daily life?",
+      "type": "short_answer",
+      "concept_id": "contact_force",
+      "bloom_level": "Remember",
+      "solution": "Various big or small actions make us feel the force — we hit or catch many objects in daily life. A moving ball stops by its own when hit with a bat. The bat changes the direction of its motion. These are many actions which help us to feel that a force is exerted.",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_09",
+      "question": "What are the effects of force? (List three)",
+      "type": "short_answer",
+      "concept_id": "force",
+      "bloom_level": "Remember",
+      "solution": "A force changes or tries to change: (i) Speed of a moving body (ii) Direction of motion of a body (iii) Shape of a body.",
+      "source": "Exploring Forces — Solved Examples, page 41"
+    },
+    {
+      "id": "SE_10",
+      "question": "A ball of dough is rolled into a flat chapatti. Name the force exerted to change the shape of the dough. (NCERT Exemplar)",
+      "type": "short_answer",
+      "concept_id": "muscular_force",
+      "bloom_level": "Understand",
+      "solution": "The force exerted to roll a ball of dough into a flat chapatti is caused by the action of muscles in our body, hence known as the muscular force.",
+      "source": "Exploring Forces — Solved Examples, page 41 (NCERT Exemplar)"
+    },
+    {
+      "id": "SE_11",
+      "question": "A figure shows a man with a parachute. Name the force which is responsible for his downward motion. Will he come down with the same speed without the parachute? (NCERT Exemplar)",
+      "type": "short_answer",
+      "concept_id": "gravity",
+      "bloom_level": "Analyse",
+      "solution": "The force responsible for man's downward motion is the force of gravity. No, he will NOT come down with the same speed without the parachute. Without the parachute, his speed will be higher because the upward force due to air trapped in the open parachute will no longer be there.",
+      "source": "Exploring Forces — Solved Examples, page 41 (NCERT Exemplar)"
+    },
+    {
+      "id": "SE_12",
+      "question": "Two persons are applying forces on two opposite sides of a moving cart. The cart still moves with the same speed in the same direction. What do you infer about the magnitudes and direction of the forces applied? (NCERT Exemplar)",
+      "type": "short_answer",
+      "concept_id": "resultant_force",
+      "bloom_level": "Analyse",
+      "solution": "The cart is still moving with the same speed in the same direction — it means the net force on it is zero. Therefore, the magnitudes of the two forces are equal and they are acting in opposite directions, perfectly cancelling each other out.",
+      "source": "Exploring Forces — Solved Examples, page 41 (NCERT Exemplar)"
+    },
+    {
+      "id": "SE_13",
+      "question": "A force of 50 N is needed to keep a trolley of mass 60 kg moving at 2 m s⁻¹. What is the frictional force acting on the trolley?",
+      "type": "numerical",
+      "concept_id": "friction",
+      "bloom_level": "Apply",
+      "solution": "Since the trolley moves at constant velocity (2 m/s), acceleration = 0. By Newton's second law, net force = 0. Therefore, applied force = frictional force. Frictional force = 50 N.",
+      "key_concept": "Constant velocity → net force = 0 → friction equals applied force",
+      "source": "Exploring Forces — Exercise questions, Ch02"
+    },
+    {
+      "id": "SE_14",
+      "question": "An archer shoots an arrow. What are the forces acting on the arrow? (NCERT Exemplar)",
+      "type": "short_answer",
+      "concept_id": "muscular_force",
+      "bloom_level": "Understand",
+      "solution": "When the archer draws the bow, muscular force is applied to stretch the string. When released, the string exerts force on the arrow. After the arrow leaves the string, gravity (gravitational force) acts on it pulling it downward.",
+      "source": "Exploring Forces — Exercise, NCERT Exemplar"
+    },
+    {
+      "id": "SE_15",
+      "question": "Two rods of different thickness are pressed into sand with the same force. Which rod goes deeper into the sand and why?",
+      "type": "short_answer",
+      "concept_id": "pressure",
+      "bloom_level": "Apply",
+      "solution": "The thinner rod goes deeper. It has a smaller cross-sectional area, so the same force is applied over a smaller area → greater pressure (P = F/A). Greater pressure causes it to penetrate deeper into the sand.",
+      "key_formula": "P = F/A",
+      "source": "Exploring Forces — Exercise questions"
+    },
+    {
+      "id": "SE_16",
+      "question": "Write three positive effects (advantages) of friction.",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Remember",
+      "solution": "(i) Friction between chopsticks and food allows us to grip and eat. (ii) Brakes in vehicles use friction to slow down and stop. (iii) Friction between pen/chalk and paper/board allows writing. Without friction, we could not walk, write, or brake.",
+      "source": "Exploring Forces — Exercise questions"
+    },
+    {
+      "id": "SE_17",
+      "question": "Give two ways to increase friction.",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Apply",
+      "solution": "(i) Spreading sand or gravel on wet or slippery roads increases friction between tyres and road. (ii) Gymnasts and weightlifters apply chalk/magnesium powder on their hands to increase friction with equipment.",
+      "source": "Exploring Forces — Exercise questions"
+    },
+    {
+      "id": "SE_18",
+      "question": "Why are aeroplanes given a shape similar to birds (streamlined shape)?",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Understand",
+      "solution": "Aeroplanes are given a streamlined (bird-like) shape to minimize friction with air (fluid/air resistance). A streamlined shape allows air to flow smoothly around the aircraft, reducing drag and enabling faster, more fuel-efficient flight.",
+      "source": "Exploring Forces — Exercise questions"
+    },
+    {
+      "id": "SE_19",
+      "question": "Give three examples where friction produces heat.",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Remember",
+      "solution": "(i) Rubbing hands together vigorously makes them warm. (ii) Striking a matchstick produces heat that ignites it. (iii) Drilling through wood/metal generates heat at the drill bit.",
+      "source": "Exploring Forces — Exercise questions"
+    },
+    {
+      "id": "SE_20",
+      "question": "Why can't you write on a blackboard with chalk if there were no friction?",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Analyse",
+      "solution": "Friction between the chalk and the blackboard causes tiny chalk particles to break off and stick to the board surface, forming visible marks. Without friction, chalk would simply slide over the surface without leaving any marks — writing would be impossible.",
+      "source": "Exploring Forces — Exercise questions"
+    },
+    {
+      "id": "SE_21",
+      "question": "What is fluid friction? What factors affect it?",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Understand",
+      "solution": "Fluid friction (drag) is the friction experienced by objects moving through a fluid (liquid or gas). Factors affecting fluid friction: (i) Shape of the object — streamlined shapes face less drag; (ii) Speed of the object — higher speed → greater fluid friction; (iii) Nature of the fluid — denser/more viscous fluids create more friction.",
+      "source": "Exploring Forces — Exercise questions"
+    },
+    {
+      "id": "SE_22",
+      "question": "Is a large brake pad as effective as a small brake pad? Explain why.",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Analyse",
+      "solution": "Yes. Braking force (friction) = μ × Normal force. The normal force (from hydraulic system) is the same regardless of pad area. A larger pad area reduces pressure per unit area, but the total friction force remains equal to μ × Normal force. Area does not independently determine braking effectiveness.",
+      "source": "Exploring Forces — Exercise questions"
+    },
+    {
+      "id": "SE_23",
+      "question": "Calculate the pressure exerted by a brick of dimensions 25 cm × 10 cm × 5 cm applying a force of 2.5 N, when placed (a) upright and (b) on its widest base.",
+      "type": "numerical",
+      "concept_id": "pressure",
+      "bloom_level": "Apply",
+      "solution": "(a) Upright: contact area = 10 cm × 5 cm = 50 cm² = 0.005 m². P = F/A = 2.5/0.005 = 500 Pa.\n(b) Widest base: contact area = 25 cm × 10 cm = 250 cm² = 0.025 m². P = 2.5/0.025 = 100 Pa.\nConclusion: Same force, larger area → smaller pressure.",
+      "key_formula": "P = F/A; 1 m² = 10000 cm²",
+      "source": "Pressure, Winds, Storms and Cyclones — Illustrations"
+    },
+    {
+      "id": "SE_24",
+      "question": "Why is it easier to swim in sea water than in river water?",
+      "type": "short_answer",
+      "concept_id": "liquid_pressure",
+      "bloom_level": "Understand",
+      "solution": "The density of sea water is more than the density of river water (due to dissolved salts). By Archimedes' principle, sea water gives more upthrust (buoyant force) for the same volume of water displaced. This greater upthrust makes it easier to float and swim in sea water.",
+      "source": "Pressure, Winds, Storms and Cyclones — Illustrations"
+    },
+    {
+      "id": "SE_25",
+      "question": "The dams of water reservoirs are made thick near the bottom. Why?",
+      "type": "short_answer",
+      "concept_id": "liquid_pressure",
+      "bloom_level": "Analyse",
+      "solution": "Pressure exerted by a liquid column = hρg, where h is the depth. As depth (h) increases, pressure (P) increases. So pressure on the dam walls is greatest near the bottom. To withstand this high pressure, dams are made thick (stronger) near the bottom.",
+      "key_formula": "P = hρg",
+      "source": "Pressure, Winds, Storms and Cyclones — Illustrations"
+    },
+    {
+      "id": "SE_26",
+      "question": "The blood pressure in human is greater at the feet than at the brain. Why?",
+      "type": "short_answer",
+      "concept_id": "liquid_pressure",
+      "bloom_level": "Understand",
+      "solution": "Blood is a liquid and liquid pressure depends on height of the column: P = hρg. The height of the blood column from feet to heart is quite large, so blood pressure at feet is greater. At the brain, the height (h) of blood column above is small, hence pressure is less.",
+      "source": "Pressure, Winds, Storms and Cyclones — Illustrations"
+    },
+    {
+      "id": "SE_27",
+      "question": "Why do the shape and size of a balloon change when filled with air or water?",
+      "type": "short_answer",
+      "concept_id": "atmospheric_pressure",
+      "bloom_level": "Understand",
+      "solution": "The high pressure produced by the gas or water molecules on the walls of the balloon causes it to expand and get inflated. The molecules push outward on the walls in all directions, causing the balloon to change shape and increase in size.",
+      "source": "Pressure, Winds, Storms and Cyclones — Illustrations"
+    },
+    {
+      "id": "SE_28",
+      "question": "When the cutting edge of a knife is put against a fast rotating stone to sharpen it, sparks are seen to fly. Explain the reason.",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Understand",
+      "solution": "Friction between the cutting edge of the knife and the fast rotating stone produces heat. As the friction is very large in this case, a large amount of heat is produced, which can be seen as sparks flying.",
+      "source": "Exploring Forces — Illustrations"
+    },
+    {
+      "id": "SE_29",
+      "question": "Mass of a body is 5 kg. What is its weight? (Take g = 9.8 m s⁻²)",
+      "type": "numerical",
+      "concept_id": "gravity",
+      "bloom_level": "Apply",
+      "solution": "Given: m = 5 kg, g = 9.8 m s⁻². W = mg = 5 × 9.8 = 49 N. The weight of the body is 49 N.",
+      "key_formula": "W = mg",
+      "source": "Exploring Forces — Illustrations"
+    },
+    {
+      "id": "SE_30",
+      "question": "What is the mass of an object whose weight is 49 newton? (Take g = 9.8 m s⁻²)",
+      "type": "numerical",
+      "concept_id": "gravity",
+      "bloom_level": "Apply",
+      "solution": "Given: W = 49 N, g = 9.8 m s⁻². W = mg → m = W/g = 49/9.8 = 5 kg. The mass of the object is 5 kg.",
+      "key_formula": "m = W/g",
+      "source": "Exploring Forces — Illustrations"
+    },
+    {
+      "id": "SE_31",
+      "question": "A body is just floating in a liquid (their densities are equal). What will happen to the body if it is pressed down and released?",
+      "type": "short_answer",
+      "concept_id": "liquid_pressure",
+      "bloom_level": "Analyse",
+      "solution": "As densities are equal, the net force on the body is zero (weight = buoyant force). When pushed down, it starts moving downward with constant velocity. When released, it just sinks to the bottom — there is no net restoring force to bring it back up.",
+      "source": "Exploring Forces — Illustrations"
+    },
+    {
+      "id": "SE_32",
+      "question": "Why is rolling friction less than sliding friction?",
+      "type": "short_answer",
+      "concept_id": "friction",
+      "bloom_level": "Understand",
+      "solution": "In sliding friction, the entire area of the object in contact with the surface is continuously 'dragging' — creating a large contact area and more resistance. In rolling friction (e.g., a wheel or ball), only a small portion of the object's surface is in contact at any given time. The rolling object 'picks up' and 'lifts off' part of its contact area as it moves, greatly reducing resistance.",
+      "source": "Exploring Forces — Illustrations"
+    },
+    {
+      "id": "SE_33",
+      "question": "A diagram shows a moving ping pong ball hit by a player. What effect of force is shown in the picture?",
+      "type": "short_answer",
+      "concept_id": "force",
+      "bloom_level": "Understand",
+      "solution": "The force changes the direction of the moving object. The bat hits the ball and changes the direction of its motion — illustrating that force can change the direction of a moving body.",
+      "source": "Exploring Forces — Illustrations, page 32"
+    },
+    {
+      "id": "SE_34",
+      "question": "The arrow in a diagram shows the direction of a sailing ship. What happens if a strong wind blows in the same direction?",
+      "type": "short_answer",
+      "concept_id": "force",
+      "bloom_level": "Understand",
+      "solution": "The sailing ship moves faster. The wind exerts force in the direction of motion of the ship, increasing its speed — illustrating that force can increase the speed of a moving body.",
+      "source": "Exploring Forces — Illustrations, page 32"
+    },
+    {
+      "id": "SE_35",
+      "question": "Are forces interactions between two or more objects? Can a force act on a single object by itself?",
+      "type": "short_answer",
+      "concept_id": "resultant_force",
+      "bloom_level": "Understand",
+      "solution": "A force cannot act on a single object by itself — it requires an interaction between at least two objects. Forces in an interaction between two or more objects can be a push or pull that causes a change in state of motion. (Example: when you push a wall, the wall pushes back on you.)",
+      "source": "Exploring Forces — Illustrations, page 32"
+    }
+  ],
+  "questions": {
+    "remember": [
+      {
+        "id": "R_01",
+        "question": "Which of the following is NOT an example of muscular force?",
+        "options": {
+          "A": "A porter carrying a load on a wheel-barrow",
+          "B": "A child riding a bicycle",
+          "C": "An apple falling from a tree",
+          "D": "A man pushing a cart"
+        },
+        "answer": "C",
+        "concept_id": "muscular_force",
+        "explanation": "An apple falling from a tree is due to gravitational force, not muscular force.",
+        "source": "Worksheet Ch02 Level 1 Q1",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_02",
+        "question": "Which of the following is NOT a non-contact force?",
+        "options": {
+          "A": "Electrostatic force",
+          "B": "Tension in strings",
+          "C": "Magnetic force",
+          "D": "Gravitational force"
+        },
+        "answer": "B",
+        "concept_id": "contact_force",
+        "explanation": "Tension in strings requires physical contact — it is a contact force.",
+        "source": "Worksheet Ch02 Level 1 Q3",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_03",
+        "question": "A small device pulls iron nails from a distance. Which type of force is involved?",
+        "options": {
+          "A": "Magnetic force",
+          "B": "Electrostatic force",
+          "C": "Frictional force",
+          "D": "Muscular force"
+        },
+        "answer": "A",
+        "concept_id": "magnetic_force",
+        "source": "Worksheet Ch02 Level 1 Q4",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_04",
+        "question": "Ball rolling on the floor stops due to",
+        "options": {
+          "A": "Gravitational force",
+          "B": "Magnetic force",
+          "C": "Muscular force",
+          "D": "Frictional force"
+        },
+        "answer": "D",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Level 1 Q46",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_05",
+        "question": "The two common forces that are acting everywhere around us are",
+        "options": {
+          "A": "Gravity and friction",
+          "B": "Gravity and magnetic force",
+          "C": "Friction and magnetic force",
+          "D": "Electrostatic force and gravity"
+        },
+        "answer": "A",
+        "concept_id": "force",
+        "source": "Worksheet Ch02 Level 1 Q47",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_06",
+        "question": "Pick the fundamental law of motion",
+        "options": {
+          "A": "Newton's first law of motion",
+          "B": "Newton's second law of motion",
+          "C": "Newton's third law of motion",
+          "D": "All laws of motion"
+        },
+        "answer": "A",
+        "concept_id": "force",
+        "explanation": "Newton's First Law defines the concept of inertia and gives the fundamental definition of force.",
+        "source": "Worksheet Ch02 Level 1 Q49",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_07",
+        "question": "Equal and opposite forces acting on a body which do not change its state of rest or motion are called",
+        "options": {
+          "A": "Null forces",
+          "B": "Unlike parallel forces",
+          "C": "Balanced forces",
+          "D": "All of these"
+        },
+        "answer": "C",
+        "concept_id": "resultant_force",
+        "source": "Worksheet Ch02 Level 1 Q50",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_08",
+        "question": "A body is in the state of rest on the surface of earth. Which of the following is a correct statement?",
+        "options": {
+          "A": "Frictional force acts on the body",
+          "B": "Only the weight of body acts on it",
+          "C": "Only the reaction of the earth acts on it",
+          "D": "The weight of body acting downward is equal and opposite to the reaction of the earth"
+        },
+        "answer": "D",
+        "concept_id": "force",
+        "source": "Worksheet Ch02 Level 1 Q53",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_09",
+        "question": "The force of a freely falling body is directly proportional to",
+        "options": {
+          "A": "Mass of body",
+          "B": "Acceleration of body",
+          "C": "Velocity of body",
+          "D": "Both (a) and (b)"
+        },
+        "answer": "D",
+        "concept_id": "gravity",
+        "explanation": "By Newton's second law: F = ma. For free fall, F = mg where g is acceleration. So F ∝ mass and F ∝ acceleration.",
+        "source": "Worksheet Ch02 Level 1 Q55",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_10",
+        "question": "Frictional force is important for motor racing. This is because frictional force",
+        "options": {
+          "A": "Can help a car slow down",
+          "B": "Can help a car move faster",
+          "C": "Can help a car move around corners without skidding",
+          "D": "Both (a) and (b)"
+        },
+        "answer": "D",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Level 1 Q57",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_11",
+        "question": "A football has lesser inertia than a stone of the same size because",
+        "options": {
+          "A": "Football has more air inside",
+          "B": "Football has less air inside",
+          "C": "Football has less mass than the stone",
+          "D": "Football has more mass than the stone"
+        },
+        "answer": "C",
+        "concept_id": "force",
+        "explanation": "Inertia is measured by mass. Football has less mass than a solid stone of same size → less inertia.",
+        "source": "Worksheet Ch02 Level 2 Q75",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_12",
+        "question": "Force of friction is an example of",
+        "options": {
+          "A": "Non-contact force",
+          "B": "Contact force",
+          "C": "Reactive force",
+          "D": "None of these"
+        },
+        "answer": "B",
+        "concept_id": "friction",
+        "source": "Worksheet",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_13",
+        "question": "_____ is a measure of the gravitational force acting on an object.",
+        "options": {
+          "A": "Mass",
+          "B": "Weight",
+          "C": "Pressure",
+          "D": "None of these"
+        },
+        "answer": "B",
+        "concept_id": "gravity",
+        "source": "Worksheet",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_14",
+        "question": "Pressure is defined as",
+        "options": {
+          "A": "Force × Area",
+          "B": "Force / Area",
+          "C": "Area / Force",
+          "D": "Mass × Gravity"
+        },
+        "answer": "B",
+        "concept_id": "pressure",
+        "explanation": "Pressure = Force / Area. SI unit = Pascal (Pa) = N/m².",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_15",
+        "question": "The SI unit of pressure is",
+        "options": {
+          "A": "Newton",
+          "B": "Pascal",
+          "C": "Joule",
+          "D": "Watt"
+        },
+        "answer": "B",
+        "concept_id": "pressure",
+        "explanation": "1 Pascal = 1 N/m². Named after French physicist Blaise Pascal.",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_16",
+        "question": "A device used to measure atmospheric pressure is called",
+        "options": {
+          "A": "Thermometer",
+          "B": "Anemometer",
+          "C": "Barometer",
+          "D": "Manometer"
+        },
+        "answer": "C",
+        "concept_id": "atmospheric_pressure",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_17",
+        "question": "Atmospheric pressure _____ with altitude.",
+        "options": {
+          "A": "Increases",
+          "B": "Decreases",
+          "C": "Remains same",
+          "D": "First increases then decreases"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Higher altitude → shorter air column above → less atmospheric pressure.",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_18",
+        "question": "When a body is thrown up, the force of gravity acts",
+        "options": {
+          "A": "In upward direction",
+          "B": "In downward direction",
+          "C": "Not at all",
+          "D": "In horizontal direction"
+        },
+        "answer": "B",
+        "concept_id": "gravity",
+        "misconception_ref": "MISC_05",
+        "source": "Worksheet",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_19",
+        "question": "There is one force which is exerted by all matter on all other matter. Which force is this?",
+        "options": {
+          "A": "Gravitational force",
+          "B": "Magnetic force",
+          "C": "Electrostatic force",
+          "D": "Frictional force"
+        },
+        "answer": "A",
+        "concept_id": "gravity",
+        "source": "Worksheet",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_20",
+        "question": "The force which opposes the relative motion between two surfaces in contact is called",
+        "options": {
+          "A": "Muscular force",
+          "B": "Magnetic force",
+          "C": "Friction",
+          "D": "Electrostatic force"
+        },
+        "answer": "C",
+        "concept_id": "friction",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_21",
+        "question": "Which of the following is NOT a correct statement about force?",
+        "options": {
+          "A": "Force can change the state of rest or motion",
+          "B": "Force can change direction of motion",
+          "C": "Force can change the chemical properties of a body",
+          "D": "Force can change the dimensions of a body"
+        },
+        "answer": "C",
+        "concept_id": "force",
+        "source": "NCERT Exercise",
+        "level": 1,
+        "level_label": "NCERT Exercise",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_22",
+        "question": "An anemometer is used to measure",
+        "options": {
+          "A": "Humidity",
+          "B": "Atmospheric pressure",
+          "C": "Wind speed",
+          "D": "Wind direction"
+        },
+        "answer": "C",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q12",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_23",
+        "question": "The primary role of the India Meteorological Department (IMD) in relation to cyclones is",
+        "options": {
+          "A": "To provide information on daily weather conditions only",
+          "B": "To monitor and forecast cyclones, issuing warnings and advisories",
+          "C": "To prevent cyclones from occurring",
+          "D": "To track the formation of earthquakes"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q45",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_24",
+        "question": "How wide is the 'eye' of a typical cyclone?",
+        "options": {
+          "A": "1–5 kilometres",
+          "B": "10–30 kilometres",
+          "C": "50–100 kilometres",
+          "D": "Over 150 kilometres"
+        },
+        "answer": "C",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q47",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_25",
+        "question": "Which of the following is a characteristic of a thunderstorm?",
+        "options": {
+          "A": "It is associated with clear skies and no wind",
+          "B": "It typically forms due to the cooling of air masses",
+          "C": "It forms only at night",
+          "D": "It is often accompanied by lightning, thunder, and heavy rainfall"
+        },
+        "answer": "D",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q48",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_26",
+        "question": "Which of the following factors does NOT affect the buoyant force on an object?",
+        "options": {
+          "A": "The volume of the object submerged",
+          "B": "The density of the fluid",
+          "C": "The acceleration due to gravity",
+          "D": "The density of the object itself"
+        },
+        "answer": "D",
+        "concept_id": "liquid_pressure",
+        "explanation": "Buoyant force = weight of fluid displaced = V_submerged × ρ_fluid × g. It does NOT depend on density of the object itself.",
+        "source": "Worksheet Ch03 Level 2 Q31",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_27",
+        "question": "What is the primary function of wind turbines?",
+        "options": {
+          "A": "To increase atmospheric pressure",
+          "B": "To convert kinetic energy of wind into electrical energy",
+          "C": "To measure wind speed",
+          "D": "To cool down air in hot regions"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q43",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_28",
+        "question": "Mass and weight are the same physical quantity.",
+        "type": "true_false",
+        "answer": "False",
+        "concept_id": "gravity",
+        "explanation": "Mass = quantity of matter (constant everywhere, unit kg). Weight = gravitational force = mg (varies with location, unit Newton).",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_29",
+        "question": "Which of the following force is utilised in reducing air pollution by removing dust, soot and fly-ash particles from the smoke coming out of factories?",
+        "options": {
+          "A": "Magnetic force",
+          "B": "Gravitational force",
+          "C": "Electrostatic force",
+          "D": "Frictional force"
+        },
+        "answer": "C",
+        "concept_id": "electrostatic_force",
+        "explanation": "Electrostatic precipitators use electrostatic force to attract and remove charged dust/soot particles from factory smoke.",
+        "source": "Worksheet Ch02 Level 1 Q2",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "R_30",
+        "question": "The easiest way to move a heavy wooden crate is to",
+        "options": {
+          "A": "Tie a rope on one end and pull",
+          "B": "Get friends to help push it",
+          "C": "Place it in a trolley",
+          "D": "None of these"
+        },
+        "answer": "C",
+        "concept_id": "friction",
+        "explanation": "Placing in a trolley converts sliding friction to rolling friction, which is much smaller.",
+        "source": "Worksheet Ch02 Level 1 Q45",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      }
+    ],
+    "understand": [
+      {
+        "id": "U_01",
+        "question": "Why do school bags have broad and padded shoulder straps?",
+        "type": "short_answer",
+        "concept_id": "pressure",
+        "answer": "Broad straps have larger area. Since Pressure = Force/Area, larger area → less pressure for the same weight → less pain on shoulders.",
+        "bloom": "Understand",
+        "source": "Worksheet",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_02",
+        "question": "During dry weather, while combing hair, sometimes we experience hair flying apart. The force responsible is",
+        "options": {
+          "A": "Gravitational force",
+          "B": "Electrostatic force",
+          "C": "Friction force",
+          "D": "Magnetic force"
+        },
+        "answer": "B",
+        "concept_id": "electrostatic_force",
+        "explanation": "Combing causes charge separation → electrostatic repulsion makes hair strands fly apart.",
+        "source": "Worksheet",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_03",
+        "question": "A spaceship continues moving in space with constant speed because",
+        "options": {
+          "A": "No force of friction due to air acts on it",
+          "B": "No force of gravitation acts on it",
+          "C": "Its mass is zero in space",
+          "D": "None of these"
+        },
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Space is a vacuum — no air means no air friction. Spaceship maintains constant velocity per Newton's First Law.",
+        "misconception_ref": "MISC_04",
+        "source": "Worksheet Level 2",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_04",
+        "question": "We do not feel the enormous atmospheric pressure on our bodies because",
+        "options": {
+          "A": "Atmosphere does not press on us",
+          "B": "Fluids inside our body exert equal and opposite outward pressure",
+          "C": "Our skin is thick enough to block pressure",
+          "D": "Atmospheric pressure is very small"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "misconception_ref": "MISC_10",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_05",
+        "question": "Why does a horse need to pull harder during the first few steps in pulling the cart?",
+        "options": {
+          "A": "Limiting friction is greater than dynamic friction",
+          "B": "Sliding friction is greater than rolling friction",
+          "C": "No frictional force acts after the cart comes in motion",
+          "D": "Air friction is greater during first steps"
+        },
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Static (limiting) friction > kinetic (dynamic) friction. More force is needed to START movement than to keep it moving.",
+        "source": "Worksheet Level 2 Q69",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_06",
+        "question": "An object is weighed using a spring balance at different locations. Where will it weigh the heaviest?",
+        "options": {
+          "A": "On the moon",
+          "B": "At the equator",
+          "C": "At the pole",
+          "D": "At the centre of Earth"
+        },
+        "answer": "C",
+        "concept_id": "gravity",
+        "explanation": "Earth is slightly flatter at poles → shorter radius → stronger gravitational pull → greater weight.",
+        "source": "Worksheet Level 2 Q60",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_07",
+        "question": "Mass differs from weight because",
+        "options": {
+          "A": "Weight is a force whereas mass is not a force",
+          "B": "Mass of an object is always more than its weight",
+          "C": "Mass can be expressed only in metric system",
+          "D": "There is no difference"
+        },
+        "answer": "A",
+        "concept_id": "gravity",
+        "explanation": "Weight = mg (a force in Newtons, changes with g). Mass = quantity of matter in kg, constant everywhere.",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_08",
+        "question": "Sea breeze occurs",
+        "options": {
+          "A": "At night when land cools faster",
+          "B": "During the day when land heats faster than sea",
+          "C": "Only in winter",
+          "D": "Only near mountains"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "During day: land heats faster → air above land rises → creates low pressure → cooler sea air rushes in = sea breeze.",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_09",
+        "question": "The eye of a cyclone is characterized by",
+        "options": {
+          "A": "Very high wind speeds and heavy rain",
+          "B": "Calm conditions with clear sky and low pressure",
+          "C": "Very high air pressure",
+          "D": "Intense thunderstorms"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "misconception_ref": "MISC_07",
+        "source": "Worksheet Level 2",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_10",
+        "question": "When a ball is dropped from a certain height, the speed of the ball goes on increasing due to",
+        "options": {
+          "A": "Gravitational force",
+          "B": "Biological force",
+          "C": "Magnetic force",
+          "D": "All of these"
+        },
+        "answer": "A",
+        "concept_id": "gravity",
+        "source": "Worksheet",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_11",
+        "question": "A coin flicked across a table will stop because",
+        "options": {
+          "A": "It is heavy",
+          "B": "No force is acting on it",
+          "C": "Earth attracts the coin",
+          "D": "The table exerts a frictional force on it"
+        },
+        "answer": "D",
+        "concept_id": "friction",
+        "source": "Worksheet",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_12",
+        "question": "Liquid pressure acts in which direction(s)?",
+        "options": {
+          "A": "Only downward",
+          "B": "Only upward",
+          "C": "Only sideways",
+          "D": "In all directions"
+        },
+        "answer": "D",
+        "concept_id": "liquid_pressure",
+        "misconception_ref": "MISC_08",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_13",
+        "question": "Why does a piece of wood float on water?",
+        "options": {
+          "A": "Wood is light",
+          "B": "Wood's density is less than water's density",
+          "C": "Wood does not absorb water",
+          "D": "Gravitational force does not act on wood"
+        },
+        "answer": "B",
+        "concept_id": "liquid_pressure",
+        "misconception_ref": "MISC_09",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_14",
+        "question": "A body is allowed to fall down a height freely. Its speed increases continuously. It is because",
+        "options": {
+          "A": "Air does not exert frictional force",
+          "B": "Magnetic force of earth increases its speed",
+          "C": "Gravitational force of earth increases its speed",
+          "D": "Pressure of air forces it downward"
+        },
+        "answer": "C",
+        "concept_id": "gravity",
+        "source": "Worksheet Ch02 Level 2 Q51",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_15",
+        "question": "A box is being pushed horizontally along a rough surface and a constant acceleration is achieved. If the push is stopped, the box will",
+        "options": {
+          "A": "Slow down and finally stop",
+          "B": "Continue to move at constant speed",
+          "C": "Continue to accelerate at a lower rate",
+          "D": "Stop immediately"
+        },
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Once push is removed, only friction remains (opposing motion). Friction decelerates the box until it stops.",
+        "source": "Worksheet Ch02 Level 2 Q85",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_16",
+        "question": "A body is moving on a rough horizontal surface towards north. The direction of frictional force is towards",
+        "options": {
+          "A": "East",
+          "B": "West",
+          "C": "North",
+          "D": "South"
+        },
+        "answer": "D",
+        "concept_id": "friction",
+        "explanation": "Friction always opposes relative motion. If body moves north, friction acts south.",
+        "source": "Worksheet Ch02 Level 2 Q68",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_17",
+        "question": "It is easier to pull boxes fitted with rollers because",
+        "options": {
+          "A": "Rolling friction is less than sliding friction",
+          "B": "Sliding friction is less than rolling friction",
+          "C": "Lubricants",
+          "D": "Viscous force"
+        },
+        "answer": "A",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Level 2 Q81",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_18",
+        "question": "You are marooned on a frictionless horizontal surface and cannot push against it. How can you get off?",
+        "options": {
+          "A": "By jumping",
+          "B": "By spitting or sneezing",
+          "C": "By rolling your body on the surface",
+          "D": "By running on the plane"
+        },
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Jumping uses Newton's Third Law — push ground down (action), ground pushes you up (reaction). No horizontal friction needed for a vertical jump.",
+        "source": "Worksheet Ch02 Level 2 Q70",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_19",
+        "question": "Whenever the surfaces in contact tend to move each other, the force of friction comes into play",
+        "options": {
+          "A": "Only if the objects are solid",
+          "B": "Only if one of the two objects is liquid",
+          "C": "Only if one of the two objects is gaseous",
+          "D": "Irrespective of whether the objects are solid, liquid or gaseous"
+        },
+        "answer": "D",
+        "concept_id": "friction",
+        "explanation": "Friction is not restricted to solid surfaces — it acts between any two surfaces in relative motion.",
+        "misconception_ref": "MISC_12",
+        "source": "Worksheet Ch02 Level 2 Q89 (NCERT Exemplar)",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": true
+      },
+      {
+        "id": "U_20",
+        "question": "In figure, a boy is shown pushing a box from right to left. The force of friction will act on the box",
+        "options": {
+          "A": "From right to left (←)",
+          "B": "From left to right (→)",
+          "C": "Vertically downwards (↓)",
+          "D": "Vertically upwards (↑)"
+        },
+        "answer": "B",
+        "concept_id": "friction",
+        "explanation": "Friction opposes motion. Box moves right to left, so friction acts left to right.",
+        "source": "Worksheet Ch02 Level 2 Q90 (NCERT Exemplar)",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": true
+      },
+      {
+        "id": "U_21",
+        "question": "A man is walking from east to west on a level rough surface. The frictional force on the man is directed",
+        "options": {
+          "A": "From west to east",
+          "B": "From east to west",
+          "C": "Along the north",
+          "D": "Along the west"
+        },
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Man walks east to west. Friction opposes relative motion of foot with ground → friction on man acts west to east (it is this friction that propels him forward).",
+        "source": "Worksheet Ch02 Level 2 Q92",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_22",
+        "question": "Which of the following does NOT reduce friction?",
+        "options": {
+          "A": "Ball bearing",
+          "B": "Lubricant",
+          "C": "Rolling",
+          "D": "Grooving and treading"
+        },
+        "answer": "D",
+        "concept_id": "friction",
+        "explanation": "Grooving and treading (like tyre treads) actually INCREASE friction for better grip. The other three reduce friction.",
+        "source": "Worksheet Ch02 Level 2 Q83",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_23",
+        "question": "Why does an astronaut experience weightlessness in outer space?",
+        "options": {
+          "A": "No gravitational force acts on him",
+          "B": "No frictional force acts on him",
+          "C": "There is no air resistance in outer space",
+          "D": "There is a vacuum in outer space"
+        },
+        "answer": "A",
+        "concept_id": "gravity",
+        "explanation": "Class 8 textbook explanation: apparent weightlessness due to no gravitational contact force (no surface reaction). Scientifically, both astronaut and spacecraft are in free fall.",
+        "source": "Worksheet Ch02 Level 2 Q61",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_24",
+        "question": "Assertion: School bags have broad and padded shoulder straps. Reason: Broad straps reduce pressure on shoulders by distributing weight over a larger area.",
+        "type": "assertion_reason",
+        "answer": "A",
+        "concept_id": "pressure",
+        "explanation": "Both assertion and reason are TRUE, and reason correctly explains assertion.",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_25",
+        "question": "High-speed winds are accompanied by reduced air pressure. Which principle explains this?",
+        "options": {
+          "A": "Pascal's Law",
+          "B": "Archimedes' Principle",
+          "C": "Bernoulli's Principle",
+          "D": "Newton's Third Law"
+        },
+        "answer": "C",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Bernoulli's principle: as speed of a fluid increases, its pressure decreases.",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_26",
+        "question": "How does the difference in air pressure between the inside of a straw and the surrounding atmosphere help in drinking coconut water?",
+        "options": {
+          "A": "Higher air pressure inside the straw forces the liquid down",
+          "B": "Higher atmospheric pressure outside the straw pushes the liquid upward",
+          "C": "Air pressure inside and outside the straw is the same, so nothing happens",
+          "D": "Atmospheric pressure inside the straw pushes the liquid into the man's mouth"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Sucking reduces pressure inside the straw. Higher atmospheric pressure outside pushes the liquid up through the straw.",
+        "source": "Worksheet Ch03 Level 1 Q49",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_27",
+        "question": "Why does sucking air from a bottle create a vacuum inside?",
+        "options": {
+          "A": "It reduces pressure inside the bottle",
+          "B": "It adds pressure inside the bottle",
+          "C": "The liquid evaporates due to pressure",
+          "D": "The bottle inflates due to suction"
+        },
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q50",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_28",
+        "question": "What happens to wind speed when the difference in air pressure between two areas increases?",
+        "options": {
+          "A": "Wind speed increases",
+          "B": "Wind speed decreases",
+          "C": "Wind speed remains the same",
+          "D": "Wind stops moving"
+        },
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q14",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_29",
+        "question": "Which of the following statements about pressure in a liquid is true?",
+        "options": {
+          "A": "Air moves from a low-pressure area to a high-pressure area",
+          "B": "Air moves from a high-pressure area to a low-pressure area",
+          "C": "Air pressure and wind speed are unrelated",
+          "D": "None of these"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q13",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_30",
+        "question": "Why is it not advisable to shut all the doors and windows tightly during a heavy storm?",
+        "type": "short_answer",
+        "answer": "Opening doors and windows equalizes air pressure inside and outside the house. This reduces the pressure difference that would otherwise create a net upward force on the roof, reducing the risk of the roof being blown away.",
+        "concept_id": "atmospheric_pressure",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_31",
+        "question": "A rubber sucker sticks to a glass wall when pressed firmly. Which of the following best explains this phenomenon?",
+        "options": {
+          "A": "The glass exerts suction on the sucker",
+          "B": "There is glue inside the sucker",
+          "C": "The air inside the sucker creates pressure and holds it",
+          "D": "The air inside is pushed out, creating low pressure, and external air pressure pushes it onto the glass"
+        },
+        "answer": "D",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 2 Q53",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_32",
+        "question": "A can filled with hot water is tightly closed and then cooled suddenly. After a few minutes it collapses inward. What is the most scientific explanation?",
+        "options": {
+          "A": "Cooling causes metal to shrink",
+          "B": "The water cools and evaporates",
+          "C": "The pressure inside drops due to condensation, and the higher atmospheric pressure crushes the can",
+          "D": "Cooling increases the weight of air inside the can"
+        },
+        "answer": "C",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 2 Q54",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_33",
+        "question": "During inhalation, how does air move into the lungs?",
+        "options": {
+          "A": "Air moves from high pressure inside the lungs to low pressure outside",
+          "B": "Muscles push air forcefully into the lungs",
+          "C": "Air pressure inside and outside are equal",
+          "D": "The diaphragm decreases pressure inside the lungs, and outside air flows in from high pressure"
+        },
+        "answer": "D",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 2 Q39",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_34",
+        "question": "What is the cause of a sea breeze?",
+        "options": {
+          "A": "Land heats up faster than the sea during the day, causing air to rise and sea air to move in",
+          "B": "The sea cools down faster than the land at night",
+          "C": "Monsoon winds blow from sea to land",
+          "D": "Trade winds push sea air toward land"
+        },
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 1 Q17",
+        "level": 1,
+        "level_label": "Level 1 — Basic",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "U_35",
+        "question": "Why is it safer to be inside a car than in an open field during a thunderstorm?",
+        "options": {
+          "A": "The car's tires are made of rubber",
+          "B": "The car's metal body acts as a Faraday cage, shielding the interior from lightning",
+          "C": "The car is heavy and lightning won't strike it",
+          "D": "Lightning never strikes moving objects"
+        },
+        "answer": "B",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Level 2 Q26",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      }
+    ],
+    "apply": [
+      {
+        "id": "AP_01",
+        "question": "A person weighs 600 N. He is wearing shoes with a total area of 0.02 m². What pressure does he exert on the floor?",
+        "type": "numerical",
+        "answer": "30,000 Pa (30 kPa)",
+        "solution": "P = F/A = 600 / 0.02 = 30,000 Pa",
+        "concept_id": "pressure",
+        "source": "Solved Examples",
+        "level": 2,
+        "level_label": "Level 2 — Solved Example",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_02",
+        "question": "A brick (25 cm × 10 cm × 5 cm) weighing 2.5 N is placed (a) upright on smallest face (10 cm × 5 cm) and (b) on widest face (25 cm × 10 cm). Calculate pressure in each case.",
+        "type": "numerical",
+        "answer": "(a) 500 Pa   (b) 100 Pa",
+        "solution": "(a) A = 0.10 × 0.05 = 0.005 m²; P = 2.5/0.005 = 500 Pa. (b) A = 0.25 × 0.10 = 0.025 m²; P = 2.5/0.025 = 100 Pa.",
+        "concept_id": "pressure",
+        "source": "Solved Examples",
+        "conclusion": "Pressure is inversely proportional to area for the same force.",
+        "level": 2,
+        "level_label": "Level 2 — Solved Example",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_03",
+        "question": "A machine gun of mass 10 kg fires 20 g bullets at the rate of 10 bullets per second with speed of 500 m/s. How much force is necessary to hold the gun steady?",
+        "type": "numerical",
+        "answer": "100 N",
+        "solution": "F = rate of change of momentum = n × m × v = 10 × 0.020 × 500 = 100 N",
+        "concept_id": "resultant_force",
+        "source": "Worksheet Level 2 Q76",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_04",
+        "question": "A force acting on an object of mass 500 g changes its speed from 200 cm/s to 0.2 m/s. What is the change in momentum?",
+        "options": {
+          "A": "Increase by 0.90 N s",
+          "B": "Decrease by 0.90 N s",
+          "C": "Increase by 90 g cm/s",
+          "D": "Decrease by 90 g cm/s"
+        },
+        "answer": "B",
+        "solution": "u = 200 cm/s = 2.0 m/s; v = 0.2 m/s; Δp = m(v-u) = 0.5 × (0.2 - 2.0) = -0.9 N s (decrease by 0.90 N s)",
+        "concept_id": "force",
+        "source": "Worksheet Level 2 Q77",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_05",
+        "question": "The acceleration due to gravity near the surface of the moon is",
+        "options": {
+          "A": "1/6 of Earth's g",
+          "B": "Equal to Earth's g",
+          "C": "6 times Earth's g",
+          "D": "1/12 of Earth's g"
+        },
+        "answer": "A",
+        "concept_id": "gravity",
+        "explanation": "Moon's gravity ≈ g/6 ≈ 1.67 m/s². Weight on Moon = 1/6 of weight on Earth.",
+        "source": "Worksheet Level 2 Q56",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_06",
+        "question": "A toy car released with the same initial speed will travel farthest on which surface?",
+        "options": {
+          "A": "Muddy surface",
+          "B": "Polished marble",
+          "C": "Cemented surface",
+          "D": "Brick surface"
+        },
+        "answer": "B",
+        "concept_id": "friction",
+        "explanation": "Polished marble has the least friction → car decelerates slowest → travels farthest.",
+        "source": "NCERT Exemplar",
+        "level": 2,
+        "level_label": "NCERT Exemplar",
+        "ncert_exemplar": true
+      },
+      {
+        "id": "AP_07",
+        "question": "Hold a small crumpled paper ball just inside the mouth of an empty bottle and blow into the bottle. What happens and why?",
+        "type": "short_answer",
+        "answer": "The ball is pushed OUT of the bottle. Blowing increases air pressure inside the bottle. This higher internal pressure pushes the ball outward — it does NOT go in.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Solved Examples",
+        "level": 2,
+        "level_label": "Level 2 — Solved Example",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_08",
+        "question": "A ball of mass 20 g is moving at 50 m/s. A constant force F is applied for 2.0 s, changing its velocity to 70 m/s. Calculate: (a) initial momentum (b) final momentum (c) force F.",
+        "type": "numerical",
+        "solution": "(a) p_i = 0.020 × 50 = 1 kg m/s  (b) p_f = 0.020 × 70 = 1.4 kg m/s  (c) F = Δp/t = 0.4/2 = 0.2 N",
+        "answer": "(a) 1 kg m/s  (b) 1.4 kg m/s  (c) 0.2 N",
+        "concept_id": "force",
+        "source": "Case Based Questions",
+        "level": 3,
+        "level_label": "Level 3 — Case Based",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_09",
+        "question": "In the afternoon, will clothes on a clothesline facing the sea be blown towards the house or away?",
+        "type": "short_answer",
+        "answer": "Towards the house. In afternoon, land is hotter than sea. Sea breeze (from sea to land) blows clothes toward the house.",
+        "concept_id": "atmospheric_pressure",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_10",
+        "question": "A seaside house has a flag on a pole at midnight. In which direction will the flag flutter — toward the sea or away from it?",
+        "type": "short_answer",
+        "answer": "Toward the sea. At midnight, land is cooler than sea. Land breeze (from land to sea) blows the flag toward the sea.",
+        "concept_id": "atmospheric_pressure",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_11",
+        "question": "Two forces on a rigid body: 32 g wt (left) and 50 g wt (right). If R is the force needed to balance these, R will be",
+        "options": {
+          "A": "26 g wt",
+          "B": "41 g wt",
+          "C": "82 g wt",
+          "D": "16 g wt"
+        },
+        "answer": "B",
+        "solution": "Net force = 50 - 32 = 18 g wt to the right. To balance, R must be 18 g wt to the left... but options suggest something else. Using vector balance: if both act on same side or opposite, check image. Net unbalanced force in one direction = 50-32=18 or total = 82. R = 41 g wt to balance 50 g wt against 32+R... This is a typical problem: R must equal the resultant = sqrt(32²+50²) if perpendicular, or simply balance a resultant. Given answer is 41 g wt from the image.",
+        "concept_id": "resultant_force",
+        "source": "Worksheet Level 2 Q62",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_12",
+        "question": "The mass of an object whose weight is 50 N is x kg. (Take g = 10 m s⁻²) Find x.",
+        "type": "numerical",
+        "answer": "x = 5 kg",
+        "solution": "W = mg → 50 = x × 10 → x = 5 kg",
+        "concept_id": "gravity",
+        "source": "Worksheet Integer/Numerical",
+        "level": 2,
+        "level_label": "Level 2 — Numerical",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_13",
+        "question": "A horizontal force of 4 N is applied to a block of mass 2 kg resting on a frictionless surface. What is the acceleration of the block in m s⁻²?",
+        "type": "numerical",
+        "answer": "2 m s⁻²",
+        "solution": "F = ma → 4 = 2 × a → a = 2 m/s²",
+        "concept_id": "force",
+        "source": "Worksheet Integer/Numerical",
+        "level": 2,
+        "level_label": "Level 2 — Numerical",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_14",
+        "question": "A block of mass 4 kg and dimensions 10 cm × 20 cm × 30 cm rests on the floor. If g = 10 m s⁻², the maximum pressure the block can exert on the floor is",
+        "options": {
+          "A": "2000 N m⁻²",
+          "B": "1000 N m⁻²",
+          "C": "4000 N m⁻²",
+          "D": "1333 N m⁻²"
+        },
+        "answer": "A",
+        "solution": "Weight = 4 × 10 = 40 N. Minimum area = 10 cm × 20 cm = 0.1 × 0.2 = 0.02 m². Max P = 40/0.02 = 2000 N/m²",
+        "concept_id": "pressure",
+        "source": "Worksheet Ch03 Level 3 HOTS Q51",
+        "level": 3,
+        "level_label": "Level 3 — HOTS",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AP_15",
+        "question": "A boy rolls a rubber ball on a wooden surface. To make the same ball travel longer before coming to rest, he may",
+        "options": {
+          "A": "Spread a carpet on the wooden surface",
+          "B": "Cover the ball with a piece of cloth",
+          "C": "Sprinkle talcum powder on the wooden surface",
+          "D": "Sprinkle sand on the wooden surface"
+        },
+        "answer": "C",
+        "concept_id": "friction",
+        "explanation": "Talcum powder (lubricant) reduces friction between ball and surface → ball rolls farther.",
+        "source": "Worksheet Level 2 Q66 (NCERT Exemplar)",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": true
+      }
+    ],
+    "analyse": [
+      {
+        "id": "AN_01",
+        "question": "A fire can be made by rubbing two pieces of rough rock together. Which statement CORRECTLY explains why? (i) Friction slows moving objects. (ii) Friction produces heat. (iii) Fire gives out heat and light. (iv) Fire has no mass.",
+        "options": {
+          "A": "(ii) only",
+          "B": "(i) and (iii) only",
+          "C": "(i), (ii) and (iii) only",
+          "D": "(ii) and (iv) only"
+        },
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Only (ii) is correct. Friction between rough surfaces converts kinetic energy to heat, which ignites the material.",
+        "source": "Worksheet Level 2 Q86",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_02",
+        "question": "Statement 1: It takes much longer time and distance to stop a moving ship in water than a moving car on road with same speed. Statement 2: Friction on water surface is much less than on solid surface. Choose the correct option:",
+        "options": {
+          "A": "Both statements 1 and 2 are true and 2 correctly explains 1",
+          "B": "Both statements are true but 2 is NOT the correct explanation of 1",
+          "C": "Statement 1 is true but statement 2 is false",
+          "D": "Statement 1 is false but statement 2 is true"
+        },
+        "answer": "B",
+        "concept_id": "friction",
+        "explanation": "Both true, but ship takes longer mainly due to enormous mass/momentum — not just less water friction.",
+        "source": "Worksheet Level 2 Q87",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_03",
+        "question": "Kerosene of mass 100 g is mixed with 100 g of water. Kerosene floats on water. Which correctly describes why?",
+        "options": {
+          "A": "Mass of displaced water < mass of kerosene",
+          "B": "Mass of kerosene > mass of displaced water",
+          "C": "Mass of kerosene < mass of equal volume of displaced water",
+          "D": "Mass of kerosene = mass of displaced water"
+        },
+        "answer": "C",
+        "concept_id": "liquid_pressure",
+        "explanation": "Kerosene density < water density. For equal volumes, kerosene mass < water mass. Kerosene floats because it displaces water whose weight exceeds kerosene's weight.",
+        "source": "Worksheet Level 2 Q73",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_04",
+        "question": "A football has lesser inertia than a stone of the same size because",
+        "options": {
+          "A": "Football has more air inside",
+          "B": "Football has less air inside",
+          "C": "Football has less mass than the stone",
+          "D": "Football has more mass than the stone"
+        },
+        "answer": "C",
+        "concept_id": "force",
+        "explanation": "Inertia is measured by mass. Football has less mass than a solid stone of the same size → less inertia.",
+        "source": "Worksheet Level 2 Q75",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_05",
+        "question": "Two persons applying equal forces in opposite directions on a moving cart that still moves at same speed. What do you infer?",
+        "type": "short_answer",
+        "answer": "The forces are equal in magnitude and opposite in direction. Their vector sum = 0, so net force = 0. By Newton's First Law, the cart continues at constant speed. (Both forces act on same cart — this is not Newton's Third Law.)",
+        "concept_id": "resultant_force",
+        "source": "NCERT Exemplar",
+        "level": 2,
+        "level_label": "NCERT Exemplar",
+        "ncert_exemplar": true
+      },
+      {
+        "id": "AN_06",
+        "question": "Compare two rods of same weight, equal length but different thickness, held vertically on sand. Which sinks more and why?",
+        "type": "short_answer",
+        "answer": "The thinner rod sinks more. Both apply the same weight force. Thinner rod has smaller cross-sectional area → greater pressure on sand → sinks deeper. Pressure = Force/Area.",
+        "concept_id": "pressure",
+        "source": "NCERT Exemplar",
+        "level": 2,
+        "level_label": "NCERT Exemplar",
+        "ncert_exemplar": true
+      },
+      {
+        "id": "AN_07",
+        "question": "Discuss: Does friction always oppose motion, or can it also aid motion? Give examples for both.",
+        "type": "long_answer",
+        "answer": "Friction opposes: book sliding across table, ball rolling and stopping, vehicle braking. Friction aids: walking (foot pushes back, friction pushes forward), driving (tyres push back on road, road friction propels car), writing (chalk on blackboard). Without friction aiding walking/driving, motion would be impossible.",
+        "concept_id": "friction",
+        "bloom": "Analyse",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_08",
+        "question": "Why do cyclones not form between 5°N and 5°S latitude?",
+        "type": "short_answer",
+        "answer": "Cyclones need the Coriolis effect to spiral. Near the equator, the Coriolis force is negligible — storm systems cannot spin into rotating cyclones.",
+        "concept_id": "atmospheric_pressure",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_09",
+        "question": "A large truck and a car are moving with the same velocity and have a head on collision. Which of the following is an incorrect statement?",
+        "options": {
+          "A": "Both vehicles experience equal force of impact",
+          "B": "The car will experience greater force of impact",
+          "C": "The truck will experience lesser acceleration",
+          "D": "The car will experience greater acceleration"
+        },
+        "answer": "B",
+        "concept_id": "force",
+        "explanation": "By Newton's Third Law, both experience EQUAL force of impact. Car has less mass → greater acceleration. Truck has more mass → less acceleration. Statement B is incorrect — force is the same.",
+        "source": "Worksheet Level 2 Q52",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_10",
+        "question": "A piece of wood is floating in water kept in a bottle connected to an air pump. When more air is pushed into the bottle, the piece of wood will float with",
+        "options": {
+          "A": "Larger part in the water",
+          "B": "Lesser part in the water",
+          "C": "Same part in the water",
+          "D": "Will sink to the bottom"
+        },
+        "answer": "A",
+        "concept_id": "liquid_pressure",
+        "explanation": "Pushing more air increases pressure throughout the water (Pascal's Law). The increased pressure pushes down on the wood with greater force → more of wood submerges to generate sufficient buoyant force.",
+        "source": "Worksheet Level 2 Q72",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_11",
+        "question": "The force of friction acting on a car on different roads, in the increasing order of magnitude, will be",
+        "options": {
+          "A": "Mud, tar, concrete and gravel roads",
+          "B": "Tar, concrete, gravel and mud roads",
+          "C": "Concrete, tar, gravel and mud roads",
+          "D": "Gravel, mud, tar and concrete roads"
+        },
+        "answer": "B",
+        "concept_id": "friction",
+        "explanation": "Rougher surfaces have more friction. In increasing order: tar < concrete < gravel < mud.",
+        "source": "Worksheet Level 2 Q79",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_12",
+        "question": "Of the following statements, choose the correct combination about reducing friction: (i) Grease is used to reduce friction in a bicycle chain. (ii) Ball bearings are used to reduce friction in a fan. (iii) Oil can be used to INCREASE friction in a car engine. (iv) Talc can be used to reduce friction when an object is sliding on a surface.",
+        "options": {
+          "A": "(i), (ii), (iv)",
+          "B": "(i), (iii), (iv)",
+          "C": "(ii), (iii), (iv)",
+          "D": "(i), (ii), (iii)"
+        },
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Statements (i), (ii), (iv) are correct. Statement (iii) is WRONG — oil reduces friction in engines.",
+        "source": "Worksheet Level 2 Q80",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_13",
+        "question": "In the process of charge separation inside a cloud during a thunderstorm, what happens to the ice particles and the water droplets?",
+        "options": {
+          "A": "Ice particles carry a negative charge, and the water droplets carry a positive charge",
+          "B": "Ice particles carry a positive charge, and the water droplets carry a negative charge",
+          "C": "Both ice particles and water droplets become neutral",
+          "D": "Both ice particles and water droplets become positively charged"
+        },
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Smaller ice crystals at top of cloud carry positive charge; larger ice particles (hailstones) at bottom carry negative charge. When charge difference becomes large enough, lightning discharge occurs.",
+        "source": "Worksheet Ch03 Level 2 Q52",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_14",
+        "question": "A high-pressure system is moving into a region. What is the most likely weather condition for the next few days in this area?",
+        "options": {
+          "A": "Stormy and rainy",
+          "B": "Hot and dry",
+          "C": "Cloudy with moderate winds",
+          "D": "Clear skies with cool temperatures"
+        },
+        "answer": "D",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "High-pressure systems are associated with subsiding air, clear skies, and calm conditions.",
+        "source": "Worksheet Ch03 Level 2 Q55",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AN_15",
+        "question": "A brick is kept in three different ways on a table. The pressure exerted by the brick on the table will be",
+        "options": {
+          "A": "Maximum in position A",
+          "B": "Maximum in position B",
+          "C": "Equal in all cases",
+          "D": "Maximum in position C"
+        },
+        "answer": "D",
+        "concept_id": "pressure",
+        "explanation": "Position C has the smallest contact area → maximum pressure = F/A (same F, smallest A).",
+        "source": "Worksheet Ch03 Level 2 Q33 (NCERT Exemplar)",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": true
+      }
+    ],
+    "evaluate": [
+      {
+        "id": "EV_01",
+        "question": "A 70 kg man on Earth (g = 9.8 m/s²) is transported to the Moon (g = 1.7 m/s²). His mass and weight on the Moon respectively are:",
+        "options": {
+          "A": "70 kg and 686 N",
+          "B": "70 kg and 119 N",
+          "C": "11.7 kg and 119 N",
+          "D": "11.7 kg and 686 N"
+        },
+        "answer": "B",
+        "solution": "Mass is constant = 70 kg everywhere. Weight on Moon = mg = 70 × 1.7 = 119 N.",
+        "concept_id": "gravity",
+        "source": "Solved Examples",
+        "level": 2,
+        "level_label": "Level 2 — Solved Example",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "EV_02",
+        "question": "A block of ice is floating in a liquid of specific gravity 1.2 in a beaker. What will happen to the liquid level when the ice completely melts?",
+        "options": {
+          "A": "Liquid level will increase",
+          "B": "Liquid level will decrease",
+          "C": "Liquid level will remain unchanged",
+          "D": "Depends on size of ice block"
+        },
+        "answer": "B",
+        "solution": "Ice floats displacing liquid equal to its weight. When it melts, water (density 1.0) occupies less volume than the liquid (density 1.2) it had displaced. So liquid level DECREASES.",
+        "concept_id": "liquid_pressure",
+        "source": "Worksheet Level 2 Q78",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "EV_03",
+        "question": "Equal-arm balance requires 12 kg to balance an object. When placed on a spring scale, it reads 12 kg. Both are taken to the Moon (g_moon = g/6). What are the new readings of the balance and spring scale?",
+        "type": "numerical",
+        "answer": "Balance: still 12 kg (mass comparison unaffected by gravity). Spring scale: 2 kg (apparent reading = 12/6 = 2 kg).",
+        "concept_id": "gravity",
+        "source": "Worksheet Level 3 HOTS Q71",
+        "level": 3,
+        "level_label": "Level 3 — HOTS",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "EV_04",
+        "question": "Evaluate whether friction is a friend or foe. Support your answer with at least 3 examples on each side.",
+        "type": "long_answer",
+        "answer": "FRIEND: (1) Walking — without it we'd slip; (2) Writing — chalk/pen grips surface; (3) Braking vehicles — tyres grip road; (4) Tying knots — friction holds them. FOE: (1) Machine parts wear out; (2) Energy lost as heat; (3) Tyres/soles wear out; (4) Moving heavy loads is harder. Conclusion: Friction must be increased where needed (shoes, tyres) and decreased where harmful (machine bearings).",
+        "concept_id": "friction",
+        "source": "Worksheet Long Answer",
+        "level": 3,
+        "level_label": "Level 3 — Long Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "EV_05",
+        "question": "A family is enjoying a picnic in an open field when they see dark clouds and hear thunder. Evaluate the safety precautions they should take and why each one works.",
+        "type": "long_answer",
+        "answer": "(1) Seek permanent building/car — provides Faraday cage protection. (2) Avoid tall trees — trees provide low-resistance path to ground. (3) Avoid metal objects — metal conducts electricity. (4) Crouch low if no shelter — reduces height profile. (5) Avoid water — water conducts electricity. (6) Do not use electrical appliances during thunderstorms.",
+        "concept_id": "atmospheric_pressure",
+        "level": 3,
+        "level_label": "Level 3 — HOTS",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "EV_06",
+        "question": "A boy rolling a ball on the floor observes that it eventually stops. Evaluate which of the following best explains why this happens and which principle is involved.",
+        "options": {
+          "A": "Gravity pulls the ball sideways",
+          "B": "The heat produced as a result of the ball's motion",
+          "C": "The friction between the ball and the surface dissipates the ball's kinetic energy as heat",
+          "D": "The energy produced as a result of its motion"
+        },
+        "answer": "C",
+        "concept_id": "friction",
+        "explanation": "Friction converts kinetic energy to thermal energy (heat). This is why sparks fly when a knife is sharpened on a fast-rotating stone.",
+        "source": "Worksheet Level 2 Q84/88",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "EV_07",
+        "question": "Two bricks each of same dimensions are placed on level ground. Surface area of end = 40 cm², base = 150 cm², weight = 40 N each. If both bricks are placed in a standing position, what is the total pressure exerted by the bricks on the ground?",
+        "type": "numerical",
+        "answer": "20,000 N m⁻²",
+        "solution": "Each brick standing: area = 40 cm² = 0.004 m². P per brick = 40/0.004 = 10,000 N m⁻². Total pressure from both = 20,000 N m⁻² (if stacked) or 10,000 N m⁻² (side by side on different areas). For stacking: P = 80/0.004 = 20,000 N m⁻².",
+        "concept_id": "pressure",
+        "source": "Worksheet Ch03 Comprehension Passage I",
+        "level": 3,
+        "level_label": "Level 3 — Case Based",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "EV_08",
+        "question": "Analyse whether it is better to wear high-heeled shoes or flat-soled shoes when walking on soft ground, and explain using pressure concepts.",
+        "type": "short_answer",
+        "answer": "Flat-soled shoes are better. High heels concentrate the entire body weight on a very small area → very high pressure → heel sinks into soft ground. Flat shoes distribute weight over larger area → less pressure per unit area → less sinking. Pressure = Force/Area: for same force (body weight), larger area = smaller pressure.",
+        "concept_id": "pressure",
+        "bloom": "Evaluate",
+        "level": 3,
+        "level_label": "Level 3 — HOTS",
+        "ncert_exemplar": false
+      }
+    ],
+    "ncert_section": [
+      {
+        "id": "NCERT_01",
+        "question": "Match Column A (type of force) with Column B (example):",
+        "type": "match",
+        "column_A": [
+          "Muscular force",
+          "Magnetic force",
+          "Frictional force",
+          "Gravitational force",
+          "Electrostatic force"
+        ],
+        "column_B": [
+          "A cricket ball stopping before touching the boundary line",
+          "A child lifting a school bag",
+          "A fruit falling from a tree",
+          "Balloon rubbed on woollen cloth attracting hair strands",
+          "A compass needle pointing North"
+        ],
+        "answers": {
+          "Muscular force": "A child lifting a school bag",
+          "Magnetic force": "A compass needle pointing North",
+          "Frictional force": "A cricket ball stopping before touching the boundary line",
+          "Gravitational force": "A fruit falling from a tree",
+          "Electrostatic force": "Balloon rubbed on woollen cloth attracting hair strands"
+        },
+        "concept_id": "force",
+        "level": 1,
+        "level_label": "NCERT Exercise",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NCERT_02",
+        "question": "Two balloons rubbed with a woollen cloth are brought near each other. What would happen and why?",
+        "answer": "They repel each other. Both balloons acquire the same (negative) charge from the cloth. Like charges repel.",
+        "concept_id": "electrostatic_force",
+        "level": 1,
+        "level_label": "NCERT Exercise",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NCERT_03",
+        "question": "When you drop a coin in a glass of water it sinks, but when you place a bigger wooden block in water it floats. Explain.",
+        "answer": "A coin's density is greater than water's density → sinks. A wooden block's density is less than water's density → the buoyant force (weight of water displaced) equals the block's weight → it floats.",
+        "concept_id": "liquid_pressure",
+        "level": 1,
+        "level_label": "NCERT Exercise",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NCERT_04",
+        "question": "A ball is thrown upwards, slows down, stops momentarily, then falls back. Name the forces and their directions during (i) upward motion, (ii) downward motion, (iii) at the topmost position.",
+        "answer": "In ALL three cases, only gravity acts — always downward. There is no upward force once the ball leaves the hand.",
+        "concept_id": "gravity",
+        "misconception_ref": "MISC_05",
+        "level": 1,
+        "level_label": "NCERT Exercise",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NCERT_05",
+        "question": "In a large commercial complex there are four ways to reach the main road. One path is laid with loose soil, the second with polished marble, the third with bricks and the fourth has gravel surface. It is raining heavily and Kiran wishes to reach the main road. The path on which she is least likely to slip is",
+        "options": {
+          "A": "Loose soil",
+          "B": "Polished marble",
+          "C": "Bricks",
+          "D": "Gravel"
+        },
+        "answer": "D",
+        "concept_id": "friction",
+        "explanation": "Gravel has most friction in wet conditions → least slippery. Polished marble is most slippery when wet.",
+        "source": "NCERT Exemplar",
+        "level": 2,
+        "level_label": "NCERT Exemplar",
+        "ncert_exemplar": true
+      },
+      {
+        "id": "NCERT_06",
+        "question": "The apple pulls the earth towards it with the same force that the earth pulls the apple. True or False?",
+        "type": "true_false",
+        "answer": "True",
+        "concept_id": "gravity",
+        "explanation": "By Newton's Third Law, the apple exerts an equal and opposite gravitational force on the Earth. However, Earth's massive size makes the effect negligible.",
+        "source": "Worksheet Level 2 Q63",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NCERT_07",
+        "question": "What is the state of motion of a body is described by its _____ and direction of motion.",
+        "options": {
+          "A": "Force",
+          "B": "Pressure",
+          "C": "Speed",
+          "D": "None of these"
+        },
+        "answer": "C",
+        "concept_id": "force",
+        "source": "NCERT Exercise",
+        "level": 1,
+        "level_label": "NCERT Exercise",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NCERT_08",
+        "question": "A water tank has four taps fixed at points A, B, C and D as shown in figure. The water will flow out at the same pressure from taps at",
+        "options": {
+          "A": "A and B",
+          "B": "B and C",
+          "C": "C and D",
+          "D": "A and C"
+        },
+        "answer": "B",
+        "concept_id": "liquid_pressure",
+        "explanation": "Liquid pressure depends on depth. B and C are at the same depth → same pressure.",
+        "source": "Worksheet Ch03 Level 2 Q34 (NCERT Exemplar)",
+        "level": 2,
+        "level_label": "Level 2 — Intermediate",
+        "ncert_exemplar": true
+      }
+    ],
+    "case_based": [
+      {
+        "id": "CASE_01",
+        "title": "Wooden block and spring balance on table (Case IV — Sneha's experiment)",
+        "context": "A wooden block is kept on horizontal surface of a table. A spring balance is attached to a hook on the block. Sneha pulls spring balance to the right. When block just tends to move, she notes reading X N. When block starts sliding, reading drops to 4 N. She also observed the block is easier to move on rollers.",
+        "questions": [
+          {
+            "q": "The magnitude of maximum static friction is most likely to be",
+            "options": {
+              "A": "5N",
+              "B": "4N",
+              "C": "2N",
+              "D": "1N"
+            },
+            "answer": "A",
+            "explanation": "Static/limiting friction > kinetic friction (4N). So X > 4N, most likely 5N."
+          },
+          {
+            "q": "The magnitude of rolling friction is most likely to be",
+            "options": {
+              "A": "10N",
+              "B": "5N",
+              "C": "4N",
+              "D": "2N"
+            },
+            "answer": "D",
+            "explanation": "Rolling < sliding (4N) < static (~5N). Rolling friction is smallest."
+          },
+          {
+            "q": "Sneha arranged the decreasing order of static, sliding and rolling friction. Choose the correct order.",
+            "options": {
+              "A": "Rolling, static, sliding",
+              "B": "Rolling, sliding, static",
+              "C": "Static, sliding, rolling",
+              "D": "Sliding, static, rolling"
+            },
+            "answer": "C"
+          },
+          {
+            "q": "Spring balance is a device used for measuring _____ acting on an object.",
+            "options": {
+              "A": "Mass",
+              "B": "Pressure",
+              "C": "Force",
+              "D": "None"
+            },
+            "answer": "C"
+          }
+        ],
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Case IV",
+        "level": 3,
+        "level_label": "Level 3 — Case Based",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "CASE_02",
+        "title": "Ball momentum change (Case I)",
+        "context": "A ball of mass 20 g is initially moving at a velocity of 50 m/s and acquires some linear momentum. A constant force F is applied on the ball for 2.0 s and its velocity changes to 70 m/s.",
+        "questions": [
+          {
+            "q": "What is the initial momentum of the ball?",
+            "options": {
+              "A": "2 kg m s⁻¹",
+              "B": "1 kg m s⁻¹",
+              "C": "10 kg m s⁻¹",
+              "D": "20 kg m s⁻¹"
+            },
+            "answer": "B",
+            "solution": "p = 0.020 × 50 = 1 kg m/s"
+          },
+          {
+            "q": "What is the final momentum of the ball?",
+            "options": {
+              "A": "1.4 kg m s⁻¹",
+              "B": "2.8 kg m s⁻¹",
+              "C": "1 kg m s⁻¹",
+              "D": "2 kg m s⁻¹"
+            },
+            "answer": "A",
+            "solution": "p = 0.020 × 70 = 1.4 kg m/s"
+          },
+          {
+            "q": "What is the rate of change of linear momentum?",
+            "options": {
+              "A": "1.4 N",
+              "B": "2.0 N",
+              "C": "0.2 N",
+              "D": "1.0 N"
+            },
+            "answer": "C",
+            "solution": "F = Δp/t = 0.4/2 = 0.2 N"
+          },
+          {
+            "q": "Calculate the magnitude of applied force F.",
+            "options": {
+              "A": "10 N",
+              "B": "1 N",
+              "C": "2 N",
+              "D": "0.2 N"
+            },
+            "answer": "D",
+            "solution": "F = 0.2 N (same as rate of change of momentum)"
+          }
+        ],
+        "concept_id": "force",
+        "source": "Worksheet Ch02 Case I",
+        "level": 3,
+        "level_label": "Level 3 — Case Based",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "CASE_03",
+        "title": "Seema rolling ball on cement road (Case III)",
+        "context": "Seema rolled a ball on a cement road. The ball stops after covering a certain distance d. A force F is exerted by the cemented road surface on the surface of the moving ball, which opposes the motion of the ball and brings it to a stop. If Seema rolled the same ball over a glass surface, the ball travels a distance larger than d (distance covered on cement rod).",
+        "questions": [
+          {
+            "q": "Name the force F exerted by the cemented road on the moving ball.",
+            "options": {
+              "A": "Muscular force",
+              "B": "Gravitational force",
+              "C": "Frictional force",
+              "D": "Magnetic force"
+            },
+            "answer": "C"
+          },
+          {
+            "q": "If Seema rolled the ball on cement road from East to West direction, then the direction of frictional force due to cemented road surface acting on the ball is towards",
+            "options": {
+              "A": "North",
+              "B": "South",
+              "C": "East",
+              "D": "West"
+            },
+            "answer": "C",
+            "explanation": "Ball moves East to West → friction acts opposite = East"
+          },
+          {
+            "q": "Smooth surfaces produce _____ friction as compared to rough surfaces.",
+            "options": {
+              "A": "Less",
+              "B": "More",
+              "C": "Equal",
+              "D": "None of these"
+            },
+            "answer": "A"
+          }
+        ],
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Case III",
+        "level": 3,
+        "level_label": "Level 3 — Case Based",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "CASE_04",
+        "title": "Two bricks on level ground (Pressure Comprehension)",
+        "context": "Two bricks each of same dimensions are placed on level ground. Surface area of end of each brick is 40 cm² and the surface area of base of each brick is 150 cm². Each brick weighs 40 N.",
+        "questions": [
+          {
+            "q": "If both bricks are placed as shown (one flat, one upright), what is the pressure exerted by the upright brick on ground?",
+            "options": {
+              "A": "10000 N m⁻²",
+              "B": "2651.7 N m⁻²",
+              "C": "1500.2 N m⁻²",
+              "D": "12666.7 N m⁻²"
+            },
+            "answer": "A",
+            "solution": "A = 40 cm² = 0.004 m². P = 40/0.004 = 10000 N m⁻²"
+          },
+          {
+            "q": "If both bricks are placed in standing position (upright), the total pressure exerted by both bricks on ground is",
+            "options": {
+              "A": "10000 N m⁻²",
+              "B": "20000 N m⁻²",
+              "C": "30000 N m⁻²",
+              "D": "40000 N m⁻²"
+            },
+            "answer": "B",
+            "solution": "Total weight = 80 N, total area = 2 × 0.004 = 0.008 m². P = 80/0.008 = 10000 N m⁻². But if stacked: P = 80/0.004 = 20000 N m⁻²"
+          },
+          {
+            "q": "What causes lightning?",
+            "options": {
+              "A": "Wind",
+              "B": "Cloud movement",
+              "C": "Changes in air pressure",
+              "D": "Build-up of electrical charges"
+            },
+            "answer": "D"
+          },
+          {
+            "q": "What happens when the electrical potential difference between clouds and ground becomes large enough?",
+            "options": {
+              "A": "The air cools down",
+              "B": "The air breaks down, allowing a rapid discharge",
+              "C": "The cloud evaporates",
+              "D": "The thunder sound occurs"
+            },
+            "answer": "B"
+          }
+        ],
+        "concept_id": "pressure",
+        "source": "Worksheet Ch03 Comprehension",
+        "level": 3,
+        "level_label": "Level 3 — Case Based",
+        "ncert_exemplar": false
+      }
+    ],
+    "assertion_reason": [
+      {
+        "id": "AR_01",
+        "assertion": "Friction is caused by the irregularities on the two surfaces in contact.",
+        "reason": "On rough surfaces, there are a large number of irregularities.",
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Both assertion and reason are TRUE, and reason correctly explains assertion.",
+        "source": "Worksheet Ch02 AR Q7",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_02",
+        "assertion": "Without friction, we can walk very easily.",
+        "reason": "There is very little friction on a polished surface.",
+        "answer": "D",
+        "concept_id": "friction",
+        "explanation": "Assertion is FALSE — we CANNOT walk without friction. Reason is TRUE.",
+        "misconception_ref": "MISC_02",
+        "source": "Worksheet Ch02 AR Q11",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_03",
+        "assertion": "Sliding friction is replaced in most machines by rolling by the use of ball bearings.",
+        "reason": "Static friction is self-adjusting for the given two surfaces.",
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Both TRUE. Ball bearings replace sliding with rolling (less friction). Static friction does self-adjust.",
+        "source": "Worksheet Ch02 AR Q10",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_04",
+        "assertion": "Friction depends on the weight of the object.",
+        "reason": "A heavier object exerts a greater frictional force.",
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Both TRUE. Greater normal force (from heavier weight) → greater friction.",
+        "source": "Worksheet Ch02 AR Q12",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_05",
+        "assertion": "Friction always opposes the motion.",
+        "reason": "Whenever one surface moves or tries to move over another surface, the force of friction starts acting on the surfaces.",
+        "answer": "A",
+        "concept_id": "friction",
+        "explanation": "Both TRUE. Reason correctly explains assertion.",
+        "source": "Worksheet Ch02 AR Q6",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_06",
+        "assertion": "Force is defined as a push or pull acting on a body.",
+        "reason": "CGS unit of force is newton.",
+        "answer": "C",
+        "concept_id": "force",
+        "explanation": "Assertion is TRUE. Reason is FALSE — CGS unit of force is dyne, not newton.",
+        "misconception_ref": "MISC_11",
+        "source": "Worksheet Ch02 AR Q1",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_07",
+        "assertion": "The weight of an object changes from place to place but not its mass.",
+        "reason": "The weight of the object is independent of the value of g.",
+        "answer": "C",
+        "concept_id": "gravity",
+        "explanation": "Assertion is TRUE (weight = mg varies with g; mass is constant). Reason is FALSE — weight DEPENDS on g.",
+        "source": "Worksheet Ch02 AR Q2",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_08",
+        "assertion": "The gravitational force makes the earth move around the sun and also makes the moon go around the earth.",
+        "reason": "Every object in the universe exerts a force on other objects.",
+        "answer": "A",
+        "concept_id": "gravity",
+        "explanation": "Both TRUE. Gravitational force acts between all masses — it governs orbital motion.",
+        "source": "Worksheet Ch02 AR Q4",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_09",
+        "assertion": "Air pressure decreases with altitude.",
+        "reason": "The weight of the air above you decreases as you go higher, reducing the pressure.",
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Both TRUE. Reason correctly explains assertion.",
+        "source": "Worksheet Ch03 AR Q1",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_10",
+        "assertion": "A cyclone is a low-pressure system.",
+        "reason": "The high-pressure air moves towards the low-pressure area, creating wind circulation around the center.",
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Both TRUE. Reason correctly explains how cyclonic circulation forms.",
+        "source": "Worksheet Ch03 AR Q2",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_11",
+        "assertion": "The eye of a cyclone is the most dangerous part of the storm.",
+        "reason": "The eye of a cyclone is characterized by calm winds and clear skies.",
+        "answer": "D",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Assertion is FALSE (eye is calmest; eye WALL is most dangerous). Reason is TRUE.",
+        "misconception_ref": "MISC_07",
+        "source": "Worksheet Ch03 AR Q4",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_12",
+        "assertion": "High-speed winds are accompanied by reduced air pressure.",
+        "reason": "As the speed of a fluid increases, its pressure decreases (Bernoulli's principle).",
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Both TRUE. Reason (Bernoulli's principle) correctly explains assertion.",
+        "source": "Worksheet Ch03 AR",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_13",
+        "assertion": "The pressure inside a suction cup decreases when the air is removed.",
+        "reason": "The external air pressure is greater than the internal pressure, which allows the suction cup to adhere to the surface.",
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Both TRUE. Reason correctly explains why suction cups stick.",
+        "source": "Worksheet Ch03 AR Q8",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_14",
+        "assertion": "The sound of thunder is caused by the rapid expansion of air around a lightning strike.",
+        "reason": "The high temperature of the lightning bolt (about 30,000°C) causes the surrounding air to heat up rapidly, creating a shockwave that we hear as thunder.",
+        "answer": "A",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Both TRUE. Reason correctly explains the mechanism of thunder.",
+        "source": "Worksheet Ch03 AR Q10",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "AR_15",
+        "assertion": "When we bring a magnet close to a pin lying on a smooth table, the pin starts moving (sliding) towards the magnet.",
+        "reason": "Magnetic force is a contact force.",
+        "answer": "C",
+        "concept_id": "magnetic_force",
+        "explanation": "Assertion is TRUE. Reason is FALSE — magnetic force is a NON-CONTACT force.",
+        "misconception_ref": "MISC_03",
+        "source": "Worksheet Ch02 AR Q5",
+        "level": 2,
+        "level_label": "Level 2 — Assertion-Reason",
+        "ncert_exemplar": false
+      }
+    ],
+    "true_false": [
+      {
+        "id": "TF_01",
+        "statement": "Mass and weight are the same physical quantity.",
+        "answer": "False",
+        "concept_id": "gravity",
+        "explanation": "Mass = quantity of matter (kg, constant). Weight = gravitational force = mg (Newton, varies with location).",
+        "level": 1,
+        "level_label": "Level 1 — True/False",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "TF_02",
+        "statement": "Upthrust always acts vertically upward.",
+        "answer": "True",
+        "concept_id": "liquid_pressure",
+        "explanation": "Buoyant force (upthrust) always acts vertically upward, opposing gravity.",
+        "level": 1,
+        "level_label": "Level 1 — True/False",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "TF_03",
+        "statement": "Forces always arise due to the interaction between two or more objects.",
+        "answer": "True",
+        "concept_id": "force",
+        "explanation": "A force cannot act on a single object by itself — it requires interaction between at least two objects.",
+        "level": 1,
+        "level_label": "Level 1 — True/False",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "TF_04",
+        "statement": "Due to friction, the speed of a ball rolling on a flat ground increases.",
+        "answer": "False",
+        "concept_id": "friction",
+        "explanation": "Friction opposes motion. It DECREASES the speed of a rolling ball.",
+        "level": 1,
+        "level_label": "Level 1 — True/False",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "TF_05",
+        "statement": "Pressure increases with an increase in the area on which the force is applied.",
+        "answer": "False",
+        "concept_id": "pressure",
+        "explanation": "Pressure = Force/Area. For same force, LARGER area → LESS pressure.",
+        "level": 1,
+        "level_label": "Level 1 — True/False",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "TF_06",
+        "statement": "Air exerts pressure in all directions.",
+        "answer": "True",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Atmospheric pressure acts equally in all directions (up, down, sideways) — like liquid pressure.",
+        "level": 1,
+        "level_label": "Level 1 — True/False",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "TF_07",
+        "statement": "Thunderstorms are often accompanied by lightning and heavy rainfall.",
+        "answer": "True",
+        "concept_id": "atmospheric_pressure",
+        "level": 1,
+        "level_label": "Level 1 — True/False",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "TF_08",
+        "statement": "The eye of a cyclone is the region of very strong winds and heavy rain.",
+        "answer": "False",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "The eye is the calmest part — clear skies, low winds. The eye WALL has the strongest winds.",
+        "misconception_ref": "MISC_07",
+        "level": 1,
+        "level_label": "Level 1 — True/False",
+        "ncert_exemplar": false
+      }
+    ],
+    "fill_blanks": [
+      {
+        "id": "FB_01",
+        "question": "A force is a _______ or _______ applied on an object.",
+        "answer": "push; pull",
+        "concept_id": "force",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_02",
+        "question": "Force cannot change the _______ of an object, but it can change its motion, speed, direction, or shape.",
+        "answer": "chemical properties",
+        "concept_id": "force",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_03",
+        "question": "Weight is the _______ acting on an object due to gravity.",
+        "answer": "gravitational force",
+        "concept_id": "gravity",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_04",
+        "question": "An object floats if its _______ is equal to the weight of the liquid displaced.",
+        "answer": "weight",
+        "concept_id": "liquid_pressure",
+        "explanation": "Archimedes' principle: object floats when buoyant force = weight of object = weight of liquid displaced.",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_05",
+        "question": "Pressure is defined as the _______ acting per unit area.",
+        "answer": "force",
+        "concept_id": "pressure",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_06",
+        "question": "We do not feel the atmospheric pressure because the pressure inside our bodies _______ the pressure outside.",
+        "answer": "equals / balances",
+        "concept_id": "atmospheric_pressure",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_07",
+        "question": "Wind is caused due to the difference in _______ between two regions.",
+        "answer": "pressure",
+        "concept_id": "atmospheric_pressure",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_08",
+        "question": "When air moves faster, the pressure exerted by the air _______.",
+        "answer": "decreases",
+        "concept_id": "atmospheric_pressure",
+        "explanation": "Bernoulli's principle: higher speed → lower pressure.",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_09",
+        "question": "In a storm, warm moist air rises and cools, forming _______.",
+        "answer": "thunderclouds",
+        "concept_id": "atmospheric_pressure",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "FB_10",
+        "question": "Smooth surfaces produce _______ friction as compared to rough surfaces.",
+        "answer": "less",
+        "concept_id": "friction",
+        "level": 1,
+        "level_label": "Level 1 — Fill in the Blanks",
+        "ncert_exemplar": false
+      }
+    ],
+    "short_answer": [
+      {
+        "id": "SA_01",
+        "question": "What is a force? Explain with the help of some examples.",
+        "answer": "Force is a push or pull acting on an object. It can change the state of rest or motion, direction of motion, or shape/size of an object. Examples: Kicking a ball (muscular force causes motion), magnet attracting a pin (magnetic force at distance), apple falling (gravitational force).",
+        "concept_id": "force",
+        "source": "Worksheet Ch02 Short Answer Q1",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_02",
+        "question": "Describe the state of motion.",
+        "answer": "State of motion is described by the speed (or velocity) and direction of motion of an object. An object at rest has zero velocity. An object in motion has a definite speed and direction. Force can change both.",
+        "concept_id": "force",
+        "source": "Worksheet Ch02 Short Answer Q2",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_03",
+        "question": "What do you understand about the force of friction?",
+        "answer": "Friction is the force that opposes the relative motion between two surfaces in contact. It always acts opposite to the direction of motion/applied force. It can be static (prevents motion), kinetic (opposes sliding), or rolling (opposes rolling). Friction is a contact force caused by microscopic irregularities on surfaces.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Short Answer Q3",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_04",
+        "question": "What is electrostatic force? Why is it called a non-contact force?",
+        "answer": "Electrostatic force is the force exerted between two electrically charged objects. It is called non-contact force because it acts between objects even without them touching each other. Example: A charged comb attracts bits of paper from a distance. It can be attractive (opposite charges) or repulsive (like charges).",
+        "concept_id": "electrostatic_force",
+        "source": "Worksheet Ch02 Short Answer Q4",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_05",
+        "question": "We observe that the wheels of buses and trucks are heavier than the wheels of a car or scooter. Why?",
+        "answer": "Heavier wheels create greater normal force on the road surface → greater friction between tyre and road. This is essential for buses and trucks carrying heavy loads to prevent skidding. More friction = better grip = safer vehicle.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Short Answer Q5",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_06",
+        "question": "What is the cause of friction?",
+        "answer": "Friction is caused by microscopic irregularities (unevenness) on the surfaces in contact. Even surfaces that appear smooth have tiny bumps and valleys. When two surfaces are in contact, these irregularities interlock (interdigitate), creating resistance to motion. Smoother surfaces have fewer irregularities → less friction.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Short Answer Q6",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_07",
+        "question": "Push the book on a table. You observe that after sometime it stops. Explain why.",
+        "answer": "When you push the book, it starts moving. But frictional force acts between the book and the table surface in the direction opposite to motion. This frictional force decelerates the book continuously. Eventually, the book's kinetic energy is completely converted to heat energy by friction, and the book stops.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Short Answer Q7",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_08",
+        "question": "Why do painters use sand paper in white washing the walls and polishing doors?",
+        "answer": "Sand paper has a rough surface. When rubbed on the wall/door surface, it creates more friction, effectively removing paint/varnish residues, dirt, and makes the surface rough. Rough surfaces hold the new paint/polish better as it can grip the irregularities. Sand paper INCREASES friction deliberately.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Short Answer Q8",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_09",
+        "question": "Can we eliminate friction completely?",
+        "answer": "No, friction cannot be eliminated completely. Even the smoothest surfaces have microscopic irregularities. However, friction can be minimized (but not made zero) using lubricants, ball bearings, streamlining, or highly polished surfaces.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 VSA Q21",
+        "level": 1,
+        "level_label": "Level 1 — Basic (VSA)",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_10",
+        "question": "Why do pieces of luggage fitted with rollers move more easily?",
+        "answer": "Luggage with rollers experiences rolling friction instead of sliding friction. Rolling friction is much less than sliding friction. So the same force moves the luggage much more easily. This is why wheels/rollers reduce effort significantly.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 VSA Q22",
+        "level": 1,
+        "level_label": "Level 1 — Basic (VSA)",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_11",
+        "question": "What is atmospheric pressure?",
+        "answer": "Atmospheric pressure is the pressure exerted by the weight of the atmosphere (column of air) above any surface. At sea level it is approximately 101,325 Pa (1 atm). It decreases with altitude as the height of air column above decreases. It is measured using a barometer.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Short Answer Q1",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_12",
+        "question": "If the area of your head is 15 cm × 15 cm, how much air (in weight) would you carry on your head?",
+        "answer": "Area = 15 × 15 = 225 cm² = 0.0225 m². Atmospheric pressure ≈ 100,000 N/m². Force = P × A = 100,000 × 0.0225 = 2,250 N (approximately 225 kg weight). This is the enormous weight of air column above your head!",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Short Answer Q2",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_13",
+        "question": "Take a pencil sharpened at one end and press it between your fingers. Which end will hurt more and why?",
+        "answer": "The pointed (sharpened) end hurts more. Both ends receive the same squeezing force. Pointed end has much smaller area → much greater pressure (P = F/A) → concentrated force hurts more. Blunt end has larger area → same force spread over more area → less pressure → less pain.",
+        "concept_id": "pressure",
+        "source": "Worksheet Ch03 Short Answer Q3",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_14",
+        "question": "Why do deep-sea divers wear special suits?",
+        "answer": "At great depths, water pressure is enormous (P = hρg). At 100 m depth, pressure ≈ 10 atm = 1,000,000 Pa. The special suits are designed to withstand this extreme pressure, preventing the suit from being crushed and protecting the diver from the pressure difference that could cause serious injury.",
+        "concept_id": "liquid_pressure",
+        "source": "Worksheet Ch03 Short Answer Q4",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_15",
+        "question": "Why do some people suffer from nose bleeding at higher altitudes?",
+        "answer": "At higher altitudes, atmospheric pressure is less. Blood pressure inside the body remains relatively constant (and higher). The reduced external pressure means blood vessels in nasal passages have greater net outward pressure → blood vessels may rupture → nosebleed.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Short Answer Q5",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_16",
+        "question": "What is a cyclone?",
+        "answer": "A cyclone is a large-scale air mass that rotates rapidly around a low-pressure center. It forms over warm ocean surfaces when a low-pressure area develops and surrounding high-pressure air spirals inward (deflected by Coriolis effect). It is characterized by strong spiraling winds and heavy rainfall. The center (eye) is calm.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 VSA Q5",
+        "level": 1,
+        "level_label": "Level 1 — Basic (VSA)",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_17",
+        "question": "What is the function of a lightning conductor?",
+        "answer": "A lightning conductor protects tall buildings from lightning damage. It is a metal rod fixed at the top of the building, connected by a thick copper wire to a metal plate buried deep in the ground. When lightning strikes, electrical charges pass through the conductor safely into the ground without damaging the building.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 VSA Q6",
+        "level": 1,
+        "level_label": "Level 1 — Basic (VSA)",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_18",
+        "question": "What is the Coriolis effect?",
+        "answer": "The Coriolis effect is the deflection of moving air (or objects) caused by Earth's rotation. In the Northern Hemisphere, winds are deflected to the right; in the Southern Hemisphere, to the left. This is what causes cyclones to rotate anticlockwise in the Northern Hemisphere and clockwise in the Southern Hemisphere.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Short Answer Q13",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_19",
+        "question": "What is the role of warm ocean water in cyclone formation?",
+        "answer": "Warm ocean water (above 27°C) provides the energy for cyclone formation by evaporating and adding heat and moisture to the atmosphere. The warm, moist air rises rapidly, creating a low-pressure center. As the air rises, it cools, condenses, releasing latent heat which further intensifies the storm. Without warm ocean water, cyclones lose their energy and weaken.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Short Answer Q11",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "SA_20",
+        "question": "What is a trade wind?",
+        "answer": "Trade winds are persistent easterly winds that blow from subtropical high-pressure areas toward the equatorial low-pressure region. In the Northern Hemisphere, they blow from northeast to southwest; in the Southern Hemisphere, from southeast to northwest. They were historically used by trade ships, hence the name.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03 Short Answer Q12",
+        "level": 2,
+        "level_label": "Level 2 — Short Answer",
+        "ncert_exemplar": false
+      }
+    ],
+    "long_answer": [
+      {
+        "id": "LA_01",
+        "question": "What are contact forces? State different contact forces. What are non-contact forces? Explain different types of non-contact forces.",
+        "answer": "CONTACT FORCES: Forces that act only when there is physical contact between interacting objects.\n1. Muscular force — force applied by muscles (e.g., lifting, pushing).\n2. Friction — opposing force between surfaces in contact.\n3. Tension — force along a stretched string/rope.\n\nNON-CONTACT FORCES: Forces that act even without physical contact (action at a distance).\n1. Gravitational force — attraction between any two masses; e.g., Earth attracts all objects.\n2. Magnetic force — force between magnets or between a magnet and magnetic materials; can attract or repel.\n3. Electrostatic force — force between electrically charged objects; can attract (unlike charges) or repel (like charges).",
+        "concept_id": "force",
+        "source": "Worksheet Ch02 Long Answer Q1",
+        "level": 3,
+        "level_label": "Level 3 — Long Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "LA_02",
+        "question": "Write some methods used to reduce friction.",
+        "answer": "1. LUBRICANTS: Oil, grease, graphite reduce friction between machine parts (e.g., car engines, bicycle chains).\n2. BALL BEARINGS / ROLLERS: Replace sliding friction with rolling friction (much less). Used in fans, wheels, heavy machinery.\n3. STREAMLINING: Giving smooth, tapered shapes to vehicles (cars, ships, aircraft) to reduce air/fluid friction (drag).\n4. POLISHING: Making surfaces smoother reduces irregularities → less friction.\n5. AIR CUSHION: Air-cushioned vehicles (hovercraft) eliminate surface contact.\n6. MAGNETIC LEVITATION: Maglev trains float above tracks, eliminating contact friction completely.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Long Answer Q2",
+        "level": 3,
+        "level_label": "Level 3 — Long Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "LA_03",
+        "question": "Explain the advantages and disadvantages of friction.",
+        "answer": "ADVANTAGES (friction as friend):\n1. Walking — friction between feet and ground prevents slipping.\n2. Writing — friction between pen/chalk and paper/board.\n3. Braking vehicles — friction between brakes and wheels stops vehicles.\n4. Tying knots — friction holds knots in place.\n5. Matches catching fire — friction ignites the match head.\n6. Sports — grip in cricket, tennis, wrestling.\n\nDISADVANTAGES (friction as foe):\n1. Wear and tear — machine parts, tyres, shoe soles wear out.\n2. Energy loss — friction converts useful energy to waste heat.\n3. Noise — friction causes squeaking/grinding in machinery.\n4. Increased fuel consumption in vehicles.\n5. Forest fires — friction from branches rubbing in wind.\n\nCONCLUSION: Friction is necessary for life but must be controlled appropriately.",
+        "concept_id": "friction",
+        "source": "Worksheet Ch02 Long Answer Q3",
+        "level": 3,
+        "level_label": "Level 3 — Long Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "LA_04",
+        "question": "Explain how thunderstorms develop and what safety measures should be taken during a thunderstorm.",
+        "answer": "DEVELOPMENT: (1) On a hot humid day, rising hot air creates powerful updrafts. (2) Moisture-laden air rises rapidly, cools, and condenses, forming cumulonimbus clouds. (3) Within clouds, ice crystals and water droplets collide → charge separation occurs (ice particles negative at bottom, positive at top). (4) When charge difference becomes large, electrical discharge occurs as lightning (between cloud and ground or within cloud). (5) Lightning heats air to ~30,000°C → rapid expansion → shockwave heard as thunder.\n\nSAFETY MEASURES:\n1. Take shelter in a building or metal-roofed car.\n2. Avoid tall trees, open fields, hilltops.\n3. Unplug electrical appliances.\n4. Avoid metal objects.\n5. Stay away from water bodies.\n6. If outdoors, crouch low with feet together.\n7. Do NOT lie flat on ground.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03",
+        "level": 3,
+        "level_label": "Level 3 — Long Answer",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "LA_05",
+        "question": "Explain the formation of a cyclone and the safety measures that should be taken before and during a cyclone.",
+        "answer": "FORMATION: (1) Warm ocean water (>27°C) heats air above it → warm moist air rises rapidly. (2) Creates a low-pressure region. (3) Surrounding cooler air moves in. (4) Earth's rotation (Coriolis effect) causes the inward-moving air to spiral. (5) Rising air releases latent heat (from condensation) → intensifies the storm. (6) Wind speeds increase spirally → eye (calm center) forms.\n\nSAFETY MEASURES BEFORE:\n1. Tune in to IMD weather alerts.\n2. Store food, water, candles, medicines.\n3. Board up windows and secure loose objects.\n4. Know evacuation routes.\n\nDURING A CYCLONE:\n1. Stay indoors away from windows.\n2. Do not go outside even if there is a calm period (could be the eye passing over).\n3. Avoid flooded roads.\n4. Do NOT use electrical appliances.\n5. Move to upper floors if flooding occurs.",
+        "concept_id": "atmospheric_pressure",
+        "source": "Worksheet Ch03",
+        "level": 3,
+        "level_label": "Level 3 — Long Answer",
+        "ncert_exemplar": false
+      }
+    ],
+    "numerical": [
+      {
+        "id": "NUM_01",
+        "question": "The mass of an object whose weight is 49 N is x kg. (Take g = 9.8 m s⁻²) Find x.",
+        "answer": "5 kg",
+        "solution": "W = mg → 49 = x × 9.8 → x = 49/9.8 = 5 kg",
+        "concept_id": "gravity",
+        "source": "Worksheet Solved Example 5–6",
+        "level": 2,
+        "level_label": "Level 2 — Solved Example",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NUM_02",
+        "question": "A person weighs 600 N. The total area of contact of both feet with the floor is 0.02 m². Calculate the pressure exerted on the floor.",
+        "answer": "30,000 Pa",
+        "solution": "P = F/A = 600/0.02 = 30,000 Pa = 30 kPa",
+        "concept_id": "pressure",
+        "source": "Solved Examples",
+        "level": 2,
+        "level_label": "Level 2 — Solved Example",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NUM_03",
+        "question": "A machine gun of mass 10 kg fires 20 g bullets at the rate of 10 bullets per second, each with a speed of 500 m/s. What force is necessary to hold the gun in position?",
+        "answer": "100 N",
+        "solution": "F = rate of change of momentum = n × m_bullet × v = 10 × 0.020 × 500 = 100 N",
+        "concept_id": "resultant_force",
+        "source": "Worksheet Q76",
+        "level": 2,
+        "level_label": "Level 2 — Numerical",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NUM_04",
+        "question": "The mass of the body is 60 kg, if value of acceleration due to gravity is 10 m s⁻² and weight of the body is x × 10² N. Find x.",
+        "answer": "x = 6",
+        "solution": "W = mg = 60 × 10 = 600 N = 6 × 10² N → x = 6",
+        "concept_id": "gravity",
+        "source": "Worksheet Integer Q3",
+        "level": 2,
+        "level_label": "Level 2 — Numerical",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NUM_05",
+        "question": "A horizontal force of 4 N is applied to a block of mass 2 kg resting on a frictionless surface. What is the acceleration of the block?",
+        "answer": "2 m s⁻²",
+        "solution": "F = ma → 4 = 2 × a → a = 2 m/s²",
+        "concept_id": "force",
+        "source": "Worksheet Integer Q2",
+        "level": 2,
+        "level_label": "Level 2 — Numerical",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NUM_06",
+        "question": "A brick (25 cm × 10 cm × 5 cm) weighing 2.5 N is placed on its widest face (25 cm × 10 cm). What pressure does it exert?",
+        "answer": "100 Pa",
+        "solution": "A = 0.25 × 0.10 = 0.025 m². P = F/A = 2.5/0.025 = 100 Pa",
+        "concept_id": "pressure",
+        "source": "Worksheet Solved Example",
+        "level": 2,
+        "level_label": "Level 2 — Solved Example",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NUM_07",
+        "question": "A block of mass 4 kg (10 cm × 20 cm × 30 cm) rests on the floor. g = 10 m s⁻². What is the maximum pressure it can exert?",
+        "answer": "2000 N m⁻²",
+        "solution": "Weight = 4 × 10 = 40 N. Minimum area (for max pressure) = 10 × 20 cm = 0.1 × 0.2 = 0.02 m². P = 40/0.02 = 2000 N/m²",
+        "concept_id": "pressure",
+        "source": "Worksheet Ch03 Level 3 Q51",
+        "level": 3,
+        "level_label": "Level 3 — HOTS",
+        "ncert_exemplar": false
+      },
+      {
+        "id": "NUM_08",
+        "question": "Two bricks each weighing 40 N are placed upright (end area = 40 cm² each). If placed side by side upright, what is the total pressure on the ground?",
+        "answer": "10,000 N m⁻² (same as one brick, since area doubles and weight doubles)",
+        "solution": "One brick upright: P = 40/0.004 = 10,000 N m⁻². Two bricks side by side: Total weight = 80 N, Total area = 0.008 m². P = 80/0.008 = 10,000 N m⁻²",
+        "concept_id": "pressure",
+        "source": "Worksheet Ch03 Comprehension",
+        "level": 3,
+        "level_label": "Level 3 — Case Based",
+        "ncert_exemplar": false
+      }
+    ]
+  }
+}

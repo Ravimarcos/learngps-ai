@@ -35,8 +35,17 @@ _driver = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: connect Neo4j and apply constraints. Shutdown: close driver."""
+    """Startup: connect Neo4j, build RAG index, apply constraints. Shutdown: close driver."""
     global _driver
+
+    # Build ChromaDB RAG index (runs in thread so it doesn't block event loop)
+    try:
+        from backend.rag.embedder import build_index
+        await asyncio.to_thread(build_index, False)   # False = skip if already built
+        print("✅ RAG index ready")
+    except Exception as e:
+        print(f"⚠️  RAG index build failed (non-fatal): {e}")
+
     _driver = AsyncGraphDatabase.driver(
         settings.neo4j_uri,
         auth=(settings.neo4j_username, settings.neo4j_password)
