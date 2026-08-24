@@ -11,6 +11,5 @@ COPY . .
 
 EXPOSE 8000
 
-COPY start.sh .
-RUN chmod +x start.sh
-CMD ["./start.sh"]
+COPY serve.py .
+CMD ["python", "serve.py"]
