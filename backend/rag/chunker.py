@@ -30,7 +30,7 @@ except ImportError:
 
 # ── Paths ──────────────────────────────────────────────────────────────────
 
-BASE = Path(__file__).parents[3]   # learngps/ root
+BASE = Path(__file__).parents[2]   # learngps/ root (backend/rag/chunker.py → 2 levels up)
 
 NCERT_PDF      = BASE / "data" / "sources" / "8-Sci-NCERT-Book-Force-Pressure.pdf"
 QUESTIONS_JSON = BASE / "data" / "sources" / "levelwise_questions.json"

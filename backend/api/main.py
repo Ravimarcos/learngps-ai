@@ -66,12 +66,8 @@ app = FastAPI(
 # Allow browser requests from Next.js dev server and production Vercel URL
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://*.vercel.app",   # production frontend
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],          # wildcard subdomains not supported — open for now
+    allow_credentials=False,      # must be False when allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
