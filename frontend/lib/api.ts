@@ -27,6 +27,10 @@ export interface ChatResponse {
   bloom_advance: boolean;
   model_used: string;
   vark_updated?: string;
+  hint_count: number;
+  activity_shown: boolean;
+  guardrail_rule?: string | null;
+  distress_count?: number;
 }
 
 export interface PhotoResponse {
@@ -75,20 +79,28 @@ export async function sendChat(params: {
   subconcept_name: string;
   bloom_level: string;
   vark_style: string;
+  hint_count?: number;
+  mode?: string;
+  activity_shown?: boolean;
+  distress_count?: number;
 }): Promise<ChatResponse> {
   const res = await fetch(`${API}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      student_id: params.studentId,
-      student_name: params.studentName,
-      message: params.message,
+      student_id:           params.studentId,
+      student_name:         params.studentName,
+      message:              params.message,
       conversation_history: params.conversationHistory,
-      subconcept_id: params.subconcept_id,
-      subconcept_name: params.subconcept_name,
-      chapter_name: "Force & Pressure",
-      bloom_level: params.bloom_level,
-      vark_style: params.vark_style,
+      subconcept_id:        params.subconcept_id,
+      subconcept_name:      params.subconcept_name,
+      chapter_name:         "Force & Pressure",
+      bloom_level:          params.bloom_level,
+      vark_style:           params.vark_style,
+      hint_count:           params.hint_count ?? 0,
+      mode:                 params.mode ?? "learning",
+      activity_shown:       params.activity_shown ?? false,
+      distress_count:       params.distress_count ?? 0,
     }),
   });
   if (!res.ok) throw new Error("Chat failed");

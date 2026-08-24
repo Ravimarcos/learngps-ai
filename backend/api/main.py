@@ -221,6 +221,9 @@ async def chat(body: dict):
     subconcept_name = body.get("subconcept_name", "Contact Force")
     chapter_name    = body.get("chapter_name", "Force & Pressure")
     distress_count  = body.get("distress_count", 0)
+    hint_count      = body.get("hint_count", 0)
+    mode            = body.get("mode", "learning")
+    activity_shown  = body.get("activity_shown", False)
     _t_start        = time.monotonic()
 
     try:
@@ -269,6 +272,9 @@ async def chat(body: dict):
             bloom_level          = body.get("bloom_level", "Remember"),
             vark_style           = body.get("vark_style", "K"),
             last_session_note    = body.get("last_session_note", ""),
+            hint_count           = hint_count,
+            mode                 = mode,
+            activity_shown       = activity_shown,
         )
 
         if student_id:
