@@ -410,7 +410,7 @@ function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void
 }
 
 // ── CHAT SCREEN ────────────────────────────────────────────────────────────
-function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, bloomLevel, setBloomLevel, hintCount, setHintCount, activityShown, setActivityShown }: {
+function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, bloomLevel, setBloomLevel, hintCount, setHintCount, activityShown, setActivityShown, onXpEarned }: {
   gps: GPSRoute | null;
   vark: VARKProfile | null;
   studentId: string;
@@ -423,6 +423,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
   setHintCount: React.Dispatch<React.SetStateAction<number>>;
   activityShown: boolean;
   setActivityShown: React.Dispatch<React.SetStateAction<boolean>>;
+  onXpEarned: (xp: number) => void;
 }) {
   const [input, setInput]           = useState("");
   const [loading, setLoading]       = useState(false);
@@ -449,7 +450,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
     setMessages((m) => [...m, { role: "user", content: userMsg }]);
     setLoading(true);
     try {
-      const history = messages.map((m) => ({ role: m.role, content: m.content }));
+      const history = messages.slice(-20).map((m) => ({ role: m.role, content: m.content }));
       const bloomOrder = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"];
       const res = await sendChat({
         studentId,
@@ -469,6 +470,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
         const idx = bloomOrder.indexOf(bloomLevel);
         if (idx < bloomOrder.length - 1) setBloomLevel(bloomOrder[idx + 1]);
       }
+      if ((res.xp_earned ?? 0) > 0) onXpEarned(res.xp_earned);
       setMessages((m) => [...m, { role: "assistant", content: res.reply, xp: res.xp_earned }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", content: "Oops! Something went wrong. Try again." }]);
@@ -823,11 +825,29 @@ export default function App() {
   const [gps,  setGPS]      = useState<GPSRoute | null>(null);
   const [vark, setVARK]     = useState<VARKProfile | null>(null);
 
-  // ── Persistent chat state (survives tab switches) ────────────────────────
-  const [messages,   setMessages]   = useState<Message[]>([]);
-  const [bloomLevel, setBloomLevel] = useState("Remember");
+  // ── Persistent chat state (survives tab switches + page reloads) ─────────
+  const [messages,   setMessages]   = useState<Message[]>(() => {
+    try {
+      const saved = sessionStorage.getItem("chat_messages");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [bloomLevel, setBloomLevel] = useState(() => {
+    try { return sessionStorage.getItem("bloom_level") ?? "Remember"; }
+    catch { return "Remember"; }
+  });
   const [hintCount,  setHintCount]  = useState(0);
   const [activityShown, setActivityShown] = useState(false);
+
+  // Sync messages + bloom to sessionStorage on every change
+  useEffect(() => {
+    try { sessionStorage.setItem("chat_messages", JSON.stringify(messages)); }
+    catch { /* storage full or unavailable */ }
+  }, [messages]);
+  useEffect(() => {
+    try { sessionStorage.setItem("bloom_level", bloomLevel); }
+    catch { /* ignore */ }
+  }, [bloomLevel]);
 
   // ── Check existing session on mount ─────────────────────────────────────
   useEffect(() => {
@@ -899,6 +919,7 @@ export default function App() {
     setActivityShown(false);
     setTotalXp(0);
     setStreakDays(0);
+    try { sessionStorage.removeItem("chat_messages"); sessionStorage.removeItem("bloom_level"); } catch { /* ignore */ }
   }
 
   // ── Loading splash ───────────────────────────────────────────────────────
@@ -952,7 +973,7 @@ export default function App() {
       <div className="w-full max-w-sm min-h-screen bg-gray-50 relative overflow-hidden">
         {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays} onContinue={() => setScreen("chat")} onMap={() => setScreen("map")} />}
         {screen === "map"      && <MapScreen      gps={gps} onStart={() => setScreen("chat")} />}
-        {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} messages={messages} setMessages={setMessages} bloomLevel={bloomLevel} setBloomLevel={setBloomLevel} hintCount={hintCount} setHintCount={setHintCount} activityShown={activityShown} setActivityShown={setActivityShown} />}
+        {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} messages={messages} setMessages={setMessages} bloomLevel={bloomLevel} setBloomLevel={setBloomLevel} hintCount={hintCount} setHintCount={setHintCount} activityShown={activityShown} setActivityShown={setActivityShown} onXpEarned={(xp) => setTotalXp((prev) => prev + xp)} />}
         {screen === "progress" && <ProgressScreen vark={vark} />}
         {screen === "profile"  && <ProfileScreen  vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />}
         <BottomNav active={screen} setActive={setScreen} />
