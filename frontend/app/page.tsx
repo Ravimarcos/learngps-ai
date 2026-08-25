@@ -336,74 +336,74 @@ function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void
   const completed = gps?.completed ?? [];
   const route     = gps?.route ?? [];
   const progress  = gps?.progress_pct ?? 0;
-  const allNodes  = [...completed, ...(current ? [current] : []), ...route];
+
+  // Build ordered list: completed → current → upcoming
+  const allNodes = [
+    ...completed.map((n) => ({ ...n, state: "done" as const })),
+    ...(current ? [{ ...current, state: "current" as const }] : []),
+    ...route.map((n) => ({ ...n, state: "locked" as const })),
+    { id: "__finish__", name: "Chapter Complete! 🏆", state: "finish" as const },
+  ];
+
+  const nodeConfig = {
+    done:    { bg: "bg-emerald-500", border: "border-emerald-500", text: "text-white", icon: "✓", label: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    current: { bg: "bg-indigo-600",  border: "border-indigo-600",  text: "text-white", icon: "📍", label: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+    locked:  { bg: "bg-gray-200",    border: "border-gray-200",    text: "text-gray-400", icon: "🔒", label: "bg-gray-50 text-gray-400 border-gray-200" },
+    finish:  { bg: "bg-amber-400",   border: "border-amber-400",   text: "text-white", icon: "🏆", label: "bg-amber-50 text-amber-700 border-amber-200" },
+  };
 
   return (
-    <div className="flex flex-col gap-3 p-4 pb-28">
-      <div>
-        <h1 className="font-bold text-xl text-gray-900">Your Learning Map</h1>
-        <p className="text-gray-400 text-sm">Grade 8 · Navigate your path</p>
-      </div>
-
-      <div className="rounded-xl bg-gradient-to-r from-indigo-700 to-indigo-900 p-4 text-white">
-        <p className="text-sm font-semibold text-indigo-200 mb-2">⚙️ Skill: Understand Forces</p>
-        <div className="w-full bg-white/20 rounded-full h-2 mb-1">
+    <div className="flex flex-col pb-36 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="bg-indigo-700 text-white px-4 pt-6 pb-8">
+        <h1 className="font-bold text-xl mb-1">Learning Map 🗺️</h1>
+        <p className="text-indigo-200 text-sm">Force & Pressure · Grade 8 Science</p>
+        <div className="mt-3 bg-white/20 rounded-full h-2">
           <div className="bg-white rounded-full h-2 transition-all" style={{ width: `${progress}%` }} />
         </div>
-        <p className="text-xs text-white/70">{progress}% complete · {route.length} SubConcept{route.length !== 1 ? "s" : ""} remaining</p>
+        <div className="flex justify-between mt-1">
+          <span className="text-xs text-indigo-200">{completed.length} mastered</span>
+          <span className="text-xs text-indigo-200">{progress}% complete</span>
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-3 h-3 rounded-full bg-indigo-600" />
-          <p className="font-semibold text-gray-800">Force</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {allNodes.map((node) => {
-            const isDone    = completed.some((c) => c.id === node.id);
-            const isCurrent = current?.id === node.id;
-            return (
-              <span key={node.id} className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
-                isDone    ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-                : isCurrent ? "bg-indigo-600 border-indigo-600 text-white gps-current"
-                : "bg-gray-50 border-gray-200 text-gray-400"
-              }`}>
-                {isDone ? "✓ " : isCurrent ? "📍 " : "🔒 "}{node.name}
-              </span>
-            );
-          })}
-        </div>
-        {current && route.length > 0 && (
-          <div className="mt-3 bg-emerald-50 rounded-xl p-3 text-xs text-emerald-800">
-            📍 {current.name} → {route.slice(0, 2).map((r) => r.name).join(" → ")}
-            {route.length > 2 && " → ..."} → <span className="text-indigo-600 font-bold">Skill Complete!</span>
-          </div>
-        )}
-      </div>
+      {/* GPS Route — vertical path */}
+      <div className="px-6 -mt-4">
+        {allNodes.map((node, i) => {
+          const cfg = nodeConfig[node.state];
+          const isLast = i === allNodes.length - 1;
+          return (
+            <div key={node.id} className="flex gap-4">
+              {/* Path + Node */}
+              <div className="flex flex-col items-center">
+                <div className={`w-10 h-10 rounded-full border-4 ${cfg.bg} ${cfg.border} ${cfg.text} flex items-center justify-center text-sm font-bold shadow-md flex-shrink-0 z-10`}>
+                  {cfg.icon}
+                </div>
+                {!isLast && (
+                  <div className={`w-0.5 flex-1 min-h-8 ${node.state === "done" ? "bg-emerald-400" : "bg-gray-200"}`} />
+                )}
+              </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <p className="font-semibold text-gray-800 mb-2">Other Skills</p>
-        {[
-          { name: "Friction", status: "mastered", pct: 92 },
-          { name: "Sound",    status: "locked",   pct: 0  },
-        ].map((s) => (
-          <div key={s.name} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-            <div className="flex items-center gap-2">
-              <span>{s.status === "mastered" ? "✅" : "🔒"}</span>
-              <span className="text-sm font-medium text-gray-700">{s.name}</span>
+              {/* Label card */}
+              <div className={`mb-2 mt-1 flex-1 rounded-xl border px-3 py-2 ${cfg.label} ${node.state === "current" ? "shadow-md" : ""}`}>
+                <p className={`text-sm font-semibold ${node.state === "locked" ? "text-gray-400" : node.state === "done" ? "text-emerald-700" : node.state === "finish" ? "text-amber-700" : "text-indigo-700"}`}>
+                  {node.name}
+                </p>
+                {node.state === "done"    && <p className="text-xs text-emerald-500 mt-0.5">Mastered ✓</p>}
+                {node.state === "current" && <p className="text-xs text-indigo-500 mt-0.5 font-medium">▶ You are here — tap to continue</p>}
+                {node.state === "locked"  && <p className="text-xs text-gray-400 mt-0.5">Complete previous topic first</p>}
+                {node.state === "finish"  && <p className="text-xs text-amber-600 mt-0.5">Master all topics to unlock</p>}
+              </div>
             </div>
-            {s.status === "mastered"
-              ? <span className="text-xs text-emerald-600 font-semibold">Mastered · {s.pct}% 🏆</span>
-              : <span className="text-xs text-gray-400">Complete Forces first</span>}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button
         onClick={onStart}
         className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform"
       >
-        Start: {current?.name ?? "Contact Force"} →
+        Continue: {current?.name ?? "Start Learning"} →
       </button>
     </div>
   );
@@ -971,12 +971,18 @@ export default function App() {
   return (
     <div className="flex justify-center bg-gray-100 min-h-screen">
       <div className="w-full max-w-sm min-h-screen bg-gray-50 relative overflow-hidden">
-        {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays} onContinue={() => setScreen("chat")} onMap={() => setScreen("map")} />}
+        {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays} onContinue={() => setScreen("chat")} onMap={() => { if (studentId) loadAppData(studentId); setScreen("map"); }} />}
         {screen === "map"      && <MapScreen      gps={gps} onStart={() => setScreen("chat")} />}
         {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} messages={messages} setMessages={setMessages} bloomLevel={bloomLevel} setBloomLevel={setBloomLevel} hintCount={hintCount} setHintCount={setHintCount} activityShown={activityShown} setActivityShown={setActivityShown} onXpEarned={(xp) => setTotalXp((prev) => prev + xp)} />}
         {screen === "progress" && <ProgressScreen vark={vark} />}
         {screen === "profile"  && <ProfileScreen  vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />}
-        <BottomNav active={screen} setActive={setScreen} />
+        <BottomNav active={screen} setActive={(s) => {
+          // Refresh GPS when navigating away from chat back to home/map
+          if (screen === "chat" && (s === "home" || s === "map") && studentId) {
+            loadAppData(studentId);
+          }
+          setScreen(s);
+        }} />
       </div>
     </div>
   );
