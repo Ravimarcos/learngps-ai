@@ -9,13 +9,13 @@ On Day 6 (DIKSHA), we'll add video/simulation links alongside.
 """
 
 import json
+import random
 from pathlib import Path
 from functools import lru_cache
 from typing import Optional
 
 # Path to the extracted question bank from daughter's worksheets
-QUESTION_BANK_PATH = Path(__file__).parents[3] / \
-    "ai-learning-platform" / "data" / "knowledge_graph" / "levelwise_questions.json"
+QUESTION_BANK_PATH = Path(__file__).parents[2] / "data" / "sources" / "levelwise_questions.json"
 
 # Map our Neo4j SubConcept IDs → question bank concept_ids
 SUBCONCEPT_TO_CONCEPT = {
@@ -78,6 +78,7 @@ def get_questions_for_subconcept(
         level_qs = questions.get(bloom_order[idx], [])
         matched = [q for q in level_qs if q.get("concept_id") == concept_id]
         if matched:
+            random.shuffle(matched)   # randomise so same question isn't repeated every turn
             return matched[:limit]
 
     return []

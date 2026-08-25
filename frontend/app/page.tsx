@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -408,15 +408,20 @@ function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void
 }
 
 // ── CHAT SCREEN ────────────────────────────────────────────────────────────
-function ChatScreen({ gps, vark, studentId, studentName }: {
+function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, bloomLevel, setBloomLevel, hintCount, setHintCount, activityShown, setActivityShown }: {
   gps: GPSRoute | null;
   vark: VARKProfile | null;
   studentId: string;
   studentName: string;
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  bloomLevel: string;
+  setBloomLevel: React.Dispatch<React.SetStateAction<string>>;
+  hintCount: number;
+  setHintCount: React.Dispatch<React.SetStateAction<number>>;
+  activityShown: boolean;
+  setActivityShown: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: `Welcome back, ${studentName}! 👋 I'm Gyaan, your AI tutor. What would you like to learn today?` },
-  ]);
   const [input, setInput]           = useState("");
   const [loading, setLoading]       = useState(false);
   const [photoMode, setPhotoMode]   = useState<"guide" | "check">("guide");
@@ -425,8 +430,6 @@ function ChatScreen({ gps, vark, studentId, studentName }: {
   const [photoPreview, setPhotoPreview]     = useState<string | null>(null);
   const [diksha, setDiksha]         = useState<DikshaResource[]>([]);
   const [showDiksha, setShowDiksha] = useState(false);
-  const [hintCount, setHintCount]   = useState(0);
-  const [activityShown, setActivityShown] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef   = useRef<HTMLInputElement>(null);
 
@@ -445,6 +448,7 @@ function ChatScreen({ gps, vark, studentId, studentName }: {
     setLoading(true);
     try {
       const history = messages.map((m) => ({ role: m.role, content: m.content }));
+      const bloomOrder = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"];
       const res = await sendChat({
         studentId,
         studentName,
@@ -452,13 +456,17 @@ function ChatScreen({ gps, vark, studentId, studentName }: {
         conversationHistory: history,
         subconcept_id:   currentSC?.id   ?? "sc_contact_force",
         subconcept_name: currentSC?.name ?? "Contact Force",
-        bloom_level:     "Remember",
+        bloom_level:     bloomLevel,
         vark_style:      varkStyle,
         hint_count:      hintCount,
         activity_shown:  activityShown,
       });
       setHintCount(res.hint_count ?? 0);
       setActivityShown(res.activity_shown ?? false);
+      if (res.bloom_advance) {
+        const idx = bloomOrder.indexOf(bloomLevel);
+        if (idx < bloomOrder.length - 1) setBloomLevel(bloomOrder[idx + 1]);
+      }
       setMessages((m) => [...m, { role: "assistant", content: res.reply, xp: res.xp_earned }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", content: "Oops! Something went wrong. Try again." }]);
@@ -811,6 +819,12 @@ export default function App() {
   const [gps,  setGPS]      = useState<GPSRoute | null>(null);
   const [vark, setVARK]     = useState<VARKProfile | null>(null);
 
+  // ── Persistent chat state (survives tab switches) ────────────────────────
+  const [messages,   setMessages]   = useState<Message[]>([]);
+  const [bloomLevel, setBloomLevel] = useState("Remember");
+  const [hintCount,  setHintCount]  = useState(0);
+  const [activityShown, setActivityShown] = useState(false);
+
   // ── Check existing session on mount ─────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -847,6 +861,7 @@ export default function App() {
 
     if (data) {
       setStudentName(data.name);
+      setMessages([{ role: "assistant", content: `Welcome back, ${data.name}! 👋 I'm Gyaan, your AI tutor. What would you like to learn today?` }]);
       setAuthStep(null);   // authenticated — show main app
       loadAppData(uid);
     } else {
@@ -872,6 +887,10 @@ export default function App() {
     setGPS(null);
     setVARK(null);
     setScreen("home");
+    setMessages([]);
+    setBloomLevel("Remember");
+    setHintCount(0);
+    setActivityShown(false);
   }
 
   // ── Loading splash ───────────────────────────────────────────────────────
@@ -910,6 +929,7 @@ export default function App() {
         userId={studentId}
         onComplete={(name, grade) => {
           setStudentName(name);
+          setMessages([{ role: "assistant", content: `Hi ${name}! 👋 I'm Gyaan, your AI tutor. Ready to start your learning journey?` }]);
           void grade;      // grade stored in DB, used later for chapter filtering
           setAuthStep(null);
           loadAppData(studentId);
@@ -924,7 +944,7 @@ export default function App() {
       <div className="w-full max-w-sm min-h-screen bg-gray-50 relative overflow-hidden">
         {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} onContinue={() => setScreen("chat")} onMap={() => setScreen("map")} />}
         {screen === "map"      && <MapScreen      gps={gps} onStart={() => setScreen("chat")} />}
-        {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} />}
+        {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} messages={messages} setMessages={setMessages} bloomLevel={bloomLevel} setBloomLevel={setBloomLevel} hintCount={hintCount} setHintCount={setHintCount} activityShown={activityShown} setActivityShown={setActivityShown} />}
         {screen === "progress" && <ProgressScreen vark={vark} />}
         {screen === "profile"  && <ProfileScreen  vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />}
         <BottomNav active={screen} setActive={setScreen} />

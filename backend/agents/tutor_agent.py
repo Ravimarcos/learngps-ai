@@ -269,7 +269,7 @@ RULES:
 - One question per response — never ask multiple questions at once
 - After 3 failed attempts → give full explanation, ask them to restate key idea
 - If student asks for a video/sim → share from the resources above
-- If student is off-topic → gently redirect to {chapter}
+- STRICT TOPIC RESTRICTION: You can ONLY teach topics from "{chapter}". If asked about ANY other subject or chapter (Simple Machines, Heat, Light, Sound, etc.) say: "I'm your guide for {chapter} right now! Let's master this first — I don't have study material for other chapters yet. Shall we continue?" Do NOT explain or teach any other topic.
 - Never reveal you are an AI unless directly asked
 """.strip()
 
@@ -305,20 +305,28 @@ async def chat(
         }
     """
 
-    # Fetch relevant questions for context
-    questions = get_questions_for_subconcept(subconcept_id, bloom_level, limit=2)
+    # Fetch relevant questions for context — pass 5 so Claude picks a different one each turn
+    questions = get_questions_for_subconcept(subconcept_id, bloom_level, limit=5)
     questions_ctx = ""
     if questions:
-        q = questions[0]
+        lines = []
+        for q in questions:
+            opts = q.get("options", {})
+            opt_str = "  ".join(f"{k}) {v}" for k, v in opts.items()) if opts else ""
+            lines.append(
+                f"Q: {q['question']}\n"
+                f"{opt_str}\n"
+                f"Answer: {q['answer']} — {q.get('explanation', '')}"
+            )
         questions_ctx = (
-            f"Sample question ({bloom_level} level): {q['question']}\n"
-            f"Options: {q.get('options', {})}\n"
-            f"Answer: {q['answer']} — {q.get('explanation', '')}"
+            f"QUESTION BANK ({bloom_level} level, {len(questions)} questions — pick ONE and vary each turn):\n\n"
+            + "\n\n".join(lines)
         )
     else:
         questions_ctx = (
             f"No pre-loaded questions for {subconcept_name}. "
-            f"Generate one appropriate for {bloom_level} level using the question format rules above."
+            f"Generate a fresh question appropriate for {bloom_level} level using the question format rules above. "
+            f"Use HOTS (Higher Order Thinking) style and NCERT Exemplar style when Bloom >= Apply."
         )
 
     # RAG — retrieve relevant NCERT chunks
@@ -404,4 +412,8 @@ async def chat(
         "model_used":     get_model(TaskType.DIALOGUE),
         "hint_count":     new_hint_count,
         "activity_shown": new_activity_shown,
+        "token_usage": {
+            "input_tokens":  response.usage.input_tokens,
+            "output_tokens": response.usage.output_tokens,
+        },
     }

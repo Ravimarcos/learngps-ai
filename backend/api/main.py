@@ -303,7 +303,8 @@ async def chat(body: dict):
         # ── Langfuse trace ────────────────────────────────────────────────
         if LANGFUSE_ENABLED:
             try:
-                latency_ms = int((time.monotonic() - _t_start) * 1000)
+                latency_ms   = int((time.monotonic() - _t_start) * 1000)
+                token_usage  = result.get("token_usage", {})
                 trace = _lf.trace(
                     name     = "gyaan_chat",
                     user_id  = student_id or "anonymous",
@@ -318,38 +319,68 @@ async def chat(body: dict):
                         "chapter":        chapter_name,
                     },
                 )
+                # Log generation with token usage for cost tracking
+                trace.generation(
+                    name            = "claude_response",
+                    model           = result.get("model_used", "claude-sonnet-4-6"),
+                    input           = student_message,
+                    output          = result.get("reply", "")[:200],
+                    usage           = {
+                        "input":  token_usage.get("input_tokens", 0),
+                        "output": token_usage.get("output_tokens", 0),
+                    },
+                )
                 _lf.flush()   # force-send — don't wait for batch timer
             except Exception as lf_err:
                 print(f"⚠️  Langfuse trace failed: {lf_err}")
 
         # ── Save progress to Supabase (fire-and-forget) ──────────────────
-        if student_id and result.get("xp_earned", 0) > 0:
+        if student_id:
             try:
                 from backend.config.settings import get_settings
                 from supabase import create_client
                 cfg = get_settings()
                 sb  = create_client(cfg.supabase_url, cfg.supabase_service_key)
 
-                xp = result.get("xp_earned", 0)
-                new_bloom = body.get("bloom_level", "Remember")
-                if result.get("bloom_advance"):
-                    bloom_order = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"]
-                    idx = bloom_order.index(new_bloom)
+                xp           = result.get("xp_earned", 0)
+                is_correct   = xp >= 20
+                bloom_order  = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"]
+                current_bloom = body.get("bloom_level", "Remember")
+                new_bloom    = current_bloom
+                if result.get("bloom_advance") and current_bloom in bloom_order:
+                    idx = bloom_order.index(current_bloom)
                     if idx < len(bloom_order) - 1:
                         new_bloom = bloom_order[idx + 1]
 
+                subconcept_id = body.get("subconcept_id", "sc_contact_force")
+
+                # Read current consecutive_correct
+                existing = sb.table("student_progress") \
+                    .select("consecutive_correct") \
+                    .eq("student_id", student_id) \
+                    .eq("subconcept_id", subconcept_id) \
+                    .execute()
+                current_cc = existing.data[0]["consecutive_correct"] if existing.data else 0
+                new_cc = (current_cc + 1) if is_correct else 0
+
+                # Mastery: 2+ consecutive correct at Apply level or above
+                mastered = new_cc >= 2 and new_bloom in ("Apply", "Analyse", "Evaluate", "Create")
+
                 # Upsert per-subconcept progress
                 sb.table("student_progress").upsert({
-                    "student_id":     student_id,
-                    "subconcept_id":  body.get("subconcept_id", "sc_contact_force"),
-                    "subconcept_name": subconcept_name,
-                    "bloom_level":    new_bloom,
-                    "xp_earned":      xp,
-                    "updated_at":     "now()",
+                    "student_id":          student_id,
+                    "subconcept_id":       subconcept_id,
+                    "subconcept_name":     subconcept_name,
+                    "bloom_level":         new_bloom,
+                    "xp_earned":           xp,
+                    "consecutive_correct": new_cc,
+                    "mastered":            mastered,
+                    "updated_at":          "now()",
                 }, on_conflict="student_id,subconcept_id").execute()
 
-                # Increment total_xp in student_profiles
-                sb.rpc("increment_xp", {"uid": student_id, "amount": xp}).execute()
+                # Increment total_xp in student_profiles (only if xp earned)
+                if xp > 0:
+                    sb.rpc("increment_xp", {"uid": student_id, "amount": xp}).execute()
 
             except Exception as prog_err:
                 print(f"⚠️  Progress save failed: {prog_err}")
