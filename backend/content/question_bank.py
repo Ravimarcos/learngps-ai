@@ -53,11 +53,12 @@ def load_question_bank() -> dict:
 def get_questions_for_subconcept(
     subconcept_id: str,
     bloom_level: str = "Remember",
-    limit: int = 3,
+    limit: int = 5,
 ) -> list[dict]:
     """
     Return questions matching a SubConcept and Bloom level.
-    Falls back to lower Bloom levels if no match found.
+    Pulls from all question types (bloom levels + NCERT, case-based, assertion-reason, etc.)
+    so Claude always has variety. Falls back to lower Bloom levels if no match found.
     """
     bank = load_question_bank()
     if not bank:
@@ -70,18 +71,33 @@ def get_questions_for_subconcept(
     bloom_key = BLOOM_TO_KEY.get(bloom_level, "remember")
     questions = bank.get("questions", {})
 
-    # Try target bloom level first, then fall back down
+    # 1. Bloom-level questions (target level first, fall back down)
     bloom_order = ["remember", "understand", "apply", "analyse", "evaluate"]
     target_idx = bloom_order.index(bloom_key) if bloom_key in bloom_order else 0
-
+    bloom_qs: list[dict] = []
     for idx in range(target_idx, -1, -1):
         level_qs = questions.get(bloom_order[idx], [])
-        matched = [q for q in level_qs if q.get("concept_id") == concept_id]
-        if matched:
-            random.shuffle(matched)   # randomise so same question isn't repeated every turn
-            return matched[:limit]
+        bloom_qs += [q for q in level_qs if q.get("concept_id") == concept_id]
+        if bloom_qs:
+            break
 
-    return []
+    # 2. Rich question types — always pull these for variety
+    EXTRA_TYPES = [
+        "ncert_section", "case_based", "assertion_reason",
+        "true_false", "fill_blanks", "short_answer",
+        "long_answer", "numerical",
+    ]
+    extra_qs: list[dict] = []
+    for qtype in EXTRA_TYPES:
+        pool = questions.get(qtype, [])
+        extra_qs += [q for q in pool if q.get("concept_id") == concept_id]
+
+    # Combine: bloom-level first, then extras. Shuffle each group independently.
+    random.shuffle(bloom_qs)
+    random.shuffle(extra_qs)
+    combined = bloom_qs + extra_qs
+
+    return combined[:limit] if combined else []
 
 
 def get_activities_for_subconcept(subconcept_id: str) -> list[dict]:

@@ -259,10 +259,13 @@ MASTERY CRITERIA (all 5 needed before moving to next topic):
 ✅ No unresolved misconception
 ✅ Student can explain it in their own words
 
-AVAILABLE QUESTIONS FOR THIS TOPIC:
+AVAILABLE QUESTIONS FOR THIS TOPIC (use as inspiration — do NOT repeat the same question twice):
 {questions_ctx}
 
+NCERT SOURCE CONTENT (use this to generate FRESH questions when bank is exhausted):
 {rag_ctx}
+
+QUESTION GENERATION RULE: If you have asked a question from the bank before in this session, generate a NEW one using the NCERT content above. Vary the format: mix MCQ, fill-in-the-blank, assertion-reason, case-based, and short-answer across turns.
 
 RULES:
 - Short responses only (3-5 sentences max)
