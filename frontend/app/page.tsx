@@ -1,22 +1,23 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import {
   getGPSRoute, sendChat, sendPhoto, getVARKProfile, getDikshaContent,
-  TEST_STUDENT_ID, TEST_CHAPTER_ID,
+  TEST_CHAPTER_ID,
   type GPSRoute, type VARKProfile, type DikshaResource,
 } from "@/lib/api";
 
 // ── Constants ──────────────────────────────────────────────────────────────
-const STUDENT_NAME = "Dhwani";
 const VARK_LABELS: Record<string, string> = { V: "👁️ Visual", A: "👂 Auditory", R: "📖 Read/Write", K: "🤸 Kinesthetic" };
 const VARK_COLORS: Record<string, string> = { V: "bg-blue-100 text-blue-700", A: "bg-green-100 text-green-700", R: "bg-purple-100 text-purple-700", K: "bg-amber-100 text-amber-700" };
 
 type Screen = "home" | "map" | "chat" | "progress" | "profile";
+type AuthStep = "email" | "otp" | "setup";
 type Message = { role: "user" | "assistant"; content: string; xp?: number };
 
 // ── Markdown renderer ──────────────────────────────────────────────────────
-// Renders **bold** and preserves newlines so MCQ options appear on separate lines
 function renderMessage(content: string) {
   return content.split("\n").map((line, i, arr) => {
     const parts = line.split(/\*\*(.+?)\*\*/g);
@@ -31,14 +32,184 @@ function renderMessage(content: string) {
   });
 }
 
+// ── AUTH: Email screen ────────────────────────────────────────────────────
+function AuthEmailScreen({ onSent }: { onSent: (email: string) => void }) {
+  const [email, setEmail]   = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError]   = useState("");
+
+  async function handleSend() {
+    if (!email.trim() || loading) return;
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: true },
+    });
+    if (error) { setError(error.message); setLoading(false); }
+    else onSent(email.trim());
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-indigo-900 p-6">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-8">
+          <span className="text-5xl mb-3">🧭</span>
+          <h1 className="text-white font-bold text-3xl"><span className="text-indigo-300">Learn</span>GPS</h1>
+          <p className="text-indigo-300 text-sm mt-1">AI-powered learning for Class 8–10</p>
+        </div>
+        <div className="bg-white rounded-2xl p-6 shadow-xl">
+          <h2 className="font-bold text-xl text-gray-900 mb-1">Welcome! 👋</h2>
+          <p className="text-gray-500 text-sm mb-5">Enter your email to get started</p>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            placeholder="your@email.com"
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-400 mb-3"
+          />
+          {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
+          <button
+            onClick={handleSend}
+            disabled={loading || !email.trim()}
+            className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl disabled:opacity-50 active:scale-95 transition-transform"
+          >
+            {loading ? "Sending..." : "Send OTP →"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── AUTH: Magic link sent screen ──────────────────────────────────────────
+function AuthOTPScreen({ email, onBack }: {
+  email: string;
+  onVerified: (user: User) => void;
+  onBack: () => void;
+}) {
+  const [timer, setTimer] = useState(30);
+  const [resending, setResending] = useState(false);
+
+  useEffect(() => {
+    if (timer <= 0) return;
+    const t = setTimeout(() => setTimer((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timer]);
+
+  async function handleResend() {
+    if (timer > 0) return;
+    setResending(true);
+    await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    setTimer(30);
+    setResending(false);
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-indigo-900 p-6">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-8">
+          <span className="text-6xl mb-4">📬</span>
+          <h1 className="text-white font-bold text-2xl text-center">Check your email</h1>
+          <p className="text-indigo-300 text-sm mt-2 text-center">We sent a sign-in link to</p>
+          <p className="text-white font-semibold text-sm mt-1">{email}</p>
+        </div>
+        <div className="bg-white rounded-2xl p-6 shadow-xl text-center">
+          <p className="text-gray-600 text-sm mb-4">
+            Open your email and tap the <strong>"Sign in"</strong> link — you&apos;ll be signed in automatically.
+          </p>
+          <div className="bg-indigo-50 rounded-xl p-3 mb-4 text-xs text-indigo-700">
+            💡 The link opens this app in your browser and logs you in instantly — no code needed!
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <button onClick={onBack} className="text-gray-400">← Back</button>
+            <button
+              onClick={handleResend}
+              disabled={timer > 0 || resending}
+              className={timer > 0 ? "text-gray-300" : "text-indigo-600 font-semibold"}
+            >
+              {resending ? "Sending..." : timer > 0 ? `Resend in ${timer}s` : "Resend link"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── AUTH: Profile setup (first time only) ────────────────────────────────
+function ProfileSetupScreen({ userId, onComplete }: {
+  userId: string;
+  onComplete: (name: string, grade: number) => void;
+}) {
+  const [name, setName]     = useState("");
+  const [grade, setGrade]   = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSave() {
+    if (!name.trim() || !grade || loading) return;
+    setLoading(true);
+    await supabase.from("student_profiles").upsert({
+      student_id: userId,
+      name: name.trim(),
+      grade,
+    });
+    onComplete(name.trim(), grade);
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-indigo-900 p-6">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-8">
+          <span className="text-5xl mb-3">🎒</span>
+          <h1 className="text-white font-bold text-2xl text-center">Almost there!</h1>
+          <p className="text-indigo-300 text-sm mt-1 text-center">Tell us a bit about yourself</p>
+        </div>
+        <div className="bg-white rounded-2xl p-6 shadow-xl">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">What&apos;s your name?</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Dhwani"
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-400 mb-5"
+          />
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Which grade are you in?</label>
+          <div className="flex gap-3 mb-6">
+            {[8, 9, 10].map((g) => (
+              <button
+                key={g}
+                onClick={() => setGrade(g)}
+                className={`flex-1 py-3 rounded-xl font-bold text-lg border-2 transition-colors ${
+                  grade === g ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-gray-200 text-gray-600"
+                }`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={!name.trim() || !grade || loading}
+            className="w-full bg-emerald-500 text-white font-bold py-3 rounded-xl disabled:opacity-50 active:scale-95 transition-transform"
+          >
+            {loading ? "Saving..." : "Let's Go! 🚀"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Bottom Nav ─────────────────────────────────────────────────────────────
 function BottomNav({ active, setActive }: { active: Screen; setActive: (s: Screen) => void }) {
   const tabs: { id: Screen; icon: string; label: string }[] = [
-    { id: "home", icon: "🏠", label: "Home" },
-    { id: "map", icon: "🗺️", label: "Map" },
-    { id: "chat", icon: "🤖", label: "Gyaan" },
+    { id: "home",     icon: "🏠", label: "Home"     },
+    { id: "map",      icon: "🗺️", label: "Map"      },
+    { id: "chat",     icon: "🤖", label: "Gyaan"    },
     { id: "progress", icon: "📊", label: "Progress" },
-    { id: "profile", icon: "👤", label: "Profile" },
+    { id: "profile",  icon: "👤", label: "Profile"  },
   ];
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-100 flex z-50">
@@ -59,44 +230,44 @@ function BottomNav({ active, setActive }: { active: Screen; setActive: (s: Scree
 }
 
 // ── HOME SCREEN ────────────────────────────────────────────────────────────
-function HomeScreen({ gps, onContinue, onMap }: {
+function HomeScreen({ gps, studentName, onContinue, onMap }: {
   gps: GPSRoute | null;
+  studentName: string;
   onContinue: () => void;
   onMap: () => void;
 }) {
-  const current = gps?.current;
+  const current  = gps?.current;
   const progress = gps?.progress_pct ?? 0;
   const completed = gps?.completed?.length ?? 0;
-  const route = gps?.route ?? [];
+  const route    = gps?.route ?? [];
 
   return (
     <div className="flex flex-col gap-3 p-4 pb-24">
-      {/* Top bar */}
       <div className="flex items-center justify-between">
-        <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">D</div>
+        <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+          {studentName[0]?.toUpperCase() ?? "S"}
+        </div>
         <span className="font-bold text-lg"><span className="text-indigo-600">Learn</span>GPS</span>
         <span className="text-xl">🔔</span>
       </div>
 
-      {/* Greeting card */}
       <div className="rounded-2xl bg-gradient-to-br from-indigo-700 to-indigo-900 p-4 text-white">
-        <p className="font-bold text-lg">Good evening, {STUDENT_NAME} 👋</p>
+        <p className="font-bold text-lg">Good day, {studentName} 👋</p>
         <div className="mt-2 bg-white/10 rounded-xl p-3">
           <p className="text-indigo-200 text-xs font-semibold mb-1">Gyaan says:</p>
           <p className="text-white/90 text-sm italic">
             {current
-              ? `You're currently on "${current.name}". Let's keep the momentum going!`
+              ? `You're on "${current.name}". Let's keep the momentum going!`
               : "Ready to start your learning journey today?"}
           </p>
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Day Streak", value: "🔥 7", color: "text-amber-500" },
-          { label: "Total XP", value: "340", color: "text-indigo-600" },
-          { label: "Mastery", value: `${progress}%`, color: "text-gray-700" },
+          { label: "Day Streak", value: "🔥 7",      color: "text-amber-500"  },
+          { label: "Total XP",   value: "340",        color: "text-indigo-600" },
+          { label: "Mastery",    value: `${progress}%`, color: "text-gray-700"  },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
             <p className={`font-bold text-lg ${s.color}`}>{s.value}</p>
@@ -105,7 +276,6 @@ function HomeScreen({ gps, onContinue, onMap }: {
         ))}
       </div>
 
-      {/* Continue button */}
       <button
         onClick={onContinue}
         className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 flex items-center gap-3 shadow-md active:scale-95 transition-transform"
@@ -118,12 +288,11 @@ function HomeScreen({ gps, onContinue, onMap }: {
         <span className="text-white text-xl">→</span>
       </button>
 
-      {/* Quick actions */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { icon: "⚡", title: "Quick Quiz", sub: "5 Qs · 5 min" },
-          { icon: "📖", title: "Explain This", sub: "Ask Gyaan" },
-          { icon: "📝", title: "Test Prep", sub: "12 days away" },
+          { icon: "⚡", title: "Quick Quiz",   sub: "5 Qs · 5 min"   },
+          { icon: "📖", title: "Explain This", sub: "Ask Gyaan"       },
+          { icon: "📝", title: "Test Prep",    sub: "12 days away"    },
         ].map((a) => (
           <button key={a.title} onClick={onContinue} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center active:bg-gray-50">
             <p className="text-xl">{a.icon}</p>
@@ -133,15 +302,12 @@ function HomeScreen({ gps, onContinue, onMap }: {
         ))}
       </div>
 
-      {/* GPS Position card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <div className="flex items-center justify-between mb-1">
           <p className="font-semibold text-gray-800">📍 Your GPS Position</p>
           <button onClick={onMap} className="text-indigo-600 text-xs font-semibold">View Map →</button>
         </div>
         <p className="text-gray-400 text-xs mb-3">Force & Pressure · Grade 8 Science</p>
-
-        {/* Node strip */}
         <div className="flex items-center gap-1">
           {[...Array(Math.min(completed, 2))].map((_, i) => (
             <div key={`c${i}`} className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">✓</div>
@@ -154,7 +320,6 @@ function HomeScreen({ gps, onContinue, onMap }: {
           ))}
           <div className="flex-1 h-0.5 bg-gray-100 mx-1" />
         </div>
-
         <p className="text-xs mt-2 text-gray-600">
           <span className="text-indigo-600 font-semibold">{route.length} SubConcept{route.length !== 1 ? "s" : ""} left</span> to complete Force & Pressure
         </p>
@@ -165,12 +330,11 @@ function HomeScreen({ gps, onContinue, onMap }: {
 
 // ── MAP SCREEN ─────────────────────────────────────────────────────────────
 function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void }) {
-  const current = gps?.current;
+  const current   = gps?.current;
   const completed = gps?.completed ?? [];
-  const route = gps?.route ?? [];
-  const progress = gps?.progress_pct ?? 0;
-
-  const allNodes = [...completed, ...(current ? [current] : []), ...route];
+  const route     = gps?.route ?? [];
+  const progress  = gps?.progress_pct ?? 0;
+  const allNodes  = [...completed, ...(current ? [current] : []), ...route];
 
   return (
     <div className="flex flex-col gap-3 p-4 pb-28">
@@ -179,7 +343,6 @@ function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void
         <p className="text-gray-400 text-sm">Grade 8 · Navigate your path</p>
       </div>
 
-      {/* Progress banner */}
       <div className="rounded-xl bg-gradient-to-r from-indigo-700 to-indigo-900 p-4 text-white">
         <p className="text-sm font-semibold text-indigo-200 mb-2">⚙️ Skill: Understand Forces</p>
         <div className="w-full bg-white/20 rounded-full h-2 mb-1">
@@ -188,7 +351,6 @@ function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void
         <p className="text-xs text-white/70">{progress}% complete · {route.length} SubConcept{route.length !== 1 ? "s" : ""} remaining</p>
       </div>
 
-      {/* Nodes */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-3 h-3 rounded-full bg-indigo-600" />
@@ -196,58 +358,45 @@ function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void
         </div>
         <div className="flex flex-wrap gap-2">
           {allNodes.map((node) => {
-            const isDone = completed.some((c) => c.id === node.id);
+            const isDone    = completed.some((c) => c.id === node.id);
             const isCurrent = current?.id === node.id;
             return (
-              <span
-                key={node.id}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
-                  isDone
-                    ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-                    : isCurrent
-                    ? "bg-indigo-600 border-indigo-600 text-white gps-current"
-                    : "bg-gray-50 border-gray-200 text-gray-400"
-                }`}
-              >
-                {isDone ? "✓ " : isCurrent ? "📍 " : "🔒 "}
-                {node.name}
+              <span key={node.id} className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
+                isDone    ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                : isCurrent ? "bg-indigo-600 border-indigo-600 text-white gps-current"
+                : "bg-gray-50 border-gray-200 text-gray-400"
+              }`}>
+                {isDone ? "✓ " : isCurrent ? "📍 " : "🔒 "}{node.name}
               </span>
             );
           })}
         </div>
-
-        {/* GPS route */}
         {current && route.length > 0 && (
           <div className="mt-3 bg-emerald-50 rounded-xl p-3 text-xs text-emerald-800">
             📍 {current.name} → {route.slice(0, 2).map((r) => r.name).join(" → ")}
-            {route.length > 2 && " → ..."} →{" "}
-            <span className="text-indigo-600 font-bold">Skill Complete!</span>
+            {route.length > 2 && " → ..."} → <span className="text-indigo-600 font-bold">Skill Complete!</span>
           </div>
         )}
       </div>
 
-      {/* Other skills */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <p className="font-semibold text-gray-800 mb-2">Other Skills</p>
         {[
           { name: "Friction", status: "mastered", pct: 92 },
-          { name: "Sound", status: "locked", pct: 0 },
+          { name: "Sound",    status: "locked",   pct: 0  },
         ].map((s) => (
           <div key={s.name} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
             <div className="flex items-center gap-2">
               <span>{s.status === "mastered" ? "✅" : "🔒"}</span>
               <span className="text-sm font-medium text-gray-700">{s.name}</span>
             </div>
-            {s.status === "mastered" ? (
-              <span className="text-xs text-emerald-600 font-semibold">Mastered · {s.pct}% 🏆</span>
-            ) : (
-              <span className="text-xs text-gray-400">Complete Forces first</span>
-            )}
+            {s.status === "mastered"
+              ? <span className="text-xs text-emerald-600 font-semibold">Mastered · {s.pct}% 🏆</span>
+              : <span className="text-xs text-gray-400">Complete Forces first</span>}
           </div>
         ))}
       </div>
 
-      {/* Start button */}
       <button
         onClick={onStart}
         className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform"
@@ -259,25 +408,27 @@ function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void
 }
 
 // ── CHAT SCREEN ────────────────────────────────────────────────────────────
-function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | null }) {
+function ChatScreen({ gps, vark, studentId, studentName }: {
+  gps: GPSRoute | null;
+  vark: VARKProfile | null;
+  studentId: string;
+  studentName: string;
+}) {
   const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: `Welcome back, ${STUDENT_NAME}! 👋 I'm Gyaan, your AI tutor. What would you like to learn today?`,
-    },
+    { role: "assistant", content: `Welcome back, ${studentName}! 👋 I'm Gyaan, your AI tutor. What would you like to learn today?` },
   ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [photoMode, setPhotoMode] = useState<"guide" | "check">("guide");
+  const [input, setInput]           = useState("");
+  const [loading, setLoading]       = useState(false);
+  const [photoMode, setPhotoMode]   = useState<"guide" | "check">("guide");
   const [showPhotoPanel, setShowPhotoPanel] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [diksha, setDiksha] = useState<DikshaResource[]>([]);
+  const [selectedFile, setSelectedFile]     = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview]     = useState<string | null>(null);
+  const [diksha, setDiksha]         = useState<DikshaResource[]>([]);
   const [showDiksha, setShowDiksha] = useState(false);
-  const [hintCount, setHintCount] = useState(0);
+  const [hintCount, setHintCount]   = useState(0);
   const [activityShown, setActivityShown] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const fileRef   = useRef<HTMLInputElement>(null);
 
   const currentSC = gps?.current;
   const varkStyle = vark?.dominant ?? "K";
@@ -292,20 +443,19 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
     setInput("");
     setMessages((m) => [...m, { role: "user", content: userMsg }]);
     setLoading(true);
-
     try {
       const history = messages.map((m) => ({ role: m.role, content: m.content }));
       const res = await sendChat({
-        studentId: TEST_STUDENT_ID,
-        studentName: STUDENT_NAME,
+        studentId,
+        studentName,
         message: userMsg,
         conversationHistory: history,
-        subconcept_id: currentSC?.id ?? "sc_contact_force",
+        subconcept_id:   currentSC?.id   ?? "sc_contact_force",
         subconcept_name: currentSC?.name ?? "Contact Force",
-        bloom_level: "Remember",
-        vark_style: varkStyle,
-        hint_count: hintCount,
-        activity_shown: activityShown,
+        bloom_level:     "Remember",
+        vark_style:      varkStyle,
+        hint_count:      hintCount,
+        activity_shown:  activityShown,
       });
       setHintCount(res.hint_count ?? 0);
       setActivityShown(res.activity_shown ?? false);
@@ -329,9 +479,8 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
     setShowPhotoPanel(false);
     setMessages((m) => [...m, { role: "user", content: `📸 [Photo uploaded — ${photoMode} mode]` }]);
     setLoading(true);
-
     try {
-      const res = await sendPhoto(selectedFile, STUDENT_NAME, photoMode, "", varkStyle);
+      const res = await sendPhoto(selectedFile, studentName, photoMode, "", varkStyle);
       setMessages((m) => [...m, { role: "assistant", content: res.reply, xp: res.xp_earned }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", content: "Couldn't read the photo. Try again with a clearer image." }]);
@@ -348,14 +497,11 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
     try {
       const res = await getDikshaContent(currentSC.id);
       setDiksha(res.resources);
-    } catch {
-      setDiksha([]);
-    }
+    } catch { setDiksha([]); }
   }
 
   return (
     <div className="flex flex-col h-screen max-h-screen">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 p-3 flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-xl">🤖</div>
         <div className="flex-1">
@@ -370,7 +516,6 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
         </div>
       </div>
 
-      {/* DIKSHA panel */}
       {showDiksha && (
         <div className="bg-orange-50 border-b border-orange-100 p-3">
           <div className="flex justify-between mb-2">
@@ -394,7 +539,6 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
         </div>
       )}
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-4 bg-indigo-50/30 flex flex-col gap-3">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} fade-up`}>
@@ -430,7 +574,6 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
         <div ref={bottomRef} />
       </div>
 
-      {/* Photo panel */}
       {showPhotoPanel && (
         <div className="bg-white border-t border-gray-100 p-3">
           <div className="flex justify-between mb-2">
@@ -465,7 +608,6 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
         </div>
       )}
 
-      {/* Input */}
       <div className="bg-white border-t border-gray-100 p-3 pb-20 flex items-center gap-2">
         <button onClick={() => setShowPhotoPanel(!showPhotoPanel)}
           className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-lg shrink-0 active:bg-indigo-100">
@@ -489,11 +631,10 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
 
 // ── PROGRESS SCREEN ────────────────────────────────────────────────────────
 function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
-  const dominant = vark?.dominant ?? "K";
+  const dominant   = vark?.dominant ?? "K";
   const confidence = vark ? Math.round(Math.max(vark.v_score, vark.a_score, vark.r_score, vark.k_score) * 100) : 25;
-  const sessions = vark?.session_count ?? 0;
-
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
+  const sessions   = vark?.session_count ?? 0;
+  const days       = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
 
   return (
     <div className="flex flex-col gap-3 p-4 pb-24">
@@ -502,7 +643,6 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
         <p className="text-gray-400 text-sm">Grade 8 · Science</p>
       </div>
 
-      {/* Mastery ring */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
         <div className="relative w-20 h-20 shrink-0">
           <svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90">
@@ -525,7 +665,6 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
         </div>
       </div>
 
-      {/* Streak */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <div className="flex justify-between mb-3">
           <p className="font-semibold text-gray-800">🔥 7-Day Streak</p>
@@ -533,23 +672,20 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
         </div>
         <div className="flex gap-1">
           {days.map((d, i) => (
-            <div key={d} className={`flex-1 flex flex-col items-center gap-1`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                i === 6 ? "bg-amber-100 ring-2 ring-amber-400" : "bg-amber-50"
-              }`}>🔥</div>
+            <div key={d} className="flex-1 flex flex-col items-center gap-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${i === 6 ? "bg-amber-100 ring-2 ring-amber-400" : "bg-amber-50"}`}>🔥</div>
               <span className="text-xs text-gray-400">{d.slice(0, 1)}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Chapter bars */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <p className="font-semibold text-gray-800 mb-3">Chapter Mastery</p>
         {[
-          { name: "Force & Pressure", pct: 65, color: "bg-indigo-500" },
-          { name: "Friction", pct: 92, color: "bg-emerald-500" },
-          { name: "Linear Equations", pct: 78, color: "bg-indigo-400" },
+          { name: "Force & Pressure",  pct: 65, color: "bg-indigo-500"  },
+          { name: "Friction",          pct: 92, color: "bg-emerald-500" },
+          { name: "Linear Equations",  pct: 78, color: "bg-indigo-400"  },
         ].map((c) => (
           <div key={c.name} className="mb-3 last:mb-0">
             <div className="flex justify-between mb-1">
@@ -563,7 +699,6 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
         ))}
       </div>
 
-      {/* VARK card — live data */}
       <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-4">
         <p className="font-semibold text-indigo-800 mb-1">Your Learning Style</p>
         <div className="flex items-center gap-3 mt-2">
@@ -576,7 +711,6 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
             </div>
           </div>
         </div>
-        {/* All 4 scores */}
         <div className="grid grid-cols-4 gap-2 mt-3">
           {(["V", "A", "R", "K"] as const).map((s) => {
             const score = vark ? Math.round((vark[`${s.toLowerCase() as "v" | "a" | "r" | "k"}_score`] ?? 0.25) * 100) : 25;
@@ -590,15 +724,14 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
         </div>
       </div>
 
-      {/* Badges */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <p className="font-semibold text-gray-800 mb-3">Recent Badges 🏆</p>
         <div className="grid grid-cols-4 gap-2">
           {[
-            { icon: "🔥", label: "7-Day Streak", unlocked: true },
-            { icon: "⭐", label: "First Skill!", unlocked: true },
-            { icon: "🎯", label: "Apply Level", unlocked: true },
-            { icon: "🧭", label: "Career Path", unlocked: false },
+            { icon: "🔥", label: "7-Day Streak", unlocked: true  },
+            { icon: "⭐", label: "First Skill!", unlocked: true  },
+            { icon: "🎯", label: "Apply Level",  unlocked: true  },
+            { icon: "🧭", label: "Career Path",  unlocked: false },
           ].map((b) => (
             <div key={b.label} className={`flex flex-col items-center gap-1 p-2 rounded-xl ${b.unlocked ? "" : "opacity-40"}`}>
               <span className="text-2xl">{b.icon}</span>
@@ -612,12 +745,19 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
 }
 
 // ── PROFILE SCREEN ─────────────────────────────────────────────────────────
-function ProfileScreen({ vark }: { vark: VARKProfile | null }) {
+function ProfileScreen({ vark, studentName, studentId, onLogout }: {
+  vark: VARKProfile | null;
+  studentName: string;
+  studentId: string;
+  onLogout: () => void;
+}) {
   return (
     <div className="flex flex-col gap-3 p-4 pb-24">
       <div className="flex flex-col items-center py-4">
-        <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-bold mb-3">D</div>
-        <h2 className="font-bold text-xl text-gray-900">{STUDENT_NAME}</h2>
+        <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-bold mb-3">
+          {studentName[0]?.toUpperCase() ?? "S"}
+        </div>
+        <h2 className="font-bold text-xl text-gray-900">{studentName}</h2>
         <p className="text-gray-400 text-sm">Grade 8 · LearnGPS Student</p>
         <div className="flex gap-3 mt-3">
           <span className="bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1 rounded-full">340 XP</span>
@@ -629,10 +769,10 @@ function ProfileScreen({ vark }: { vark: VARKProfile | null }) {
       </div>
 
       {[
-        { icon: "📚", label: "Chapters", value: "3 in progress" },
-        { icon: "🎯", label: "Bloom Level", value: "Apply" },
-        { icon: "📅", label: "Next Test", value: "Oct 15 · 12 days" },
-        { icon: "🏆", label: "Badges Earned", value: "3 / 8" },
+        { icon: "📚", label: "Chapters",   value: "3 in progress" },
+        { icon: "🎯", label: "Bloom Level", value: "Apply"        },
+        { icon: "📅", label: "Next Test",   value: "Oct 15 · 12 days" },
+        { icon: "🏆", label: "Badges Earned", value: "3 / 8"     },
       ].map((item) => (
         <div key={item.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -645,31 +785,97 @@ function ProfileScreen({ vark }: { vark: VARKProfile | null }) {
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
         <p className="text-sm font-semibold text-gray-700 mb-1">Student ID</p>
-        <p className="text-xs text-gray-400 font-mono">{TEST_STUDENT_ID}</p>
+        <p className="text-xs text-gray-400 font-mono">{studentId}</p>
       </div>
+
+      <button
+        onClick={onLogout}
+        className="w-full border border-red-200 text-red-500 font-semibold py-3 rounded-xl text-sm active:bg-red-50"
+      >
+        Sign Out
+      </button>
     </div>
   );
 }
 
 // ── ROOT APP ───────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState<Screen>("home");
-  const [gps, setGPS] = useState<GPSRoute | null>(null);
-  const [vark, setVARK] = useState<VARKProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authStep, setAuthStep]         = useState<AuthStep | null>(null);
+  const [authChecked, setAuthChecked]   = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
 
+  const [studentId,   setStudentId]   = useState("");
+  const [studentName, setStudentName] = useState("Student");
+
+  const [screen, setScreen] = useState<Screen>("home");
+  const [gps,  setGPS]      = useState<GPSRoute | null>(null);
+  const [vark, setVARK]     = useState<VARKProfile | null>(null);
+
+  // ── Check existing session on mount ─────────────────────────────────────
   useEffect(() => {
-    Promise.all([
-      getGPSRoute(TEST_STUDENT_ID, TEST_CHAPTER_ID).catch(() => null),
-      getVARKProfile(TEST_STUDENT_ID).catch(() => null),
-    ]).then(([g, v]) => {
-      setGPS(g);
-      setVARK(v);
-      setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        handleUserReady(session.user.id);
+      } else {
+        setAuthStep("email");
+        setAuthChecked(true);
+      }
     });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        // Magic link clicked — user is now signed in
+        handleUserReady(session.user.id);
+      } else if (!session) {
+        setAuthStep("email");
+        setStudentId("");
+        setStudentName("Student");
+      }
+    });
+    return () => listener.subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading) {
+  async function handleUserReady(uid: string) {
+    setStudentId(uid);
+    // Load profile
+    const { data } = await supabase
+      .from("student_profiles")
+      .select("name, grade")
+      .eq("student_id", uid)
+      .single();
+
+    if (data) {
+      setStudentName(data.name);
+      setAuthStep(null);   // authenticated — show main app
+      loadAppData(uid);
+    } else {
+      setAuthStep("setup"); // first time — need name/grade
+    }
+    setAuthChecked(true);
+  }
+
+  async function loadAppData(uid: string) {
+    const [g, v] = await Promise.all([
+      getGPSRoute(uid, TEST_CHAPTER_ID).catch(() => null),
+      getVARKProfile(uid).catch(() => null),
+    ]);
+    setGPS(g);
+    setVARK(v);
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setAuthStep("email");
+    setStudentId("");
+    setStudentName("Student");
+    setGPS(null);
+    setVARK(null);
+    setScreen("home");
+  }
+
+  // ── Loading splash ───────────────────────────────────────────────────────
+  if (!authChecked) {
     return (
       <div className="flex items-center justify-center h-screen bg-indigo-900">
         <div className="flex flex-col items-center gap-3">
@@ -681,14 +887,46 @@ export default function App() {
     );
   }
 
+  // ── Auth screens ─────────────────────────────────────────────────────────
+  if (authStep === "email") {
+    return (
+      <AuthEmailScreen
+        onSent={(email) => { setPendingEmail(email); setAuthStep("otp"); }}
+      />
+    );
+  }
+  if (authStep === "otp") {
+    return (
+      <AuthOTPScreen
+        email={pendingEmail}
+        onVerified={(user) => handleUserReady(user.id)}
+        onBack={() => setAuthStep("email")}
+      />
+    );
+  }
+  if (authStep === "setup") {
+    return (
+      <ProfileSetupScreen
+        userId={studentId}
+        onComplete={(name, grade) => {
+          setStudentName(name);
+          void grade;      // grade stored in DB, used later for chapter filtering
+          setAuthStep(null);
+          loadAppData(studentId);
+        }}
+      />
+    );
+  }
+
+  // ── Main app ─────────────────────────────────────────────────────────────
   return (
     <div className="flex justify-center bg-gray-100 min-h-screen">
       <div className="w-full max-w-sm min-h-screen bg-gray-50 relative overflow-hidden">
-        {screen === "home" && <HomeScreen gps={gps} onContinue={() => setScreen("chat")} onMap={() => setScreen("map")} />}
-        {screen === "map" && <MapScreen gps={gps} onStart={() => setScreen("chat")} />}
-        {screen === "chat" && <ChatScreen gps={gps} vark={vark} />}
+        {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} onContinue={() => setScreen("chat")} onMap={() => setScreen("map")} />}
+        {screen === "map"      && <MapScreen      gps={gps} onStart={() => setScreen("chat")} />}
+        {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} />}
         {screen === "progress" && <ProgressScreen vark={vark} />}
-        {screen === "profile" && <ProfileScreen vark={vark} />}
+        {screen === "profile"  && <ProfileScreen  vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />}
         <BottomNav active={screen} setActive={setScreen} />
       </div>
     </div>
