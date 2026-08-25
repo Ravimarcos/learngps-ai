@@ -315,14 +315,27 @@ async def chat(
     if questions:
         lines = []
         for q in questions:
+            # Handle different question formats (regular, case_based, ncert_section)
+            question_text = q.get("question") or q.get("title") or ""
+            if not question_text:
+                continue
+            # For case_based, append context and sub-questions
+            if q.get("context"):
+                question_text = f"{question_text}\nContext: {q['context']}"
+            if q.get("questions"):  # case_based sub-questions
+                sub_qs = q["questions"]
+                question_text += "\n" + "\n".join(
+                    f"  ({i+1}) {sq.get('q', '')} — Ans: {sq.get('answer', '')}"
+                    for i, sq in enumerate(sub_qs[:2])  # show first 2 sub-questions
+                )
             opts = q.get("options", {})
             opt_str = "  ".join(f"{k}) {v}" for k, v in opts.items()) if opts else ""
             exemplar_tag = " ⭐ NCERT Exemplar" if q.get("ncert_exemplar") else ""
             lines.append(
                 f"[{q.get('id', '')}]{exemplar_tag}\n"
-                f"Q: {q['question']}\n"
+                f"Q: {question_text}\n"
                 + (f"Options: {opt_str}\n" if opt_str else "")
-                + f"Answer: {q['answer']} — {q.get('explanation', q.get('solution', ''))}"
+                + f"Answer: {q.get('answer', q.get('answers', ''))} — {q.get('explanation', q.get('solution', ''))}"
             )
         questions_ctx = (
             f"BLOOM LEVEL STYLE GUIDE ({bloom_level}):\n{style_guide}\n\n"
