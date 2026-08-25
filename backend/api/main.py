@@ -322,6 +322,38 @@ async def chat(body: dict):
             except Exception as lf_err:
                 print(f"⚠️  Langfuse trace failed: {lf_err}")
 
+        # ── Save progress to Supabase (fire-and-forget) ──────────────────
+        if student_id and result.get("xp_earned", 0) > 0:
+            try:
+                from backend.config.settings import get_settings
+                from supabase import create_client
+                cfg = get_settings()
+                sb  = create_client(cfg.supabase_url, cfg.supabase_service_key)
+
+                xp = result.get("xp_earned", 0)
+                new_bloom = body.get("bloom_level", "Remember")
+                if result.get("bloom_advance"):
+                    bloom_order = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"]
+                    idx = bloom_order.index(new_bloom)
+                    if idx < len(bloom_order) - 1:
+                        new_bloom = bloom_order[idx + 1]
+
+                # Upsert per-subconcept progress
+                sb.table("student_progress").upsert({
+                    "student_id":     student_id,
+                    "subconcept_id":  body.get("subconcept_id", "sc_contact_force"),
+                    "subconcept_name": subconcept_name,
+                    "bloom_level":    new_bloom,
+                    "xp_earned":      xp,
+                    "updated_at":     "now()",
+                }, on_conflict="student_id,subconcept_id").execute()
+
+                # Increment total_xp in student_profiles
+                sb.rpc("increment_xp", {"uid": student_id, "amount": xp}).execute()
+
+            except Exception as prog_err:
+                print(f"⚠️  Progress save failed: {prog_err}")
+
         return result
 
     except Exception as exc:
