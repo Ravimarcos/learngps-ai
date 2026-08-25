@@ -553,7 +553,7 @@ function ChatScreen({ gps, vark, studentId, studentName }: {
               }`}>
                 {renderMessage(msg.content)}
               </div>
-              {msg.xp && msg.xp > 0 && (
+              {(msg.xp ?? 0) > 0 && (
                 <div className="mt-1 text-xs text-amber-500 font-semibold px-1">+{msg.xp} XP 🔥</div>
               )}
             </div>
