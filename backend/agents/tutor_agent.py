@@ -16,7 +16,7 @@ import anthropic
 import asyncio
 from backend.config.models import get_model, TaskType
 from backend.config.settings import get_settings
-from backend.content.question_bank import get_questions_for_subconcept
+from backend.content.question_bank import get_questions_for_subconcept, get_bloom_style_guide
 from backend.rag.retriever import retrieve, format_for_prompt
 
 settings = get_settings()
@@ -310,26 +310,31 @@ async def chat(
 
     # Fetch relevant questions for context — pass 5 so Claude picks a different one each turn
     questions = get_questions_for_subconcept(subconcept_id, bloom_level, limit=5)
-    questions_ctx = ""
+    style_guide = get_bloom_style_guide(bloom_level)
+
     if questions:
         lines = []
         for q in questions:
             opts = q.get("options", {})
             opt_str = "  ".join(f"{k}) {v}" for k, v in opts.items()) if opts else ""
+            exemplar_tag = " ⭐ NCERT Exemplar" if q.get("ncert_exemplar") else ""
             lines.append(
+                f"[{q.get('id', '')}]{exemplar_tag}\n"
                 f"Q: {q['question']}\n"
-                f"{opt_str}\n"
-                f"Answer: {q['answer']} — {q.get('explanation', '')}"
+                + (f"Options: {opt_str}\n" if opt_str else "")
+                + f"Answer: {q['answer']} — {q.get('explanation', q.get('solution', ''))}"
             )
         questions_ctx = (
-            f"QUESTION BANK ({bloom_level} level, {len(questions)} questions — pick ONE and vary each turn):\n\n"
+            f"BLOOM LEVEL STYLE GUIDE ({bloom_level}):\n{style_guide}\n\n"
+            f"SAMPLE QUESTIONS FROM QUESTION BANK (use as style reference — do NOT repeat verbatim; generate fresh variations):\n\n"
             + "\n\n".join(lines)
         )
     else:
         questions_ctx = (
-            f"No pre-loaded questions for {subconcept_name}. "
-            f"Generate a fresh question appropriate for {bloom_level} level using the question format rules above. "
-            f"Use HOTS (Higher Order Thinking) style and NCERT Exemplar style when Bloom >= Apply."
+            f"BLOOM LEVEL STYLE GUIDE ({bloom_level}):\n{style_guide}\n\n"
+            f"No pre-loaded questions found for {subconcept_name} at this level. "
+            f"Generate a FRESH question following the style guide above using the NCERT content provided. "
+            f"Use Indian context examples (cricket, chapati, auto-rickshaw, etc.)."
         )
 
     # RAG — retrieve relevant NCERT chunks
