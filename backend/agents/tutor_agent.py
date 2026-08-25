@@ -368,17 +368,22 @@ async def chat(
     reply = response.content[0].text
 
     # XP detection — keyword match in Gyaan's reply
+    # Only run XP detection after the student has sent at least one message
+    # (conversation_history has prior turns), to avoid false positives on Gyaan's opener
     xp_earned = 0
     bloom_advance = False
     lower_reply = reply.lower()
+
+    student_turns = [m for m in conversation_history if m.get("role") == "user"]
+    has_prior_student_turn = len(student_turns) > 0
 
     correct_signals = ["correct", "exactly", "perfect", "well done", "that's it",
                        "you got it", "spot on", "nailed it", "brilliant"]
     good_signals    = ["good", "right", "yes", "great", "nice", "good thinking",
                        "good attempt", "almost"]
 
-    is_correct = any(w in lower_reply for w in correct_signals)
-    is_good    = any(w in lower_reply for w in good_signals)
+    is_correct = has_prior_student_turn and any(w in lower_reply for w in correct_signals)
+    is_good    = has_prior_student_turn and any(w in lower_reply for w in good_signals)
 
     if is_correct:
         xp_earned = 20

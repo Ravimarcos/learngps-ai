@@ -15,6 +15,22 @@ const VARK_COLORS: Record<string, string> = { V: "bg-blue-100 text-blue-700", A:
 type Screen = "home" | "map" | "chat" | "progress" | "profile";
 type Message = { role: "user" | "assistant"; content: string; xp?: number };
 
+// ── Markdown renderer ──────────────────────────────────────────────────────
+// Renders **bold** and preserves newlines so MCQ options appear on separate lines
+function renderMessage(content: string) {
+  return content.split("\n").map((line, i, arr) => {
+    const parts = line.split(/\*\*(.+?)\*\*/g);
+    const rendered = parts.map((part, j) =>
+      j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+    );
+    return (
+      <span key={i} className={i < arr.length - 1 ? "block" : ""}>
+        {rendered}
+      </span>
+    );
+  });
+}
+
 // ── Bottom Nav ─────────────────────────────────────────────────────────────
 function BottomNav({ active, setActive }: { active: Screen; setActive: (s: Screen) => void }) {
   const tabs: { id: Screen; icon: string; label: string }[] = [
@@ -258,6 +274,8 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [diksha, setDiksha] = useState<DikshaResource[]>([]);
   const [showDiksha, setShowDiksha] = useState(false);
+  const [hintCount, setHintCount] = useState(0);
+  const [activityShown, setActivityShown] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -286,7 +304,11 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
         subconcept_name: currentSC?.name ?? "Contact Force",
         bloom_level: "Remember",
         vark_style: varkStyle,
+        hint_count: hintCount,
+        activity_shown: activityShown,
       });
+      setHintCount(res.hint_count ?? 0);
+      setActivityShown(res.activity_shown ?? false);
       setMessages((m) => [...m, { role: "assistant", content: res.reply, xp: res.xp_earned }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", content: "Oops! Something went wrong. Try again." }]);
@@ -385,7 +407,7 @@ function ChatScreen({ gps, vark }: { gps: GPSRoute | null; vark: VARKProfile | n
                   ? "bg-indigo-600 text-white rounded-br-sm"
                   : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-sm"
               }`}>
-                {msg.content}
+                {renderMessage(msg.content)}
               </div>
               {msg.xp && msg.xp > 0 && (
                 <div className="mt-1 text-xs text-amber-500 font-semibold px-1">+{msg.xp} XP 🔥</div>
