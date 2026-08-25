@@ -230,9 +230,11 @@ function BottomNav({ active, setActive }: { active: Screen; setActive: (s: Scree
 }
 
 // ── HOME SCREEN ────────────────────────────────────────────────────────────
-function HomeScreen({ gps, studentName, onContinue, onMap }: {
+function HomeScreen({ gps, studentName, totalXp, streakDays, onContinue, onMap }: {
   gps: GPSRoute | null;
   studentName: string;
+  totalXp: number;
+  streakDays: number;
   onContinue: () => void;
   onMap: () => void;
 }) {
@@ -265,9 +267,9 @@ function HomeScreen({ gps, studentName, onContinue, onMap }: {
 
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Day Streak", value: "🔥 7",      color: "text-amber-500"  },
-          { label: "Total XP",   value: "340",        color: "text-indigo-600" },
-          { label: "Mastery",    value: `${progress}%`, color: "text-gray-700"  },
+          { label: "Day Streak", value: `🔥 ${streakDays}`, color: "text-amber-500"  },
+          { label: "Total XP",   value: `${totalXp}`,       color: "text-indigo-600" },
+          { label: "Mastery",    value: `${progress}%`,     color: "text-gray-700"  },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
             <p className={`font-bold text-lg ${s.color}`}>{s.value}</p>
@@ -814,6 +816,8 @@ export default function App() {
 
   const [studentId,   setStudentId]   = useState("");
   const [studentName, setStudentName] = useState("Student");
+  const [totalXp,     setTotalXp]     = useState(0);
+  const [streakDays,  setStreakDays]  = useState(0);
 
   const [screen, setScreen] = useState<Screen>("home");
   const [gps,  setGPS]      = useState<GPSRoute | null>(null);
@@ -855,12 +859,14 @@ export default function App() {
     // Load profile
     const { data } = await supabase
       .from("student_profiles")
-      .select("name, grade")
+      .select("name, grade, total_xp, streak_days")
       .eq("student_id", uid)
       .single();
 
     if (data) {
       setStudentName(data.name);
+      setTotalXp(data.total_xp ?? 0);
+      setStreakDays(data.streak_days ?? 0);
       setMessages([{ role: "assistant", content: `Welcome back, ${data.name}! 👋 I'm Gyaan, your AI tutor. What would you like to learn today?` }]);
       setAuthStep(null);   // authenticated — show main app
       loadAppData(uid);
@@ -891,6 +897,8 @@ export default function App() {
     setBloomLevel("Remember");
     setHintCount(0);
     setActivityShown(false);
+    setTotalXp(0);
+    setStreakDays(0);
   }
 
   // ── Loading splash ───────────────────────────────────────────────────────
@@ -942,7 +950,7 @@ export default function App() {
   return (
     <div className="flex justify-center bg-gray-100 min-h-screen">
       <div className="w-full max-w-sm min-h-screen bg-gray-50 relative overflow-hidden">
-        {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} onContinue={() => setScreen("chat")} onMap={() => setScreen("map")} />}
+        {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays} onContinue={() => setScreen("chat")} onMap={() => setScreen("map")} />}
         {screen === "map"      && <MapScreen      gps={gps} onStart={() => setScreen("chat")} />}
         {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} messages={messages} setMessages={setMessages} bloomLevel={bloomLevel} setBloomLevel={setBloomLevel} hintCount={hintCount} setHintCount={setHintCount} activityShown={activityShown} setActivityShown={setActivityShown} />}
         {screen === "progress" && <ProgressScreen vark={vark} />}
