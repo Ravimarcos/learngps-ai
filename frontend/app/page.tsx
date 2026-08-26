@@ -441,9 +441,25 @@ function hexToRgba(hex: string, alpha: number): string {
 
 // Fallback auto-layout for chapters that don't yet have ov_x / ov_y in Neo4j.
 // Arranges chapters on an ellipse centred in the 760×590 viewBox.
-function autoOvPos(idx: number, total: number): { x: number; y: number } {
-  const angle = (idx / Math.max(total, 1)) * 2 * Math.PI - Math.PI / 2;
-  return { x: 550 + 420 * Math.cos(angle), y: 330 + 260 * Math.sin(angle) };
+/**
+ * Graph-based chapter positions.
+ * Science → 3-col grid on the left; Maths → 4-col grid on the right.
+ * Ordered by ncert_chapter_num within each subject.
+ * Chapters with stored ov_x/ov_y use those instead (manual override).
+ */
+function getChapterGridPos(ch: Chapter, visible: Chapter[]): { x: number; y: number } {
+  if (ch.ov_x > 0) return { x: ch.ov_x, y: ch.ov_y };
+  const peers = [...visible]
+    .filter(c => c.subject === ch.subject)
+    .sort((a, b) => (a.ncert_chapter_num ?? 99) - (b.ncert_chapter_num ?? 99));
+  const idx  = Math.max(0, peers.findIndex(c => c.id === ch.id));
+  const isSci = ch.subject === "Science";
+  const COLS = isSci ? 3 : 4;
+  const CW   = 285;   // cell width
+  const CH   = 195;   // cell height
+  const OX   = isSci ? 145 : 1100;
+  const OY   = 90;
+  return { x: OX + (idx % COLS) * CW, y: OY + Math.floor(idx / COLS) * CH };
 }
 
 // ── MAP SCREEN — fully data-driven GPS-style 2D knowledge graph ──────────────
@@ -740,7 +756,7 @@ function MapScreen({ studentId, onStart }: {
             </div>
           ) : (
             <svg
-              viewBox="0 0 1100 660"
+              viewBox="0 0 2000 1160"
               width="100%" height="100%"
               preserveAspectRatio="xMidYMid meet"
               style={{ display: "block", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, transformOrigin: "center center", willChange: "transform" }}
@@ -752,31 +768,85 @@ function MapScreen({ studentId, onStart }: {
                     <stop offset="100%" stopColor={ch.color} stopOpacity="0.05" />
                   </radialGradient>
                 ))}
+                <marker id="arr-ch" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                  <path d="M0,0 L0,8 L8,4 z" fill="rgba(255,255,255,0.25)" />
+                </marker>
               </defs>
 
-              {/* Cross-chapter edges (CHAPTER_LINK from Neo4j) */}
+              {/* Section labels + divider (only when both subjects visible) */}
+              {subjects.length > 1 && (<>
+                <text x="572" y="44" textAnchor="middle"
+                  fill="rgba(255,255,255,0.12)" fontSize="14" fontWeight="900" letterSpacing="5">SCIENCE</text>
+                <text x="1527" y="44" textAnchor="middle"
+                  fill="rgba(255,255,255,0.12)" fontSize="14" fontWeight="900" letterSpacing="5">MATHEMATICS</text>
+                <line x1="920" y1="0" x2="920" y2="1160"
+                  stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="6 6" />
+              </>)}
+
+              {/* Cross-chapter prerequisite edges (CHAPTER_LINK from Neo4j) */}
               {chapterEdges.map((oe, i) => {
                 const fm = visibleChapters.find(c => c.id === oe.from_id);
                 const tm = visibleChapters.find(c => c.id === oe.to_id);
                 if (!fm || !tm) return null;
-                const fpx = fm.ov_x > 0 ? fm.ov_x : autoOvPos(visibleChapters.indexOf(fm), visibleChapters.length).x;
-                const fpy = fm.ov_y > 0 ? fm.ov_y : autoOvPos(visibleChapters.indexOf(fm), visibleChapters.length).y;
-                const tpx = tm.ov_x > 0 ? tm.ov_x : autoOvPos(visibleChapters.indexOf(tm), visibleChapters.length).x;
-                const tpy = tm.ov_y > 0 ? tm.ov_y : autoOvPos(visibleChapters.indexOf(tm), visibleChapters.length).y;
-                const mx  = (fpx + tpx) / 2, my = (fpy + tpy) / 2;
+                const fp  = getChapterGridPos(fm, visibleChapters);
+                const tp  = getChapterGridPos(tm, visibleChapters);
+                const fpx = fp.x, fpy = fp.y, tpx = tp.x, tpy = tp.y;
+                const dx  = tpx - fpx, dy = tpy - fpy;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                const R    = fm.subconcept_count > 0 ? (fm.ov_radius || 46) : 26;
+                const TR   = tm.subconcept_count > 0 ? (tm.ov_radius || 46) : 26;
+                // Trim line to orb edges
+                const sx = fpx + (dx / dist) * R;
+                const sy = fpy + (dy / dist) * R;
+                const ex = tpx - (dx / dist) * (TR + 9);
+                const ey = tpy - (dy / dist) * (TR + 9);
+                const mx = (fpx + tpx) / 2, my = (fpy + tpy) / 2;
                 return (
                   <g key={i}>
-                    <line x1={fpx} y1={fpy} x2={tpx} y2={tpy}
-                      stroke="rgba(255,255,255,0.09)" strokeWidth="1.5" strokeDasharray="5 5" />
-                    <text x={mx} y={my - 6} textAnchor="middle" fill="rgba(255,255,255,0.28)" fontSize="9" fontWeight="600">{oe.label}</text>
+                    <line x1={sx} y1={sy} x2={ex} y2={ey}
+                      stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" strokeDasharray="6 4"
+                      markerEnd="url(#arr-ch)" />
+                    {oe.label && (
+                      <text x={mx} y={my - 7} textAnchor="middle"
+                        fill="rgba(255,255,255,0.3)" fontSize="9" fontWeight="600">{oe.label}</text>
+                    )}
                   </g>
                 );
               })}
 
               {/* Chapter orbs */}
               {visibleChapters.map((ch, idx) => {
-                const px      = ch.ov_x > 0 ? ch.ov_x : autoOvPos(idx, visibleChapters.length).x;
-                const py      = ch.ov_y > 0 ? ch.ov_y : autoOvPos(idx, visibleChapters.length).y;
+                const pos     = getChapterGridPos(ch, visibleChapters);
+                const px      = pos.x;
+                const py      = pos.y;
+                const hasContent = ch.subconcept_count > 0;
+
+                /* Coming-soon: render as a small compact pill — no ring, no halo, no ETA */
+                if (!hasContent) {
+                  const cr = 26;
+                  const nameWords = ch.name.split(" ").slice(0, 3); // max 3 words
+                  const nLines  = nameWords.length;
+                  const nStartY = py - ((nLines - 1) * 10) / 2;
+                  return (
+                    <g key={ch.id} onClick={() => drillInto(ch.id)} style={{ cursor: "pointer" }} opacity="0.55">
+                      <circle cx={px} cy={py} r={cr}
+                        fill={hexToRgba(ch.color, 0.06)}
+                        stroke={ch.color} strokeWidth="1"
+                        strokeDasharray="4 3" />
+                      {nameWords.map((word, wi) => (
+                        <text key={wi} x={px} y={nStartY + wi * 11}
+                          textAnchor="middle" dominantBaseline="middle"
+                          fill="rgba(255,255,255,0.5)" fontSize="8" fontWeight="700">
+                          {word}
+                        </text>
+                      ))}
+                      <text x={px} y={py + cr + 10} textAnchor="middle"
+                        fill={ch.color} fontSize="7.5" fontWeight="600" opacity="0.7">{ch.subject}</text>
+                    </g>
+                  );
+                }
+
+                /* Active chapter: full orb with ring, halo, mastery % */
                 const r       = ch.ov_radius > 0 ? ch.ov_radius : 46;
                 const ringR   = r + 8;
                 const circumf = 2 * Math.PI * ringR;
@@ -786,10 +856,10 @@ function MapScreen({ studentId, onStart }: {
                 return (
                   <g key={ch.id} onClick={() => drillInto(ch.id)} style={{ cursor: "pointer" }}>
                     {/* Glow halo */}
-                    <circle cx={px} cy={py} r={r + 20} fill={`url(#ogr-${ch.id})`} />
-                    {/* Ring background */}
+                    <circle cx={px} cy={py} r={r + 22} fill={`url(#ogr-${ch.id})`} />
+                    {/* Ring track */}
                     <circle cx={px} cy={py} r={ringR}
-                      fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3"
+                      fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3"
                       transform={`rotate(-90 ${px} ${py})`} />
                     {/* Ring progress */}
                     {pct > 0 && (
@@ -799,35 +869,26 @@ function MapScreen({ studentId, onStart }: {
                         strokeLinecap="round"
                         transform={`rotate(-90 ${px} ${py})`} />
                     )}
-                    {/* Orb body — dimmed for coming-soon chapters */}
+                    {/* Orb body */}
                     <circle cx={px} cy={py} r={r}
-                      fill={hexToRgba(ch.color, ch.subconcept_count > 0 ? 0.18 : 0.07)}
-                      stroke={ch.color} strokeWidth="1.5"
-                      opacity={ch.subconcept_count > 0 ? 1 : 0.5}
-                      strokeDasharray={ch.subconcept_count === 0 ? "5 3" : undefined} />
+                      fill={hexToRgba(ch.color, 0.18)}
+                      stroke={ch.color} strokeWidth="2" />
                     {/* Chapter name */}
                     {words.map((word, wi) => (
                       <text key={wi} x={px} y={startY + wi * 14}
                         textAnchor="middle" dominantBaseline="middle"
-                        fill={ch.subconcept_count > 0 ? "#fff" : "rgba(255,255,255,0.45)"}
-                        fontSize={r > 48 ? "12" : "11"} fontWeight="800"
-                        opacity={ch.subconcept_count > 0 ? 1 : 0.6}>
+                        fill="#fff" fontSize={r > 48 ? "12" : "11"} fontWeight="800">
                         {word}
                       </text>
                     ))}
-                    {/* "Soon" badge for chapters without content */}
-                    {ch.subconcept_count === 0 && (
-                      <text x={px} y={py + r - 10} textAnchor="middle" dominantBaseline="middle"
-                        fill="rgba(255,255,255,0.35)" fontSize="8" fontWeight="600">Coming Soon</text>
-                    )}
-                    {/* Subject + ETA */}
-                    <text x={px} y={py + ringR + 12} textAnchor="middle"
-                      fill={ch.color} fontSize="10" fontWeight="700" opacity={ch.subconcept_count > 0 ? 1 : 0.5}>{ch.subject}</text>
-                    <text x={px} y={py + ringR + 24} textAnchor="middle"
-                      fill="rgba(255,255,255,0.28)" fontSize="9" opacity={ch.subconcept_count > 0 ? 1 : 0.5}>{ch.eta}</text>
-                    {/* Mastery % */}
+                    {/* Subject + ETA below orb */}
+                    <text x={px} y={py + ringR + 13} textAnchor="middle"
+                      fill={ch.color} fontSize="10" fontWeight="700">{ch.subject}</text>
+                    <text x={px} y={py + ringR + 25} textAnchor="middle"
+                      fill="rgba(255,255,255,0.3)" fontSize="9">{ch.eta}</text>
+                    {/* Mastery % inside orb */}
                     {pct > 0 && (
-                      <text x={px} y={py + r - 8} textAnchor="middle" dominantBaseline="middle"
+                      <text x={px} y={py + r - 9} textAnchor="middle" dominantBaseline="middle"
                         fill={ch.color} fontSize="15" fontWeight="900">{pct}%</text>
                     )}
                   </g>
