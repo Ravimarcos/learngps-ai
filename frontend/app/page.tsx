@@ -4,9 +4,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import {
-  getGPSRoute, sendChat, sendPhoto, getVARKProfile, getDikshaContent,
+  getGPSRoute, getChapters, sendChat, sendPhoto, getVARKProfile, getDikshaContent,
   TEST_CHAPTER_ID,
-  type GPSRoute, type VARKProfile, type DikshaResource,
+  type Chapter, type ChapterEdge, type ChaptersResponse,
+  type GPSRoute, type GPSNode, type GPSEdge, type VARKProfile, type DikshaResource,
 } from "@/lib/api";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -335,227 +336,545 @@ function HomeScreen({ gps, studentName, totalXp, streakDays, onContinue, onMap }
   );
 }
 
-// ── MAP SCREEN — Knowledge constellation (dark space theme) ────────────────
-function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void }) {
-  const [detailNode, setDetailNode] = useState<{ id: string; name: string; state: string } | null>(null);
+// ── Hex color → rgba fill helper ─────────────────────────────────────────────
+// Converts "#rrggbb" to "rgba(r,g,b,alpha)" for SVG fills.
+// Handles only 6-digit hex (all colors from Neo4j are in that format).
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
-  const current   = gps?.current;
-  const completed = gps?.completed ?? [];
-  const route     = gps?.route ?? [];
-  const locked    = gps?.locked ?? [];
-  const progress  = gps?.progress_pct ?? 0;
+// Fallback auto-layout for chapters that don't yet have ov_x / ov_y in Neo4j.
+// Arranges chapters on an ellipse centred in the 760×590 viewBox.
+function autoOvPos(idx: number, total: number): { x: number; y: number } {
+  const angle = (idx / Math.max(total, 1)) * 2 * Math.PI - Math.PI / 2;
+  return { x: 380 + 270 * Math.cos(angle), y: 295 + 210 * Math.sin(angle) };
+}
 
-  const allNodes = [
-    ...completed.map((n) => ({ ...n, state: "done"    as const })),
-    ...(current ? [{ ...current, state: "current" as const }] : []),
-    ...route.map((n)    => ({ ...n, state: "ready"   as const })),
-    ...locked.map((n)   => ({ ...n, state: "ghost"   as const })),
-    { id: "__finish__", name: "Chapter Complete!", state: "finish" as const },
-  ];
+// ── MAP SCREEN — fully data-driven GPS-style 2D knowledge graph ──────────────
+// Two zoom levels:
+//   overview  → all chapters from /chapters API as glowing orbs + cross-chapter edges
+//   chapter   → subconcept 2D graph from /gps API (positions + edges from Neo4j)
+//
+// Adding a new chapter = seed Neo4j (color, ov_x, ov_y, ov_radius, eta properties).
+// Zero frontend changes required. Grade/subject filters work automatically.
+function MapScreen({ studentId, onStart }: {
+  studentId: string;
+  onStart: (gps: GPSRoute) => void;
+}) {
+  // ── overview data (from /chapters API) ────────────────────────────────────
+  const [chapters,      setChapters]      = useState<Chapter[]>([]);
+  const [chapterEdges,  setChapterEdges]  = useState<ChapterEdge[]>([]);
+  const [loadingChaps,  setLoadingChaps]  = useState(true);
 
-  // Per-state visual config — dark constellation palette
-  const CFG = {
-    done:    { color: "#00e676", glow: "0 0 14px rgba(0,230,118,0.7),0 0 28px rgba(0,230,118,0.25)", size: 44, border: "2px solid #00e676",                   bg: "rgba(0,40,20,0.85)",  icon: "✓",   badge: "✓ MASTERED",       badgeCol: "#00e676", lineCol: "rgba(0,230,118,0.45)", dim: 1    },
-    current: { color: "#2979ff", glow: "0 0 20px rgba(41,121,255,0.85),0 0 40px rgba(41,121,255,0.4)", size: 52, border: "2px solid #2979ff",                  bg: "rgba(10,30,80,0.9)",  icon: "📍",  badge: "📍 YOU ARE HERE",  badgeCol: "#82b1ff", lineCol: "rgba(255,255,255,0.12)", dim: 1  },
-    ready:   { color: "#ffd740", glow: "0 0 10px rgba(255,215,64,0.5),0 0 22px rgba(255,215,64,0.2)",  size: 38, border: "2px solid #ffd740",                   bg: "rgba(40,30,0,0.75)",  icon: "○",   badge: "READY ▶",          badgeCol: "#ffd740", lineCol: "rgba(255,255,255,0.1)",  dim: 1    },
-    ghost:   { color: "rgba(255,255,255,0.28)", glow: "none",                                           size: 34, border: "2px dashed rgba(255,255,255,0.22)", bg: "rgba(20,25,45,0.55)", icon: "···", badge: "👁 VISIBLE AHEAD",  badgeCol: "rgba(255,255,255,0.3)", lineCol: "rgba(255,255,255,0.07)", dim: 0.3 },
-    finish:  { color: "#ff9100", glow: "0 0 12px rgba(255,145,0,0.5),0 0 24px rgba(255,145,0,0.2)",    size: 42, border: "2px solid #ff9100",                   bg: "rgba(40,20,0,0.85)",  icon: "🏆",  badge: "🏁 DESTINATION",   badgeCol: "#ff9100", lineCol: "rgba(255,255,255,0.05)", dim: 1   },
+  // ── per-chapter GPS cache (fetched on drill-in) ───────────────────────────
+  const [gpsCache,   setGpsCache]   = useState<Record<string, GPSRoute>>({});
+  const [loadingGps, setLoadingGps] = useState(false);
+
+  // ── navigation ─────────────────────────────────────────────────────────────
+  const [view,       setView]       = useState<"overview" | string>("overview");
+  const [detailNode, setDetailNode] = useState<{ id: string; name: string; state: string; bloomTarget?: string; varkHint?: string } | null>(null);
+  const [routeMode,  setRouteMode]  = useState<"focused" | "deep" | "revision">("focused");
+  const [gradeFilter, setGradeFilter] = useState<number | null>(null);
+
+  // ── pan / zoom ──────────────────────────────────────────────────────────────
+  const [pan,   setPan]   = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+  const touchRef = useRef<{ x: number; y: number; dist?: number } | null>(null);
+
+  // ── Fetch all chapters on mount ────────────────────────────────────────────
+  useEffect(() => {
+    setLoadingChaps(true);
+    getChapters({ studentId })
+      .then(res => { setChapters(res.chapters); setChapterEdges(res.edges); })
+      .catch(console.error)
+      .finally(() => setLoadingChaps(false));
+  }, [studentId]);
+
+  // ── Drill-in: fetch GPS for selected chapter (cached after first fetch) ────
+  async function drillInto(chapId: string) {
+    setView(chapId);
+    setPan({ x: 0, y: 0 });
+    setScale(1);
+    setDetailNode(null);
+    if (!gpsCache[chapId]) {
+      setLoadingGps(true);
+      try {
+        const g = await getGPSRoute(studentId, chapId);
+        setGpsCache(prev => ({ ...prev, [chapId]: g }));
+      } catch { /* handled by "coming soon" fallback */ }
+      finally { setLoadingGps(false); }
+    }
+  }
+
+  function goOverview() {
+    setView("overview"); setPan({ x: 0, y: 0 }); setScale(1); setDetailNode(null);
+  }
+
+  // ── Derived state ──────────────────────────────────────────────────────────
+  const isOverview   = view === "overview";
+  const activeGps    = isOverview ? null : (gpsCache[view] ?? null);
+  const activeChap   = isOverview ? null : chapters.find(c => c.id === view) ?? null;
+  const chColor      = activeChap?.color ?? "#2979ff";
+
+  const current    = activeGps?.current;
+  const completed  = activeGps?.completed ?? [];
+  const route      = activeGps?.route     ?? [];
+  const locked     = activeGps?.locked    ?? [];
+  const nodes      = activeGps?.nodes     ?? [];
+  const edges      = activeGps?.edges     ?? [];
+  const progress   = activeGps?.progress_pct ?? (activeChap?.mastery_pct ?? 0);
+  const etaLabel   = current ? `~${Math.max(1, Math.round((route.length + locked.length + 1) * 0.75))}h` : "✓ Done";
+
+  const completedIds = new Set(completed.map(n => n.id));
+  const routeIds     = new Set(route.map(n => n.id));
+  const posMap: Record<string, { x: number; y: number }> = {};
+  for (const n of nodes) posMap[n.id] = { x: n.x, y: n.y };
+
+  function getState(id: string): "done" | "current" | "ready" | "ghost" {
+    if (completedIds.has(id))         return "done";
+    if (current && current.id === id) return "current";
+    if (routeIds.has(id))             return "ready";
+    return "ghost";
+  }
+
+  // Grade filter — derived from chapters data
+  const grades          = [...new Set(chapters.map(c => c.grade))].sort((a, b) => a - b);
+  const visibleChapters = gradeFilter ? chapters.filter(c => c.grade === gradeFilter) : chapters;
+
+  // ── Touch pan / pinch-zoom ─────────────────────────────────────────────────
+  function onTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 1) {
+      touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      touchRef.current = { x: 0, y: 0, dist: Math.sqrt(dx * dx + dy * dy) };
+    }
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    e.preventDefault();
+    if (!touchRef.current) return;
+    if (e.touches.length === 1) {
+      const dx = e.touches[0].clientX - touchRef.current.x;
+      const dy = e.touches[0].clientY - touchRef.current.y;
+      setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+      touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 2 && touchRef.current.dist) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const nd = Math.sqrt(dx * dx + dy * dy);
+      setScale(s => Math.min(4, Math.max(0.3, s * nd / touchRef.current!.dist!)));
+      touchRef.current = { ...touchRef.current, dist: nd };
+    }
+  }
+  function onTouchEnd() { touchRef.current = null; }
+
+  // ── Node visual config ─────────────────────────────────────────────────────
+  const R = 22;
+  const SCFG = {
+    done:    { fill: "rgba(0,40,20,0.92)",  stroke: "#00e676",               text: "#00e676",               icon: "✓", op: 1,    sw: 1.5 },
+    current: { fill: "rgba(8,24,80,0.95)",  stroke: "#2979ff",               text: "#82b1ff",               icon: "●", op: 1,    sw: 2.5 },
+    ready:   { fill: "rgba(40,30,0,0.88)",  stroke: "#ffd740",               text: "#ffd740",               icon: "○", op: 1,    sw: 1.5 },
+    ghost:   { fill: "rgba(18,22,44,0.55)", stroke: "rgba(255,255,255,0.2)", text: "rgba(255,255,255,0.35)", icon: "·", op: 0.38, sw: 1.5 },
   };
 
+  function edgeColor(fromId: string) {
+    const s = getState(fromId);
+    if (s === "done")    return "rgba(0,230,118,0.55)";
+    if (s === "current") return "rgba(41,121,255,0.55)";
+    return "rgba(255,255,255,0.1)";
+  }
+  function isRecommendedEdge(fromId: string, toId: string) {
+    return routeMode === "focused" && current?.id === fromId && route.length > 0 && route[0].id === toId;
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div style={{ background: "#03061a", minHeight: "100vh", paddingBottom: "100px", position: "relative" }}>
-      {/* CSS animations */}
+    <div style={{ background: "#03061a", height: "100vh", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
       <style>{`
-        @keyframes lgps-pulse { 0%{transform:scale(1);opacity:0.6} 70%{transform:scale(2);opacity:0} 100%{transform:scale(2);opacity:0} }
-        .lgps-pulse { animation: lgps-pulse 2s ease-out infinite; position:absolute; inset:0; border-radius:50%; border:2px solid rgba(41,121,255,0.5); pointer-events:none; }
-        @keyframes lgps-stars { 0%,100%{opacity:0.4} 50%{opacity:1} }
+        @keyframes gps-pulse { 0%{r:22px;opacity:.5} 70%{r:46px;opacity:0} 100%{r:46px;opacity:0} }
+        .gps-pulse-ring { animation: gps-pulse 2s ease-out infinite; }
+        @keyframes dash-f { to { stroke-dashoffset: 0; } }
+        .flow-edge { animation: dash-f 1.2s linear infinite; }
+        @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.75} }
       `}</style>
 
       {/* Starfield */}
-      {[...Array(28)].map((_, i) => (
+      {[...Array(20)].map((_, i) => (
         <div key={i} style={{
-          position: "absolute", borderRadius: "50%",
+          position: "absolute", borderRadius: "50%", pointerEvents: "none",
           width: i % 3 === 0 ? "2px" : "1px", height: i % 3 === 0 ? "2px" : "1px",
-          background: "rgba(255,255,255,0.6)",
-          top: `${(i * 37 + 11) % 95}%`, left: `${(i * 53 + 7) % 95}%`,
-          animation: `lgps-stars ${2 + (i % 3)}s ease-in-out ${(i * 0.3) % 2}s infinite`,
-          pointerEvents: "none",
+          background: "rgba(255,255,255,0.5)",
+          top: `${(i * 37 + 11) % 94}%`, left: `${(i * 53 + 7) % 94}%`,
+          animation: `twinkle ${2 + (i % 3)}s ease-in-out ${(i * 0.3) % 2}s infinite`,
         }} />
       ))}
 
-      {/* ── Dark header with mastery ring ── */}
-      <div style={{ background: "rgba(4,8,32,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "14px 16px 12px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <div>
-            <p style={{ fontSize: "9px", color: "rgba(165,180,252,0.7)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", marginBottom: "2px" }}>Mastery Map · Learning GPS</p>
-            <p style={{ fontSize: "15px", fontWeight: 800, color: "#fff" }}>Force &amp; Pressure · Grade 8</p>
-          </div>
-          {/* Mastery ring */}
-          <div style={{ position: "relative", width: "50px", height: "50px", flexShrink: 0 }}>
-            <svg width="50" height="50" viewBox="0 0 50 50">
-              <circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5" transform="rotate(-90 25 25)" />
-              <circle cx="25" cy="25" r="20" fill="none" stroke="#00e676" strokeWidth="5"
-                strokeDasharray="125.66" strokeDashoffset={125.66 * (1 - progress / 100)}
-                strokeLinecap="round" transform="rotate(-90 25 25)" />
-            </svg>
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#00e676" }}>{progress}%</div>
+      {/* ── TOP BAR ─────────────────────────────────────────────────────────── */}
+      <div style={{ background: "rgba(4,8,32,0.97)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "10px 16px 8px", flexShrink: 0, zIndex: 10 }}>
+        {/* Row 1: breadcrumb + mastery ring + reset */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+          <span style={{ fontSize: "15px", flexShrink: 0 }}>🧭</span>
+          <button onClick={goOverview}
+            style={{ fontSize: "12px", fontWeight: isOverview ? 800 : 600, color: isOverview ? "#fff" : "rgba(165,180,252,0.7)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
+            All Chapters
+          </button>
+          {!isOverview && <>
+            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "12px" }}>›</span>
+            <span style={{ fontSize: "12px", fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+              {activeChap?.name ?? view}
+            </span>
+          </>}
+          <div style={{ marginLeft: isOverview ? "auto" : undefined, display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            <button onClick={() => { setPan({ x: 0, y: 0 }); setScale(1); }}
+              style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "3px 7px", cursor: "pointer", fontFamily: "inherit" }}>
+              ⊹ Reset
+            </button>
+            {/* Mastery ring */}
+            <div style={{ position: "relative", width: "36px", height: "36px", flexShrink: 0 }}>
+              <svg width="36" height="36" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="13" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3.5" transform="rotate(-90 18 18)" />
+                <circle cx="18" cy="18" r="13" fill="none" stroke={chColor} strokeWidth="3.5"
+                  strokeDasharray="81.68" strokeDashoffset={81.68 * (1 - progress / 100)}
+                  strokeLinecap="round" transform="rotate(-90 18 18)" />
+              </svg>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: 800, color: chColor }}>{progress}%</div>
+            </div>
           </div>
         </div>
-        {/* Stats row */}
-        <div style={{ display: "flex", gap: "10px", fontSize: "10.5px" }}>
-          <span style={{ color: "#00e676", fontWeight: 700 }}>✓ {completed.length} mastered</span>
-          <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
-          <span style={{ color: "#2979ff", fontWeight: 700 }}>▶ {current ? 1 : 0} active</span>
-          <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
-          <span style={{ color: "#ffd740" }}>{route.length} ready</span>
-          <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
-          <span style={{ color: "rgba(255,255,255,0.25)" }}>{locked.length} ahead</span>
+
+        {/* Row 2: route mode tabs + grade filter (overview) / ETA (detail) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap" }}>
+          {(["focused", "deep", "revision"] as const).map(m => (
+            <button key={m} onClick={() => setRouteMode(m)} style={{
+              padding: "3px 8px", borderRadius: "10px", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+              background: routeMode === m ? (m === "focused" ? "#4338ca" : m === "deep" ? "#00695c" : "#c62828") : "rgba(255,255,255,0.05)",
+              color: routeMode === m ? "#fff" : "rgba(255,255,255,0.4)",
+              border: routeMode === m ? "none" : "1px solid rgba(255,255,255,0.08)",
+            }}>
+              {m === "focused" ? "🎯 Focused" : m === "deep" ? "🔬 Deep" : "🔄 Revision"}
+            </button>
+          ))}
+
+          {/* Grade filter tabs — only in overview, only when multiple grades exist */}
+          {isOverview && grades.length > 1 && (
+            <div style={{ marginLeft: "auto", display: "flex", gap: "4px" }}>
+              <button onClick={() => setGradeFilter(null)}
+                style={{ padding: "2px 7px", borderRadius: "8px", fontSize: "9px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                  background: gradeFilter === null ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.05)",
+                  color: gradeFilter === null ? "#fff" : "rgba(255,255,255,0.4)",
+                  border: "1px solid rgba(255,255,255,0.1)" }}>
+                All
+              </button>
+              {grades.map(g => (
+                <button key={g} onClick={() => setGradeFilter(g)}
+                  style={{ padding: "2px 7px", borderRadius: "8px", fontSize: "9px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                    background: gradeFilter === g ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.05)",
+                    color: gradeFilter === g ? "#fff" : "rgba(255,255,255,0.4)",
+                    border: "1px solid rgba(255,255,255,0.1)" }}>
+                  Gr {g}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!isOverview && (
+            <span style={{ marginLeft: "auto", fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>ETA {etaLabel}</span>
+          )}
         </div>
       </div>
 
-      {/* ── Constellation node chain ── */}
-      <div style={{ padding: "16px 18px" }}>
-        {allNodes.map((node, i) => {
-          const cfg = CFG[node.state];
-          const isLast    = i === allNodes.length - 1;
-          const isCurrent = node.state === "current";
-          const isGhost   = node.state === "ghost";
-
-          return (
-            <div key={node.id} style={{ display: "flex", gap: "12px", opacity: isGhost ? 0.35 : 1 }}>
-
-              {/* Node + connector column */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "56px", flexShrink: 0 }}>
-                {/* Node circle */}
-                <div style={{ position: "relative", flexShrink: 0 }}>
-                  {/* Pulse ring for current */}
-                  {isCurrent && <div className="lgps-pulse" />}
-                  <button
-                    onClick={() => {
-                      if (node.state === "finish") return;
-                      if (isCurrent) { onStart(); return; }
-                      setDetailNode(node);
-                    }}
-                    style={{
-                      width: cfg.size, height: cfg.size, borderRadius: "50%",
-                      border: cfg.border, background: cfg.bg,
-                      boxShadow: cfg.glow,
-                      color: cfg.color, fontSize: isCurrent ? "20px" : node.state === "finish" ? "18px" : "13px",
-                      fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: node.state === "finish" ? "default" : "pointer",
-                      outline: "none", position: "relative", zIndex: 1,
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    {cfg.icon}
-                  </button>
-                </div>
-                {/* Connector line */}
-                {!isLast && (
-                  <div style={{
-                    width: "2px", flex: 1, minHeight: "28px",
-                    background: cfg.lineCol,
-                    borderRadius: "1px",
-                    ...(isCurrent ? { backgroundImage: "repeating-linear-gradient(to bottom, rgba(41,121,255,0.7) 0px, rgba(41,121,255,0.7) 6px, transparent 6px, transparent 12px)" } : {}),
-                  }} />
-                )}
-              </div>
-
-              {/* Label card */}
-              <div
-                onClick={() => {
-                  if (node.state === "finish") return;
-                  if (isCurrent) { onStart(); return; }
-                  setDetailNode(node);
-                }}
-                style={{
-                  flex: 1, padding: "8px 12px", borderRadius: "12px",
-                  marginBottom: "4px", marginTop: "4px",
-                  background: isCurrent
-                    ? "rgba(41,121,255,0.1)"
-                    : node.state === "done"
-                    ? "rgba(0,230,118,0.05)"
-                    : "rgba(255,255,255,0.02)",
-                  border: isCurrent
-                    ? "1px solid rgba(41,121,255,0.3)"
-                    : node.state === "done"
-                    ? "1px solid rgba(0,230,118,0.15)"
-                    : "1px solid rgba(255,255,255,0.05)",
-                  cursor: node.state === "finish" ? "default" : "pointer",
-                }}
-              >
-                <p style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.8px", textTransform: "uppercase", color: cfg.badgeCol, marginBottom: "3px" }}>
-                  {cfg.badge}
-                </p>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{node.name}</p>
-                <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", marginTop: "3px" }}>
-                  {node.state === "done"    && "Tap to review & reinforce"}
-                  {node.state === "current" && "Tap to continue learning →"}
-                  {node.state === "ready"   && "Prerequisites done — tap to begin"}
-                  {node.state === "ghost"   && "Gyaan bridges the gap if you jump here"}
-                  {node.state === "finish"  && "Master all topics to unlock"}
-                </p>
+      {/* ── CANVAS ──────────────────────────────────────────────────────────── */}
+      <div
+        style={{ flex: 1, overflow: "hidden", touchAction: "none", position: "relative" }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* ── OVERVIEW ── */}
+        {isOverview && (
+          loadingChaps ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "rgba(255,255,255,0.4)" }}>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontSize: "28px", marginBottom: "10px" }}>🧭</p>
+                <p style={{ fontSize: "13px" }}>Loading chapters…</p>
               </div>
             </div>
-          );
-        })}
+          ) : (
+            <svg
+              viewBox="0 0 760 590"
+              width="100%" height="100%"
+              preserveAspectRatio="xMidYMid meet"
+              style={{ display: "block", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, transformOrigin: "center center", willChange: "transform" }}
+            >
+              <defs>
+                {visibleChapters.map(ch => (
+                  <radialGradient key={ch.id} id={`ogr-${ch.id}`} cx="50%" cy="40%" r="60%">
+                    <stop offset="0%"   stopColor={ch.color} stopOpacity="0.4" />
+                    <stop offset="100%" stopColor={ch.color} stopOpacity="0.05" />
+                  </radialGradient>
+                ))}
+              </defs>
+
+              {/* Cross-chapter edges (CHAPTER_LINK from Neo4j) */}
+              {chapterEdges.map((oe, i) => {
+                const fm = visibleChapters.find(c => c.id === oe.from_id);
+                const tm = visibleChapters.find(c => c.id === oe.to_id);
+                if (!fm || !tm) return null;
+                const fpx = fm.ov_x > 0 ? fm.ov_x : autoOvPos(visibleChapters.indexOf(fm), visibleChapters.length).x;
+                const fpy = fm.ov_y > 0 ? fm.ov_y : autoOvPos(visibleChapters.indexOf(fm), visibleChapters.length).y;
+                const tpx = tm.ov_x > 0 ? tm.ov_x : autoOvPos(visibleChapters.indexOf(tm), visibleChapters.length).x;
+                const tpy = tm.ov_y > 0 ? tm.ov_y : autoOvPos(visibleChapters.indexOf(tm), visibleChapters.length).y;
+                const mx  = (fpx + tpx) / 2, my = (fpy + tpy) / 2;
+                return (
+                  <g key={i}>
+                    <line x1={fpx} y1={fpy} x2={tpx} y2={tpy}
+                      stroke="rgba(255,255,255,0.09)" strokeWidth="1.5" strokeDasharray="5 5" />
+                    <text x={mx} y={my - 6} textAnchor="middle" fill="rgba(255,255,255,0.28)" fontSize="9" fontWeight="600">{oe.label}</text>
+                  </g>
+                );
+              })}
+
+              {/* Chapter orbs */}
+              {visibleChapters.map((ch, idx) => {
+                const px      = ch.ov_x > 0 ? ch.ov_x : autoOvPos(idx, visibleChapters.length).x;
+                const py      = ch.ov_y > 0 ? ch.ov_y : autoOvPos(idx, visibleChapters.length).y;
+                const r       = ch.ov_radius > 0 ? ch.ov_radius : 46;
+                const ringR   = r + 8;
+                const circumf = 2 * Math.PI * ringR;
+                const pct     = ch.mastery_pct;
+                const words   = ch.name.split(" ");
+                const startY  = py - ((words.length - 1) * 13) / 2;
+                return (
+                  <g key={ch.id} onClick={() => drillInto(ch.id)} style={{ cursor: "pointer" }}>
+                    {/* Glow halo */}
+                    <circle cx={px} cy={py} r={r + 20} fill={`url(#ogr-${ch.id})`} />
+                    {/* Ring background */}
+                    <circle cx={px} cy={py} r={ringR}
+                      fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3"
+                      transform={`rotate(-90 ${px} ${py})`} />
+                    {/* Ring progress */}
+                    {pct > 0 && (
+                      <circle cx={px} cy={py} r={ringR}
+                        fill="none" stroke={ch.color} strokeWidth="3"
+                        strokeDasharray={`${circumf}`} strokeDashoffset={circumf * (1 - pct / 100)}
+                        strokeLinecap="round"
+                        transform={`rotate(-90 ${px} ${py})`} />
+                    )}
+                    {/* Orb body */}
+                    <circle cx={px} cy={py} r={r}
+                      fill={hexToRgba(ch.color, 0.18)} stroke={ch.color} strokeWidth="1.5" />
+                    {/* Chapter name */}
+                    {words.map((word, wi) => (
+                      <text key={wi} x={px} y={startY + wi * 14}
+                        textAnchor="middle" dominantBaseline="middle"
+                        fill="#fff" fontSize={r > 48 ? "12" : "11"} fontWeight="800">
+                        {word}
+                      </text>
+                    ))}
+                    {/* Subject + ETA */}
+                    <text x={px} y={py + ringR + 12} textAnchor="middle"
+                      fill={ch.color} fontSize="10" fontWeight="700">{ch.subject}</text>
+                    <text x={px} y={py + ringR + 24} textAnchor="middle"
+                      fill="rgba(255,255,255,0.28)" fontSize="9">{ch.eta}</text>
+                    {/* Mastery % */}
+                    {pct > 0 && (
+                      <text x={px} y={py + r - 8} textAnchor="middle" dominantBaseline="middle"
+                        fill={ch.color} fontSize="15" fontWeight="900">{pct}%</text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+          )
+        )}
+
+        {/* ── CHAPTER DETAIL ── */}
+        {!isOverview && (
+          loadingGps && !activeGps ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "rgba(255,255,255,0.4)" }}>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontSize: "28px", marginBottom: "10px" }}>🗺️</p>
+                <p style={{ fontSize: "13px" }}>Loading chapter map…</p>
+              </div>
+            </div>
+          ) : nodes.length === 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "12px", color: "rgba(255,255,255,0.4)", padding: "20px", textAlign: "center" }}>
+              <p style={{ fontSize: "36px" }}>🔭</p>
+              <p style={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}>{activeChap?.name ?? view}</p>
+              <p style={{ fontSize: "13px" }}>Content for this chapter is being prepared. Check back soon!</p>
+              <button onClick={goOverview}
+                style={{ marginTop: "8px", padding: "10px 20px", borderRadius: "12px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}>
+                ← All Chapters
+              </button>
+            </div>
+          ) : (
+            <svg
+              viewBox="0 0 340 510"
+              width="340" height="510"
+              style={{ display: "block", margin: "0 auto", overflow: "visible", transformOrigin: "top center", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, willChange: "transform" }}
+            >
+              <defs>
+                <marker id="arr-g" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(0,230,118,0.7)" />
+                </marker>
+                <marker id="arr-b" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(41,121,255,0.6)" />
+                </marker>
+                <marker id="arr-d" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(255,255,255,0.18)" />
+                </marker>
+                <filter id="glow-g" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur stdDeviation="4" result="b" />
+                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <filter id="glow-b" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur stdDeviation="5" result="b" />
+                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+
+              {/* Edges */}
+              {edges.map((edge, i) => {
+                const fp = posMap[edge.from_id];
+                const tp = posMap[edge.to_id];
+                if (!fp || !tp) return null;
+                const dx   = tp.x - fp.x, dy = tp.y - fp.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                const sx   = fp.x + (dx / dist) * (R + 2);
+                const sy   = fp.y + (dy / dist) * (R + 2);
+                const ex   = tp.x - (dx / dist) * (R + 9);
+                const ey   = tp.y - (dy / dist) * (R + 9);
+                const fromState = getState(edge.from_id);
+                const isRec     = isRecommendedEdge(edge.from_id, edge.to_id);
+                return (
+                  <line key={i} x1={sx} y1={sy} x2={ex} y2={ey}
+                    stroke={isRec ? "#2979ff" : edgeColor(edge.from_id)}
+                    strokeWidth={isRec ? 2.5 : fromState === "ghost" ? 1 : 1.5}
+                    strokeDasharray={isRec ? "8 4" : fromState === "ghost" ? "4 3" : undefined}
+                    strokeDashoffset={isRec ? "16" : undefined}
+                    className={isRec ? "flow-edge" : undefined}
+                    markerEnd={fromState === "done" ? "url(#arr-g)" : fromState === "current" ? "url(#arr-b)" : "url(#arr-d)"}
+                  />
+                );
+              })}
+
+              {/* Nodes */}
+              {nodes.map(node => {
+                const state = getState(node.id);
+                const cfg   = SCFG[state];
+                const isCur = state === "current";
+                const isGh  = state === "ghost";
+                const filt  = state === "done" ? "url(#glow-g)" : state === "current" ? "url(#glow-b)" : undefined;
+                const words = node.name.split(" ");
+                const mid   = Math.ceil(words.length / 2);
+                const ln1   = words.slice(0, mid).join(" ");
+                const ln2   = words.slice(mid).join(" ");
+                const ly    = node.y + R + 10;
+                return (
+                  <g key={node.id}
+                    onClick={() => {
+                      if (isCur && activeGps) { onStart(activeGps); return; }
+                      setDetailNode({ id: node.id, name: node.name, state, bloomTarget: node.bloom_target, varkHint: node.vark_hint });
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {isCur && (
+                      <circle cx={node.x} cy={node.y} r={R}
+                        fill="none" stroke="rgba(41,121,255,0.4)" strokeWidth="2"
+                        className="gps-pulse-ring" />
+                    )}
+                    <circle cx={node.x} cy={node.y} r={R}
+                      fill={cfg.fill} stroke={cfg.stroke} strokeWidth={cfg.sw}
+                      strokeDasharray={isGh ? "4 3" : undefined}
+                      opacity={cfg.op} filter={filt} />
+                    <text x={node.x} y={node.y} textAnchor="middle" dominantBaseline="central"
+                      fill={cfg.text} fontSize={isCur ? 17 : state === "done" ? 15 : 12}
+                      fontWeight="800" opacity={cfg.op}>{cfg.icon}</text>
+                    <text x={node.x} y={ly} textAnchor="middle" dominantBaseline="hanging"
+                      fill={cfg.text} fontSize="8" fontWeight="600" opacity={cfg.op}>{ln1}</text>
+                    {ln2 && (
+                      <text x={node.x} y={ly + 10} textAnchor="middle" dominantBaseline="hanging"
+                        fill={cfg.text} fontSize="8" fontWeight="600" opacity={cfg.op}>{ln2}</text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+          )
+        )}
       </div>
 
-      {/* ── Node detail bottom sheet ── */}
-      {detailNode && (
-        <div
-          style={{
-            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-            background: "rgba(4,8,30,0.97)", backdropFilter: "blur(20px)",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "20px 20px 0 0", padding: "16px 20px 110px",
-          }}
-        >
-          <div style={{ width: "36px", height: "3px", background: "rgba(255,255,255,0.2)", borderRadius: "2px", margin: "0 auto 14px" }} />
-          <p style={{ fontSize: "9px", color: CFG[detailNode.state as keyof typeof CFG]?.badgeCol ?? "#fff", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
-            {CFG[detailNode.state as keyof typeof CFG]?.badge}
-          </p>
-          <p style={{ fontSize: "17px", fontWeight: 800, color: "#fff", marginBottom: "12px" }}>{detailNode.name}</p>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              onClick={() => setDetailNode(null)}
-              style={{ flex: 1, padding: "11px", borderRadius: "12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}
-            >
-              Close
+      {/* ── BOTTOM STATS STRIP (chapter detail only) ────────────────────────── */}
+      {!isOverview && nodes.length > 0 && (
+        <div style={{ background: "rgba(4,8,32,0.96)", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "8px 14px", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, zIndex: 10 }}>
+          <span style={{ fontSize: "11px", color: "#00e676", fontWeight: 700 }}>✓ {completed.length}</span>
+          <span style={{ fontSize: "11px", color: "#2979ff", fontWeight: 700 }}>▶ {current ? 1 : 0}</span>
+          <span style={{ fontSize: "11px", color: "#ffd740" }}>○ {route.length}</span>
+          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>· {locked.length} ahead</span>
+          {activeGps && (
+            <button onClick={() => onStart(activeGps)}
+              style={{ marginLeft: "auto", background: "linear-gradient(135deg,#4338ca,#7c3aed)", color: "#fff", fontSize: "12px", fontWeight: 800, padding: "7px 14px", borderRadius: "11px", border: "none", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 12px rgba(67,56,202,0.45)", whiteSpace: "nowrap" }}>
+              {current ? `▶ ${current.name}` : "✓ Complete!"}
             </button>
-            <button
-              onClick={() => { setDetailNode(null); onStart(); }}
-              style={{ flex: 2, padding: "11px", borderRadius: "12px", background: "linear-gradient(135deg,#4338ca,#7c3aed)", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit",
-                boxShadow: "0 4px 20px rgba(67,56,202,0.5)" }}
-            >
-              {detailNode.state === "done"  ? "🔄 Review & Reinforce" :
-               detailNode.state === "ready" ? "🚀 Start Learning Now" :
-                                              "▶ Jump here — Gyaan adapts"}
-            </button>
-          </div>
+          )}
         </div>
       )}
 
-      {/* ── Sticky CTA ── */}
-      <button
-        onClick={onStart}
-        style={{
-          position: "fixed", bottom: "76px", left: "50%", transform: "translateX(-50%)",
-          width: "calc(100% - 2rem)", maxWidth: "380px",
-          background: "linear-gradient(135deg,#4338ca,#7c3aed)",
-          color: "#fff", fontWeight: 800, padding: "14px 20px", borderRadius: "16px",
-          border: "none", cursor: "pointer",
-          boxShadow: "0 4px 24px rgba(67,56,202,0.55)",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          fontFamily: "inherit",
-        }}
-      >
-        <span>
-          <span style={{ display: "block", fontSize: "10px", color: "rgba(199,210,254,0.75)", fontWeight: 400 }}>Continue learning</span>
-          <span style={{ fontSize: "14px" }}>{current?.name ?? "Start Learning"}</span>
-        </span>
-        <span style={{ fontSize: "22px" }}>→</span>
-      </button>
+      {/* ── NODE DETAIL BOTTOM SHEET ─────────────────────────────────────────── */}
+      {detailNode && !isOverview && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+          background: "rgba(4,8,30,0.97)", backdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "20px 20px 0 0", padding: "16px 20px 36px",
+        }}>
+          <div style={{ width: "36px", height: "3px", background: "rgba(255,255,255,0.2)", borderRadius: "2px", margin: "0 auto 14px" }} />
+          <p style={{ fontSize: "9px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1.2px", marginBottom: "4px",
+            color: detailNode.state === "done" ? "#00e676" : detailNode.state === "ready" ? "#ffd740" : "rgba(255,255,255,0.4)" }}>
+            {detailNode.state === "done" ? "✓ MASTERED" : detailNode.state === "ready" ? "READY ▶" : "👁 VISIBLE AHEAD"}
+          </p>
+          <p style={{ fontSize: "18px", fontWeight: 800, color: "#fff", marginBottom: "4px" }}>{detailNode.name}</p>
+          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.38)", marginBottom: "12px" }}>
+            {activeChap?.name ?? ""}{detailNode.bloomTarget ? ` · Target: ${detailNode.bloomTarget}` : ""}{detailNode.varkHint ? ` · ${detailNode.varkHint} learner` : ""}
+          </p>
+          {detailNode.bloomTarget && (
+            <div style={{ marginBottom: "14px" }}>
+              <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.35)", marginBottom: "5px", fontWeight: 700, letterSpacing: "0.8px" }}>BLOOM LEVEL</p>
+              <div style={{ display: "flex", gap: "3px" }}>
+                {["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"].map((b, bi) => {
+                  const bIdx   = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"].indexOf(detailNode.bloomTarget ?? "Remember");
+                  const active = bi <= bIdx;
+                  return <div key={b} title={b} style={{ flex: 1, height: "5px", borderRadius: "3px", background: active ? "#4338ca" : "rgba(255,255,255,0.08)" }} />;
+                })}
+              </div>
+            </div>
+          )}
+          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "16px" }}>
+            {detailNode.state === "done"  && "You've mastered this. Review to reinforce long-term retention."}
+            {detailNode.state === "ready" && "Prerequisites done. Start now — Gyaan will guide you step by step."}
+            {detailNode.state === "ghost" && "Jump here if curious — Gyaan adapts and bridges any gaps automatically."}
+          </p>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button onClick={() => setDetailNode(null)}
+              style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}>
+              Close
+            </button>
+            {activeGps && (
+              <button onClick={() => { setDetailNode(null); onStart(activeGps); }}
+                style={{ flex: 2, padding: "12px", borderRadius: "12px", background: "linear-gradient(135deg,#4338ca,#7c3aed)", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", boxShadow: "0 4px 20px rgba(67,56,202,0.5)" }}>
+                {detailNode.state === "done"  ? "🔄 Review & Reinforce" :
+                 detailNode.state === "ready" ? "🚀 Start Learning" :
+                                               "▶ Jump here — Gyaan adapts"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1138,7 +1457,7 @@ export default function App() {
     <div className="flex justify-center bg-gray-100 min-h-screen">
       <div className="w-full max-w-sm min-h-screen bg-gray-50 relative overflow-hidden">
         {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays} onContinue={() => setScreen("chat")} onMap={() => { if (studentId) loadAppData(studentId); setScreen("map"); }} />}
-        {screen === "map"      && <MapScreen      gps={gps} onStart={() => setScreen("chat")} />}
+        {screen === "map"      && <MapScreen      studentId={studentId} onStart={(g) => { setGPS(g); setScreen("chat"); }} />}
         {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} messages={messages} setMessages={setMessages} bloomLevel={bloomLevel} setBloomLevel={setBloomLevel} hintCount={hintCount} setHintCount={setHintCount} activityShown={activityShown} setActivityShown={setActivityShown} onXpEarned={(xp) => setTotalXp((prev) => prev + xp)} />}
         {screen === "progress" && <ProgressScreen vark={vark} studentId={studentId} gps={gps} streakDays={streakDays} />}
         {screen === "profile"  && <ProfileScreen  vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />}

@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnGPS — Knowledge Map v2</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#03061a; color:#e0e8ff; height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+
+/* ── Navbar ── */
+.navbar { display:flex; align-items:center; justify-content:space-between; padding:9px 20px; background:rgba(4,8,32,0.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; z-index:20; position:relative; }
+.logo { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:800; color:#fff; }
+.logo-icon { width:28px; height:28px; background:linear-gradient(135deg,#4338ca,#7c3aed); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+.tabs { display:flex; gap:2px; }
+.tab { padding:5px 13px; border-radius:6px; font-size:12.5px; cursor:pointer; color:rgba(255,255,255,0.5); border:none; background:none; font-family:inherit; transition:all 0.2s; }
+.tab:hover { color:rgba(255,255,255,0.85); }
+.tab.active { background:rgba(99,102,241,0.22); color:#a5b4fc; border:1px solid rgba(99,102,241,0.32); }
+.nav-r { display:flex; align-items:center; gap:12px; font-size:12.5px; }
+.streak { color:#ff9800; font-weight:700; }
+.xp { color:#fbbf24; font-weight:700; }
+.ava { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#4338ca,#7c3aed); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+
+/* ── Route-mode bar ── */
+.mode-bar { display:flex; align-items:center; gap:10px; padding:6px 20px; background:rgba(4,8,32,0.7); border-bottom:1px solid rgba(255,255,255,0.05); flex-shrink:0; z-index:15; }
+.mode-label { font-size:11px; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:1px; margin-right:4px; }
+.mode-btn { padding:4px 13px; border-radius:20px; font-size:11.5px; cursor:pointer; border:1px solid rgba(255,255,255,0.1); background:transparent; color:rgba(255,255,255,0.5); font-family:inherit; transition:all 0.2s; }
+.mode-btn:hover { color:rgba(255,255,255,0.85); border-color:rgba(255,255,255,0.25); }
+.mode-btn.active { background:rgba(99,102,241,0.25); color:#a5b4fc; border-color:rgba(99,102,241,0.45); }
+.eta-chip { margin-left:auto; font-size:11.5px; color:rgba(255,255,255,0.45); display:flex; align-items:center; gap:6px; }
+.eta-val { color:#fbbf24; font-weight:700; }
+.breadcrumb { font-size:12px; color:rgba(255,255,255,0.4); display:flex; align-items:center; gap:6px; margin-left:16px; }
+.bc-link { cursor:pointer; color:#82b1ff; text-decoration:underline; text-underline-offset:2px; }
+.bc-sep { color:rgba(255,255,255,0.2); }
+
+/* ── Main ── */
+.main { display:flex; flex:1; overflow:hidden; }
+
+/* ── Left panel ── */
+.lp { width:205px; flex-shrink:0; background:rgba(4,8,30,0.78); backdrop-filter:blur(12px); border-right:1px solid rgba(255,255,255,0.05); padding:16px 13px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; }
+.slabel { font-size:10px; text-transform:uppercase; letter-spacing:1.2px; color:rgba(255,255,255,0.3); margin-bottom:7px; }
+.ch-name { font-size:14px; font-weight:800; color:#fff; line-height:1.3; }
+.ch-sub { font-size:11px; color:rgba(255,255,255,0.3); margin-top:2px; }
+.ring-row { display:flex; align-items:center; gap:11px; }
+.ring-wrap { position:relative; flex-shrink:0; }
+.ring-wrap svg { display:block; }
+.ring-txt { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#fff; }
+.ring-info .big { font-size:20px; font-weight:800; line-height:1; }
+.ring-info .sub { font-size:11px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.here-card { background:rgba(41,121,255,0.1); border:1px solid rgba(41,121,255,0.25); border-radius:9px; padding:9px 11px; }
+.here-badge { font-size:9.5px; color:#82b1ff; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:3px; }
+.here-name { font-size:12.5px; font-weight:700; color:#fff; }
+.here-sub { font-size:10.5px; color:rgba(255,255,255,0.4); margin-top:1px; }
+.legend { display:flex; flex-direction:column; gap:6px; }
+.leg { display:flex; align-items:center; gap:7px; font-size:11.5px; color:rgba(255,255,255,0.6); }
+.ldot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.stats { display:flex; flex-direction:column; gap:5px; }
+.srow { display:flex; justify-content:space-between; font-size:11.5px; }
+.sk { color:rgba(255,255,255,0.4); }
+.sv { font-weight:700; color:#fff; }
+.rec-card { background:rgba(99,102,241,0.09); border:1px solid rgba(99,102,241,0.2); border-radius:9px; padding:9px 11px; }
+.rec-t { font-size:11px; color:#a5b4fc; font-weight:700; margin-bottom:5px; }
+.rec-b { font-size:11.5px; color:rgba(255,255,255,0.6); line-height:1.45; }
+.hl { color:#fbbf24; font-weight:700; }
+.btn-rec { margin-top:9px; width:100%; padding:7px; border-radius:8px; background:linear-gradient(135deg,#4338ca,#7c3aed); color:#fff; font-size:12px; font-weight:700; border:none; cursor:pointer; font-family:inherit; }
+.btn-rec:hover { opacity:0.85; }
+
+/* ── Canvas ── */
+.canvas { flex:1; position:relative; overflow:hidden; }
+#svg { width:100%; height:100%; }
+.node-g { cursor:pointer; }
+.node-g:hover { filter:brightness(1.15); }
+
+/* ── Right panel ── */
+.rp { width:0; overflow:hidden; transition:width 0.28s cubic-bezier(0.4,0,0.2,1); background:rgba(4,8,30,0.88); backdrop-filter:blur(14px); border-left:1px solid rgba(255,255,255,0.05); position:relative; }
+.rp.open { width:265px; }
+.ri { width:265px; padding:16px 13px; display:flex; flex-direction:column; gap:13px; height:100%; overflow-y:auto; }
+.xbtn { position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.07); border:none; color:rgba(255,255,255,0.5); width:21px; height:21px; border-radius:50%; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; font-family:inherit; }
+.r-name { font-size:16px; font-weight:800; color:#fff; padding-right:24px; }
+.r-path { font-size:10.5px; color:rgba(255,255,255,0.3); margin-top:2px; }
+.r-mas { display:flex; align-items:center; gap:13px; }
+.r-lv { font-size:14px; font-weight:800; }
+.r-note { font-size:11px; color:rgba(255,255,255,0.35); }
+.bloom-bars { display:flex; flex-direction:column; gap:5.5px; }
+.br { display:flex; align-items:center; gap:7px; font-size:11px; }
+.bl { width:66px; color:rgba(255,255,255,0.5); flex-shrink:0; }
+.bb { flex:1; height:5px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden; }
+.bf { height:100%; border-radius:3px; transition:width 0.45s ease; }
+.bp { width:26px; text-align:right; color:rgba(255,255,255,0.4); }
+.misc-item { display:flex; align-items:flex-start; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.55); line-height:1.4; }
+.mdot { width:7px; height:7px; background:#f44336; border-radius:50%; flex-shrink:0; margin-top:3px; }
+.ret-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+.ret-v { font-weight:800; color:#00e676; font-size:12px; }
+.tags { display:flex; flex-wrap:wrap; gap:5px; }
+.tag { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:3px 9px; font-size:11px; color:rgba(255,255,255,0.55); cursor:pointer; transition:all 0.2s; }
+.tag:hover { background:rgba(99,102,241,0.16); color:#a5b4fc; border-color:rgba(99,102,241,0.32); }
+.btn-study { width:100%; padding:9px; border-radius:9px; background:linear-gradient(135deg,#4338ca,#7c3aed); color:#fff; font-size:12.5px; font-weight:700; border:none; cursor:pointer; font-family:inherit; transition:opacity 0.2s; }
+.btn-study:hover { opacity:0.85; }
+
+/* Animations */
+@keyframes pulse-out { 0%{r:30;opacity:.65} 70%{r:46;opacity:0} 100%{r:46;opacity:0} }
+.pulse-ring { animation:pulse-out 2s ease-out infinite; }
+@keyframes dash-f { to{stroke-dashoffset:-24} }
+.path-anim { animation:dash-f 1.2s linear infinite; }
+@keyframes fadeSlide { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:translateX(0)} }
+.ri { animation:fadeSlide 0.22s ease; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="logo"><div class="logo-icon">🧭</div>Learning GPS</div>
+  <div class="tabs">
+    <button class="tab">Home</button>
+    <button class="tab active">Mastery Map</button>
+    <button class="tab">My Journey</button>
+    <button class="tab">Practice</button>
+    <button class="tab">Goals</button>
+    <button class="tab">Smart Tutor</button>
+  </div>
+  <div class="nav-r">
+    <span class="streak">🔥 12 Day Streak</span>
+    <span class="xp">💎 340</span>
+    <div class="ava">D</div>
+  </div>
+</nav>
+
+<!-- Route-mode bar -->
+<div class="mode-bar">
+  <span class="mode-label">Route</span>
+  <button class="mode-btn active" onclick="setMode('focused')" id="mb-focused">🎯 Focused</button>
+  <button class="mode-btn" onclick="setMode('deep')" id="mb-deep">🔬 Deep</button>
+  <button class="mode-btn" onclick="setMode('revision')" id="mb-revision">🔄 Revision</button>
+  <div class="breadcrumb" id="breadcrumb">
+    <span id="bc-overview" style="color:rgba(255,255,255,0.4)">All Chapters</span>
+  </div>
+  <div class="eta-chip">ETA to goal: <span class="eta-val" id="etaVal">~22 sessions</span></div>
+</div>
+
+<div class="main">
+
+  <!-- Left panel -->
+  <aside class="lp" id="leftPanel">
+    <div>
+      <div class="slabel" id="lpScope">All Chapters</div>
+      <div class="ch-name" id="lpTitle">Science &amp; Mathematics</div>
+      <div class="ch-sub" id="lpSub">Class 8 · CBSE</div>
+    </div>
+    <div>
+      <div class="slabel">Overall Mastery</div>
+      <div class="ring-row">
+        <div class="ring-wrap" style="width:50px;height:50px;">
+          <svg width="50" height="50" id="lpRingSvg">
+            <circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="5" transform="rotate(-90 25 25)"/>
+            <circle cx="25" cy="25" r="20" fill="none" id="lpArc" stroke="#00e676" stroke-width="5"
+              stroke-dasharray="125.66" stroke-dashoffset="112.9" stroke-linecap="round" transform="rotate(-90 25 25)"/>
+          </svg>
+          <div class="ring-txt" id="lpPct">10%</div>
+        </div>
+        <div class="ring-info">
+          <div class="big" id="lpBig" style="color:#00e676">10%</div>
+          <div class="sub" id="lpSmall">2 of 5 chapters started</div>
+        </div>
+      </div>
+    </div>
+    <div class="here-card" id="lpHereCard">
+      <div class="here-badge">📍 Currently learning</div>
+      <div class="here-name" id="lpHereName">Non-Contact Force</div>
+      <div class="here-sub" id="lpHereSub">Force &amp; Pressure · Apply level · 45%</div>
+    </div>
+    <div>
+      <div class="slabel">Legend</div>
+      <div class="legend">
+        <div class="leg"><div class="ldot" style="background:#00e676;box-shadow:0 0 6px #00e676;"></div>Mastered</div>
+        <div class="leg"><div class="ldot" style="background:#2979ff;box-shadow:0 0 7px #2979ff;"></div>In Progress (you)</div>
+        <div class="leg"><div class="ldot" style="background:#ffd740;box-shadow:0 0 4px #ffd740;"></div>Ready to Learn</div>
+        <div class="leg"><div class="ldot" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.2);"></div>Not yet reachable</div>
+      </div>
+    </div>
+    <div>
+      <div class="slabel">Progress</div>
+      <div class="stats" id="lpStats">
+        <div class="srow"><span class="sk">Mastered</span><span class="sv" style="color:#00e676">2</span></div>
+        <div class="srow"><span class="sk">In Progress</span><span class="sv" style="color:#2979ff">1</span></div>
+        <div class="srow"><span class="sk">Ready</span><span class="sv" style="color:#ffd740">4</span></div>
+        <div class="srow"><span class="sk">Not yet</span><span class="sv" style="color:rgba(255,255,255,0.3)">35</span></div>
+        <div class="srow"><span class="sk">Total XP</span><span class="sv">340</span></div>
+      </div>
+    </div>
+    <div class="rec-card">
+      <div class="rec-t">⚡ Recommended Next</div>
+      <div class="rec-b" id="lpRec">Continue <span class="hl">Non-Contact Force</span> to unlock <span class="hl">Gravity</span></div>
+      <button class="btn-rec" id="lpBtn" onclick="handleRecBtn()">▶ Start Practice</button>
+    </div>
+  </aside>
+
+  <!-- SVG canvas -->
+  <div class="canvas">
+    <svg id="svg" viewBox="0 0 760 590" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="fg" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="fb" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="fa" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <marker id="arr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+          <polygon points="0 0,6 2.5,0 5" fill="rgba(255,255,255,0.2)"/>
+        </marker>
+        <marker id="arr-g" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+          <polygon points="0 0,6 2.5,0 5" fill="rgba(0,230,118,0.45)"/>
+        </marker>
+        <marker id="arr-b" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+          <polygon points="0 0,6 2.5,0 5" fill="rgba(41,121,255,0.65)"/>
+        </marker>
+        <pattern id="sp" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+          <circle cx="8" cy="12" r="0.7" fill="rgba(255,255,255,0.4)"/>
+          <circle cx="48" cy="60" r="0.5" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="82" cy="8" r="0.9" fill="rgba(255,255,255,0.45)"/>
+          <circle cx="95" cy="85" r="0.5" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="25" cy="45" r="0.6" fill="rgba(255,255,255,0.35)"/>
+          <circle cx="62" cy="92" r="0.4" fill="rgba(255,255,255,0.25)"/>
+          <circle cx="5"  cy="72" r="0.5" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="88" cy="40" r="0.7" fill="rgba(255,255,255,0.35)"/>
+          <circle cx="38" cy="22" r="0.5" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="70" cy="32" r="0.4" fill="rgba(255,255,255,0.2)"/>
+        </pattern>
+        <style>
+          @keyframes pulse-out { 0%{r:32;opacity:.6} 70%{r:50;opacity:0} 100%{r:50;opacity:0} }
+          .pulse-ring { animation:pulse-out 2s ease-out infinite; }
+          @keyframes dash-f { to{stroke-dashoffset:-24} }
+          .path-anim { animation:dash-f 1.2s linear infinite; }
+          .node-g { cursor:pointer; transition:opacity 0.3s; }
+        </style>
+      </defs>
+
+      <!-- Background -->
+      <rect width="760" height="590" fill="url(#sp)"/>
+      <!-- Nebula -->
+      <ellipse cx="190" cy="180" rx="210" ry="150" fill="rgba(67,56,202,0.04)"/>
+      <ellipse cx="570" cy="160" rx="180" ry="130" fill="rgba(255,111,0,0.03)"/>
+      <ellipse cx="380" cy="480" rx="200" ry="120" fill="rgba(0,188,212,0.03)"/>
+      <ellipse cx="560" cy="430" rx="170" ry="110" fill="rgba(104,159,56,0.03)"/>
+      <ellipse cx="140" cy="430" rx="160" ry="110" fill="rgba(124,58,237,0.03)"/>
+
+      <!-- Overview layer -->
+      <g id="overviewLayer"></g>
+      <!-- Chapter detail layer -->
+      <g id="detailLayer" style="display:none;"></g>
+    </svg>
+  </div>
+
+  <!-- Right panel -->
+  <aside class="rp" id="rp">
+    <div class="ri" id="ri">
+      <button class="xbtn" onclick="closeRP()">✕</button>
+      <div>
+        <div class="r-name" id="rName"></div>
+        <div class="r-path" id="rPath"></div>
+      </div>
+      <div class="r-mas">
+        <div class="ring-wrap" style="width:58px;height:58px;">
+          <svg width="58" height="58" id="rRingSvg">
+            <circle cx="29" cy="29" r="23" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6" transform="rotate(-90 29 29)"/>
+            <circle cx="29" cy="29" r="23" fill="none" id="rArc" stroke="#00e676" stroke-width="6"
+              stroke-dasharray="144.51" stroke-dashoffset="144.51" stroke-linecap="round" transform="rotate(-90 29 29)"/>
+          </svg>
+          <div class="ring-txt" id="rPct" style="font-size:12px;">0%</div>
+        </div>
+        <div><div class="r-lv" id="rLv"></div><div class="r-note" id="rNote"></div></div>
+      </div>
+      <div>
+        <div class="slabel">Bloom's Taxonomy</div>
+        <div class="bloom-bars" id="bloomBars"></div>
+      </div>
+      <div id="miscSec">
+        <div class="slabel">Detected Misconceptions</div>
+        <div id="miscItems" style="display:flex;flex-direction:column;gap:5px;"></div>
+      </div>
+      <div>
+        <div class="slabel">Best Learning Mode</div>
+        <div style="font-size:12.5px;color:#a5b4fc;" id="rMode"></div>
+      </div>
+      <div>
+        <div class="ret-head">
+          <span class="slabel" style="margin-bottom:0;">Retention (30 Days)</span>
+          <span class="ret-v" id="rRet"></span>
+        </div>
+        <svg width="100%" height="36" viewBox="0 0 238 36" id="rSpark"></svg>
+      </div>
+      <div>
+        <div class="slabel">Related Concepts</div>
+        <div class="tags" id="rTags"></div>
+      </div>
+      <button class="btn-study" id="rCta"></button>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+
+const BLOOM_COLORS = { Remember:"#4caf50",Understand:"#66bb6a",Apply:"#ff9800",Analyse:"#ff7043",Evaluate:"#ef5350",Create:"#ec407a" };
+
+const STATUS_COLOR = { mastered:"#00e676", current:"#2979ff", ready:"#ffd740", ghost:"rgba(255,255,255,0.28)" };
+
+const CHAPTERS = {
+  force_pressure: {
+    name:"Force & Pressure", subject:"Physics", mastery:40, color:"#2979ff",
+    ov:{ x:285, y:295 }, radius:52,
+    eta:"~8 sessions", started:true,
+    subconcepts:[
+      { id:"sc_mf",  name:"Muscular Force",       status:"mastered", mastery:85, bloom:{Remember:95,Understand:88,Apply:75,Analyse:50,Evaluate:25,Create:10}, misc:[], mode:"🏃 Kinesthetic", retention:88, spark:[75,78,82,84,86,87,88,88,88,88], related:["Contact Force","Friction"], pos:{x:310,y:90} },
+      { id:"sc_cf",  name:"Contact Force",         status:"mastered", mastery:78, bloom:{Remember:95,Understand:85,Apply:68,Analyse:38,Evaluate:12,Create:0},  misc:["Contact forces always cause motion"], mode:"📊 Visual", retention:82, spark:[65,70,72,75,78,79,80,81,82,82], related:["Muscular Force","Normal Force"], pos:{x:175,y:200} },
+      { id:"sc_nc",  name:"Non-Contact Force",     status:"current",  mastery:45, bloom:{Remember:80,Understand:60,Apply:30,Analyse:10,Evaluate:0,Create:0},   misc:["Magnets only attract iron","Gravity only pulls down"], mode:"🏃 Kinesthetic", retention:72, spark:[50,55,58,62,65,68,70,71,72,72], related:["Magnetic Force","Electrostatic Force","Gravity"], pos:{x:450,y:200} },
+      { id:"sc_nf",  name:"Normal Force",          status:"ready",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0},        misc:[], mode:"📖 Read/Write", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Contact Force","Friction"], pos:{x:130,y:330} },
+      { id:"sc_g",   name:"Gravity",               status:"ready",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0},        misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Non-Contact Force","Weight"], pos:{x:490,y:330} },
+      { id:"sc_fr",  name:"Friction",              status:"ghost",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0},        misc:[], mode:"🏃 Kinesthetic", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Normal Force","Contact Force"], pos:{x:310,y:420} },
+      { id:"sc_rf",  name:"Resultant Force",       status:"ghost",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0},        misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Friction","Gravity"], pos:{x:310,y:500} },
+      { id:"sc_pr",  name:"Pressure",              status:"ghost",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0},        misc:[], mode:"📊 Visual + 🏃 Kinesthetic", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Resultant Force","Liquid Pressure"], pos:{x:310,y:575} },
+      { id:"sc_lp",  name:"Liquid Pressure",       status:"ghost",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0},        misc:[], mode:"🏃 Kinesthetic", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Pressure","Atmospheric Pressure"], pos:{x:175,y:640} },
+      { id:"sc_ap",  name:"Atmospheric Pressure",  status:"ghost",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0},        misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Pressure","Weather"], pos:{x:450,y:640} },
+    ],
+    edges:[
+      {from:"sc_mf",to:"sc_cf",type:"prereq",done:true},
+      {from:"sc_mf",to:"sc_nc",type:"related",done:false},
+      {from:"sc_cf",to:"sc_nf",type:"prereq",done:true},
+      {from:"sc_nc",to:"sc_g", type:"prereq",done:false,recommended:true},
+      {from:"sc_cf",to:"sc_nc",type:"related",done:false},
+      {from:"sc_nf",to:"sc_fr",type:"prereq",done:false},
+      {from:"sc_g", to:"sc_fr",type:"prereq",done:false},
+      {from:"sc_fr",to:"sc_rf",type:"prereq",done:false},
+      {from:"sc_rf",to:"sc_pr",type:"prereq",done:false},
+      {from:"sc_pr",to:"sc_lp",type:"prereq",done:false},
+      {from:"sc_pr",to:"sc_ap",type:"prereq",done:false},
+    ]
+  },
+  light: {
+    name:"Light", subject:"Physics", mastery:0, color:"#ff9100",
+    ov:{ x:570, y:165 }, radius:44,
+    eta:"~10 sessions", started:false,
+    subconcepts:[
+      { id:"lt_rl",  name:"Reflection of Light",   status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Laws of Reflection","Refraction"], pos:{x:210,y:110} },
+      { id:"lt_lo",  name:"Laws of Reflection",    status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📖 Read/Write", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Reflection of Light","Mirrors"], pos:{x:420,y:110} },
+      { id:"lt_rf",  name:"Refraction",            status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Laws of Reflection","Lenses"], pos:{x:210,y:270} },
+      { id:"lt_ln",  name:"Lenses",                status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"🏃 Kinesthetic", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Refraction","Human Eye"], pos:{x:420,y:270} },
+      { id:"lt_dp",  name:"Dispersion of Light",   status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Refraction","Rainbow"], pos:{x:310,y:400} },
+      { id:"lt_he",  name:"Human Eye",             status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Lenses","Defects of Vision"], pos:{x:530,y:400} },
+    ],
+    edges:[
+      {from:"lt_rl",to:"lt_lo",type:"prereq",done:false},
+      {from:"lt_rl",to:"lt_rf",type:"prereq",done:false},
+      {from:"lt_lo",to:"lt_ln",type:"prereq",done:false},
+      {from:"lt_rf",to:"lt_ln",type:"prereq",done:false},
+      {from:"lt_rf",to:"lt_dp",type:"prereq",done:false},
+      {from:"lt_ln",to:"lt_he",type:"prereq",done:false},
+    ]
+  },
+  sound: {
+    name:"Sound", subject:"Physics", mastery:0, color:"#e040fb",
+    ov:{ x:145, y:180 }, radius:42,
+    eta:"~8 sessions", started:false,
+    subconcepts:[
+      { id:"sn_ps",  name:"Production of Sound",   status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"🏃 Kinesthetic", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Vibrations","Propagation"], pos:{x:310,y:90} },
+      { id:"sn_pr",  name:"Propagation of Sound",  status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Production of Sound","Characteristics"], pos:{x:180,y:220} },
+      { id:"sn_ch",  name:"Characteristics",       status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"🎧 Auditory", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Propagation","Reflection of Sound"], pos:{x:440,y:220} },
+      { id:"sn_rs",  name:"Reflection of Sound",   status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"🏃 Kinesthetic", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Characteristics","Echo","Human Ear"], pos:{x:310,y:360} },
+      { id:"sn_he",  name:"Human Ear",             status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Reflection of Sound","Noise Pollution"], pos:{x:180,y:470} },
+      { id:"sn_np",  name:"Noise & Pollution",     status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📖 Read/Write", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Human Ear"], pos:{x:440,y:470} },
+    ],
+    edges:[
+      {from:"sn_ps",to:"sn_pr",type:"prereq",done:false},
+      {from:"sn_ps",to:"sn_ch",type:"prereq",done:false},
+      {from:"sn_pr",to:"sn_rs",type:"prereq",done:false},
+      {from:"sn_ch",to:"sn_rs",type:"prereq",done:false},
+      {from:"sn_rs",to:"sn_he",type:"prereq",done:false},
+      {from:"sn_rs",to:"sn_np",type:"prereq",done:false},
+    ]
+  },
+  linear_eq: {
+    name:"Linear Equations", subject:"Mathematics", mastery:20, color:"#00bcd4",
+    ov:{ x:200, y:460 }, radius:46,
+    eta:"~6 sessions", started:true,
+    subconcepts:[
+      { id:"le_vc",  name:"Variables & Constants",     status:"mastered", mastery:80, bloom:{Remember:95,Understand:85,Apply:70,Analyse:40,Evaluate:15,Create:5}, misc:[], mode:"📖 Read/Write", retention:84, spark:[70,74,76,78,80,81,82,83,84,84], related:["Simple Equations"], pos:{x:310,y:90} },
+      { id:"le_se",  name:"Simple Equations",          status:"current",  mastery:40, bloom:{Remember:80,Understand:55,Apply:25,Analyse:5,Evaluate:0,Create:0}, misc:["Equals sign means the answer is on the right"], mode:"📊 Visual", retention:65, spark:[45,48,52,55,58,60,62,64,65,65], related:["Variables & Constants","Solving Methods"], pos:{x:180,y:230} },
+      { id:"le_sm",  name:"Solving Methods",           status:"ready",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📖 Read/Write", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Simple Equations","Word Problems"], pos:{x:440,y:230} },
+      { id:"le_wp",  name:"Word Problems",             status:"ghost",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📖 Read/Write", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Solving Methods","Graphs"], pos:{x:310,y:380} },
+      { id:"le_gr",  name:"Graphs of Linear Eq.",      status:"ghost",    mastery:0,  bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Word Problems"], pos:{x:520,y:380} },
+    ],
+    edges:[
+      {from:"le_vc",to:"le_se",type:"prereq",done:true},
+      {from:"le_se",to:"le_sm",type:"prereq",done:false,recommended:true},
+      {from:"le_sm",to:"le_wp",type:"prereq",done:false},
+      {from:"le_wp",to:"le_gr",type:"prereq",done:false},
+      {from:"le_vc",to:"le_sm",type:"strengthens",done:false},
+    ]
+  },
+  mensuration: {
+    name:"Mensuration", subject:"Mathematics", mastery:0, color:"#69f0ae",
+    ov:{ x:530, y:445 }, radius:42,
+    eta:"~9 sessions", started:false,
+    subconcepts:[
+      { id:"me_pe",  name:"Perimeter",         status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Area","Circumference"], pos:{x:180,y:130} },
+      { id:"me_ar",  name:"Area of 2D Shapes", status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"🏃 Kinesthetic", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Perimeter","Volume"], pos:{x:440,y:130} },
+      { id:"me_ci",  name:"Circumference",     status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📖 Read/Write", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Perimeter","Area"], pos:{x:180,y:300} },
+      { id:"me_vo",  name:"Volume",            status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"🏃 Kinesthetic", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Area","Surface Area"], pos:{x:440,y:300} },
+      { id:"me_sa",  name:"Surface Area",      status:"ghost", mastery:0, bloom:{Remember:0,Understand:0,Apply:0,Analyse:0,Evaluate:0,Create:0}, misc:[], mode:"📊 Visual", retention:0, spark:[0,0,0,0,0,0,0,0,0,0], related:["Volume","Perimeter"], pos:{x:310,y:450} },
+    ],
+    edges:[
+      {from:"me_pe",to:"me_ar",type:"prereq",done:false},
+      {from:"me_pe",to:"me_ci",type:"prereq",done:false},
+      {from:"me_ar",to:"me_vo",type:"prereq",done:false},
+      {from:"me_ci",to:"me_vo",type:"prereq",done:false},
+      {from:"me_vo",to:"me_sa",type:"prereq",done:false},
+    ]
+  }
+};
+
+// Cross-chapter edges in overview
+const OV_EDGES = [
+  {from:"force_pressure",to:"mensuration",label:"Pressure=F/Area"},
+  {from:"force_pressure",to:"sound",label:"Vibrations → Force"},
+  {from:"light",to:"linear_eq",label:"Angles & ray tracing"},
+  {from:"linear_eq",to:"mensuration",label:"Area formulas"},
+];
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let currentView = 'overview';
+let routeMode = 'focused';
+let rpOpen = false;
+let selectedId = null;
+
+// ═══════════════════════════════════════════════════════════
+// RENDER OVERVIEW
+// ═══════════════════════════════════════════════════════════
+function renderOverview() {
+  currentView = 'overview';
+  document.getElementById('overviewLayer').style.display = '';
+  document.getElementById('detailLayer').style.display = 'none';
+
+  // Breadcrumb
+  document.getElementById('breadcrumb').innerHTML =
+    `<span style="color:rgba(255,255,255,0.4)">All Chapters</span>`;
+
+  // ETA
+  document.getElementById('etaVal').textContent = '~22 sessions';
+
+  // Left panel
+  document.getElementById('lpScope').textContent = 'All Chapters';
+  document.getElementById('lpTitle').textContent = 'Science & Mathematics';
+  document.getElementById('lpSub').textContent = 'Class 8 · CBSE';
+  setRing('lpArc', 'lpPct', 'lpBig', 10, '#00e676', 125.66);
+  document.getElementById('lpSmall').textContent = '2 of 5 chapters started';
+  document.getElementById('lpHereName').textContent = 'Non-Contact Force';
+  document.getElementById('lpHereSub').textContent = 'Force & Pressure · Apply level · 45%';
+  document.getElementById('lpRec').innerHTML = 'Continue <span class="hl">Non-Contact Force</span> to unlock <span class="hl">Gravity</span>';
+  document.getElementById('lpBtn').textContent = '▶ Start Practice';
+  document.getElementById('lpStats').innerHTML = `
+    <div class="srow"><span class="sk">Mastered</span><span class="sv" style="color:#00e676">2</span></div>
+    <div class="srow"><span class="sk">In Progress</span><span class="sv" style="color:#2979ff">1</span></div>
+    <div class="srow"><span class="sk">Ready</span><span class="sv" style="color:#ffd740">4</span></div>
+    <div class="srow"><span class="sk">Not yet</span><span class="sv" style="color:rgba(255,255,255,0.3)">35</span></div>
+    <div class="srow"><span class="sk">Total XP</span><span class="sv">340</span></div>`;
+
+  const g = document.getElementById('overviewLayer');
+
+  // Cross-chapter edges
+  let edgesHTML = '';
+  OV_EDGES.forEach(e => {
+    const from = CHAPTERS[e.from].ov;
+    const to   = CHAPTERS[e.to].ov;
+    const mx = (from.x + to.x)/2, my = (from.y + to.y)/2;
+    edgesHTML += `
+      <line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"
+        stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-dasharray="6,5"/>
+      <text x="${mx}" y="${my-5}" text-anchor="middle" fill="rgba(255,255,255,0.2)" font-size="9">${e.label}</text>`;
+  });
+
+  // Chapter nodes
+  let nodesHTML = '';
+  Object.entries(CHAPTERS).forEach(([id, ch]) => {
+    const { x, y } = ch.ov;
+    const r = ch.radius;
+    const col = ch.color;
+    const circumference = 2 * Math.PI * (r + 8);
+    const offset = circumference * (1 - ch.mastery / 100);
+    const opacity = ch.started ? 1 : 0.38;
+
+    // Subject badge color
+    const badge = ch.subject === 'Physics' ? '#7986cb' : ch.subject === 'Mathematics' ? '#4db6ac' : '#fff';
+
+    nodesHTML += `
+      <g class="node-g" onclick="drillInto('${id}')" style="opacity:${opacity}">
+        <!-- Glow halo -->
+        <circle cx="${x}" cy="${y}" r="${r+12}" fill="rgba(${hexToRgb(col)},0.06)" filter="url(#fg)"/>
+        <!-- Progress ring -->
+        <circle cx="${x}" cy="${y}" r="${r+8}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4.5"/>
+        <circle cx="${x}" cy="${y}" r="${r+8}" fill="none" stroke="${col}" stroke-width="4.5"
+          stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+          stroke-linecap="round" transform="rotate(-90 ${x} ${y})"/>
+        <!-- Main circle -->
+        <circle cx="${x}" cy="${y}" r="${r}" fill="rgba(4,8,30,0.75)" stroke="${col}" stroke-width="2"/>
+        <!-- Chapter name -->
+        <text x="${x}" y="${y-8}" text-anchor="middle" fill="#fff" font-size="${r>48?13:12}" font-weight="800">${ch.name}</text>
+        <!-- Subject -->
+        <text x="${x}" y="${y+7}" text-anchor="middle" fill="${badge}" font-size="10" font-weight="600">${ch.subject}</text>
+        <!-- Mastery % -->
+        <text x="${x}" y="${y+20}" text-anchor="middle" fill="${ch.mastery>0?col:'rgba(255,255,255,0.25)'}" font-size="11" font-weight="700">${ch.mastery}% · ${ch.eta}</text>
+        <!-- Tap hint -->
+        <text x="${x}" y="${r+y+22}" text-anchor="middle" fill="rgba(255,255,255,0.22)" font-size="9.5">tap to explore →</text>
+        ${ch.mastery > 0 ? `<circle class="pulse-ring" cx="${x}" cy="${y}" r="${r+8}" fill="none" stroke="${col}" stroke-width="1.5" opacity="0.4"/>` : ''}
+      </g>`;
+  });
+
+  g.innerHTML = edgesHTML + nodesHTML;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER CHAPTER DETAIL
+// ═══════════════════════════════════════════════════════════
+function drillInto(chapId) {
+  const ch = CHAPTERS[chapId];
+  currentView = chapId;
+  closeRP();
+
+  document.getElementById('overviewLayer').style.display = 'none';
+  const dl = document.getElementById('detailLayer');
+  dl.style.display = '';
+
+  // Breadcrumb
+  document.getElementById('breadcrumb').innerHTML =
+    `<span class="bc-link" onclick="renderOverview()">All Chapters</span>
+     <span class="bc-sep">›</span>
+     <span style="color:#fff;font-weight:700;">${ch.name}</span>`;
+
+  // ETA
+  document.getElementById('etaVal').textContent = ch.eta;
+
+  // Left panel
+  document.getElementById('lpScope').textContent = ch.subject;
+  document.getElementById('lpTitle').textContent = ch.name;
+  document.getElementById('lpSub').textContent = 'Class 8 · CBSE · ' + ch.subject;
+  setRing('lpArc', 'lpPct', 'lpBig', ch.mastery, ch.color, 125.66);
+  const total = ch.subconcepts.length;
+  const mastered = ch.subconcepts.filter(s=>s.status==='mastered').length;
+  document.getElementById('lpSmall').textContent = `${mastered} of ${total} mastered`;
+  const current = ch.subconcepts.find(s=>s.status==='current');
+  document.getElementById('lpHereName').textContent = current ? current.name : 'Not started';
+  document.getElementById('lpHereSub').textContent = current ? `${ch.name} · ${ch.mastery}% mastery` : 'Begin with first concept';
+  const recommended = ch.edges.find(e=>e.recommended);
+  const recTarget = recommended ? ch.subconcepts.find(s=>s.id===recommended.to) : null;
+  document.getElementById('lpRec').innerHTML = recTarget
+    ? `Master <span class="hl">${current?.name||'next concept'}</span> to unlock <span class="hl">${recTarget.name}</span>`
+    : `Begin <span class="hl">${ch.subconcepts[0].name}</span>`;
+  document.getElementById('lpBtn').textContent = current ? '▶ Continue Practice' : '🚀 Start Chapter';
+  const counts = {mastered:0,current:0,ready:0,ghost:0};
+  ch.subconcepts.forEach(s=>counts[s.status]=(counts[s.status]||0)+1);
+  document.getElementById('lpStats').innerHTML = `
+    <div class="srow"><span class="sk">Mastered</span><span class="sv" style="color:#00e676">${counts.mastered||0}</span></div>
+    <div class="srow"><span class="sk">In Progress</span><span class="sv" style="color:#2979ff">${counts.current||0}</span></div>
+    <div class="srow"><span class="sk">Ready</span><span class="sv" style="color:#ffd740">${counts.ready||0}</span></div>
+    <div class="srow"><span class="sk">Coming up</span><span class="sv" style="color:rgba(255,255,255,0.3)">${counts.ghost||0}</span></div>
+    <div class="srow"><span class="sk">ETA</span><span class="sv">${ch.eta}</span></div>`;
+
+  // Build SVG for chapter
+  // Scale subconcept positions into a viewBox range
+  // Positions are defined in a ~620×660 virtual space; map to 760×590 viewBox
+  const scMap = {};
+  ch.subconcepts.forEach(s => { scMap[s.id] = s; });
+
+  // Find bounding box
+  const xs = ch.subconcepts.map(s=>s.pos.x), ys = ch.subconcepts.map(s=>s.pos.y);
+  const minX=Math.min(...xs)-60, maxX=Math.max(...xs)+60;
+  const minY=Math.min(...ys)-60, maxY=Math.max(...ys)+60;
+  const scaleX=(760-40)/(maxX-minX), scaleY=(590-40)/(maxY-minY);
+  const scale=Math.min(scaleX,scaleY,1.2);
+  const offX=(760-(maxX-minX)*scale)/2 - minX*scale;
+  const offY=(590-(maxY-minY)*scale)/2 - minY*scale;
+  const sx=(x)=>x*scale+offX, sy=(y)=>y*scale+offY;
+
+  // Edges
+  let edgesHTML = '';
+  ch.edges.forEach(e => {
+    const from = scMap[e.from], to = scMap[e.to];
+    if (!from || !to) return;
+    const x1=sx(from.pos.x), y1=sy(from.pos.y), x2=sx(to.pos.x), y2=sy(to.pos.y);
+    const isRecommended = e.recommended && routeMode==='focused';
+    const isDone = e.done;
+    if (isDone) {
+      edgesHTML += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(0,230,118,0.4)" stroke-width="2" marker-end="url(#arr-g)"/>`;
+    } else if (isRecommended) {
+      edgesHTML += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(41,121,255,0.55)" stroke-width="2.5" stroke-dasharray="10,5" marker-end="url(#arr-b)" class="path-anim"/>`;
+    } else if (e.type === 'strengthens') {
+      edgesHTML += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,215,64,0.2)" stroke-width="1.5" stroke-dasharray="4,5"/>`;
+    } else {
+      edgesHTML += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arr)"/>`;
+    }
+  });
+
+  // Nodes
+  let nodesHTML = '';
+  ch.subconcepts.forEach(s => {
+    const cx=sx(s.pos.x), cy=sy(s.pos.y);
+    const st = s.status;
+    const isGhost = st==='ghost';
+    const opacity = isGhost ? 0.28 : 1;
+    let color, r, filterAttr='', pulseHTML='';
+
+    if (st==='mastered') {
+      color='#00e676'; r=24; filterAttr='filter="url(#fg)"';
+    } else if (st==='current') {
+      color='#2979ff'; r=26; filterAttr='filter="url(#fb)"';
+      pulseHTML=`<circle class="pulse-ring" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.55"/>`;
+    } else if (st==='ready') {
+      color='#ffd740'; r=22; filterAttr='filter="url(#fa)"';
+    } else { // ghost
+      color='rgba(255,255,255,0.3)'; r=20;
+    }
+
+    const fillColor = st==='mastered' ? 'rgba(0,40,20,0.7)' :
+                      st==='current'  ? 'rgba(10,30,80,0.75)' :
+                      st==='ready'    ? 'rgba(40,30,0,0.65)' :
+                                        'rgba(20,25,45,0.55)';
+    const strokeDash = isGhost ? 'stroke-dasharray="4,3"' : '';
+    const labelColor = isGhost ? 'rgba(255,255,255,0.5)' : '#fff';
+    const mastLabel  = s.mastery>0 ? `${s.mastery}%` : (st==='ready' ? 'Ready ▶' : st==='ghost' ? '···' : '');
+    const mastColor  = st==='mastered'?'#00e676':st==='current'?'#82b1ff':st==='ready'?'#ffd740':'rgba(255,255,255,0.3)';
+
+    const words = s.name.split(' ');
+    const line1 = words.slice(0,Math.ceil(words.length/2)).join(' ');
+    const line2 = words.slice(Math.ceil(words.length/2)).join(' ');
+    const twoLine = line2.length > 0;
+
+    const checkmark = st==='mastered' ? `<text x="${cx}" y="${cy-r-6}" text-anchor="middle" fill="#00e676" font-size="9" font-weight="700">✓ MASTERED</text>` : '';
+    const youAreHere = st==='current' ? `<text x="${cx}" y="${cy-r-7}" text-anchor="middle" fill="#82b1ff" font-size="9" font-weight="800">📍 YOU ARE HERE</text>` : '';
+
+    nodesHTML += `
+      <g class="node-g" onclick="selectNode('${s.id}','${chapId}')" style="opacity:${opacity}" title="${s.name}">
+        ${pulseHTML}
+        <circle cx="${cx}" cy="${cy}" r="${r+8}" fill="rgba(${hexToRgb(color)||'255,255,255'},0.04)" ${filterAttr}/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="${fillColor}" stroke="${color}" stroke-width="2" ${strokeDash}/>
+        ${checkmark}${youAreHere}
+        <text x="${cx}" y="${cy+(twoLine?-3:5)}" text-anchor="middle" fill="${labelColor}" font-size="${r>22?10:9}" font-weight="700">${line1}</text>
+        ${twoLine?`<text x="${cx}" y="${cy+9}" text-anchor="middle" fill="${labelColor}" font-size="${r>22?10:9}" font-weight="700">${line2}</text>`:''}
+        <text x="${cx}" y="${cy+r+12}" text-anchor="middle" fill="${mastColor}" font-size="9.5" font-weight="600">${mastLabel}</text>
+      </g>`;
+  });
+
+  dl.innerHTML = edgesHTML + nodesHTML;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SELECT NODE → open right panel
+// ═══════════════════════════════════════════════════════════
+function selectNode(scId, chapId) {
+  const ch = CHAPTERS[chapId];
+  const node = ch.subconcepts.find(s=>s.id===scId);
+  if (!node) return;
+
+  selectedId = scId;
+  document.getElementById('rp').classList.add('open');
+
+  document.getElementById('rName').textContent = node.name;
+  document.getElementById('rPath').textContent = `${ch.name} · ${ch.subject} · Class 8`;
+
+  const col = STATUS_COLOR[node.status] || '#00e676';
+  const circ = 144.51;
+  const arc = document.getElementById('rArc');
+  arc.setAttribute('stroke', col);
+  arc.setAttribute('stroke-dashoffset', circ*(1-node.mastery/100));
+  document.getElementById('rPct').textContent = node.mastery+'%';
+  const lv = document.getElementById('rLv');
+  lv.textContent = { mastered:'Advanced',current:'Developing',ready:'Ready to Learn',ghost:'Not Yet Reachable' }[node.status] || '—';
+  lv.style.color = col;
+  document.getElementById('rNote').textContent = {
+    mastered:'🎯 Keep sharp with spaced reviews',
+    current:'📈 You\'re actively learning this',
+    ready:'✅ Prerequisites done — start now!',
+    ghost:'👁️ Visible ahead — complete prior nodes'
+  }[node.status] || '';
+
+  // Bloom
+  document.getElementById('bloomBars').innerHTML = Object.entries(node.bloom).map(([k,v])=>`
+    <div class="br">
+      <span class="bl">${k}</span>
+      <div class="bb"><div class="bf" style="width:${v}%;background:${BLOOM_COLORS[k]};"></div></div>
+      <span class="bp">${v}%</span>
+    </div>`).join('');
+
+  // Misconceptions
+  const ms = document.getElementById('miscSec');
+  if (node.misc.length===0) { ms.style.display='none'; }
+  else { ms.style.display='block'; document.getElementById('miscItems').innerHTML=node.misc.map(m=>`<div class="misc-item"><div class="mdot"></div>${m}</div>`).join(''); }
+
+  document.getElementById('rMode').textContent = node.mode;
+  document.getElementById('rRet').textContent = node.retention+'%';
+  drawSpark(node.spark);
+
+  document.getElementById('rTags').innerHTML = node.related.map(r=>`<span class="tag">${r}</span>`).join('');
+
+  const cta = document.getElementById('rCta');
+  if (node.status==='ghost') {
+    cta.textContent='🔜 Complete prior concepts first'; cta.style.background='rgba(84,110,122,0.2)'; cta.style.cursor='default'; cta.style.opacity='0.6';
+  } else if (node.status==='mastered') {
+    cta.textContent='🔄 Review & Reinforce'; cta.style.background='linear-gradient(135deg,#00897b,#00acc1)'; cta.style.cursor='pointer'; cta.style.opacity='1';
+  } else if (node.status==='ready') {
+    cta.textContent='🚀 Start Learning Now'; cta.style.background='linear-gradient(135deg,#f59e0b,#d97706)'; cta.style.cursor='pointer'; cta.style.opacity='1';
+  } else {
+    cta.textContent='▶ Continue Practice'; cta.style.background='linear-gradient(135deg,#4338ca,#7c3aed)'; cta.style.cursor='pointer'; cta.style.opacity='1';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function closeRP() { document.getElementById('rp').classList.remove('open'); }
+
+function setMode(m) {
+  routeMode=m;
+  ['focused','deep','revision'].forEach(x=>{
+    document.getElementById('mb-'+x).classList.toggle('active',x===m);
+  });
+  if (currentView!=='overview') drillInto(currentView);
+}
+
+function handleRecBtn() {
+  if (currentView==='overview') drillInto('force_pressure');
+}
+
+function setRing(arcId, pctId, bigId, pct, color, circumference) {
+  const arc=document.getElementById(arcId);
+  arc.setAttribute('stroke',color);
+  arc.setAttribute('stroke-dashoffset', circumference*(1-pct/100));
+  document.getElementById(pctId).textContent=pct+'%';
+  const big=document.getElementById(bigId);
+  if (big) { big.textContent=pct+'%'; big.style.color=color; }
+}
+
+function drawSpark(data) {
+  const svg=document.getElementById('rSpark');
+  const W=238,H=36;
+  const pts=data.map((v,i)=>{
+    const x=(i/(data.length-1))*W;
+    const y=H-((v/100)*(H-4))-2;
+    return `${x},${y}`;
+  }).join(' ');
+  svg.innerHTML=`
+    <defs><linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00e676" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00e676" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="0,${H} ${pts} ${W},${H}" fill="url(#sg2)"/>
+    <polyline points="${pts}" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+function hexToRgb(hex) {
+  if (!hex||hex.startsWith('rgba')) return '255,255,255';
+  const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? `${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}` : '255,255,255';
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+renderOverview();
+</script>
+</body>
+</html>

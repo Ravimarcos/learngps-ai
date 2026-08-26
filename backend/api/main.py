@@ -139,18 +139,69 @@ async def get_gps(student_id: str, chapter_id: str):
     # Get GPS route from Neo4j
     gps = await get_gps_route(_driver, chapter_id, mastered_ids)
 
+    total = len(gps["completed"]) + (1 if gps["current"] else 0) + len(gps["route"]) + len(gps["locked"])
     return {
-        "student_id": student_id,
-        "chapter_id": chapter_id,
-        "current": gps["current"],
-        "route": gps["route"],
-        "completed": gps["completed"],
-        "locked": gps["locked"],
+        "student_id":  student_id,
+        "chapter_id":  chapter_id,
+        "current":     gps["current"],
+        "route":       gps["route"],       # does NOT include current
+        "completed":   gps["completed"],
+        "locked":      gps["locked"],
         "locked_count": len(gps["locked"]),
-        "progress_pct": round(
-            len(gps["completed"]) / max(len(gps["completed"]) + len(gps["route"]) + len(gps["locked"]), 1) * 100
-        ),
+        "nodes":       gps["nodes"],       # all nodes with x,y for 2D map rendering
+        "edges":       gps["edges"],       # all PREREQUISITE edges for drawing lines
+        "progress_pct": round(len(gps["completed"]) / max(total, 1) * 100),
     }
+
+
+# ---------------------------------------------------------------------------
+# Chapters overview endpoint — all chapters with metadata + mastery per student
+# ---------------------------------------------------------------------------
+@app.get("/chapters")
+async def get_chapters_endpoint(
+    grade:      int | None = None,
+    subject:    str | None = None,
+    student_id: str | None = None,
+):
+    """
+    Returns all seeded chapters for the overview map.
+
+    Optional query params:
+        ?grade=8           — filter by grade (e.g. 8, 9, 10)
+        ?subject=Science   — filter by subject name
+        ?student_id=uuid   — include mastery_pct per chapter for this student
+
+    Response:
+    {
+        "chapters": [
+            { "id", "name", "grade", "subject", "color",
+              "ov_x", "ov_y", "ov_radius", "eta",
+              "subconcept_count", "mastery_pct" }
+        ],
+        "edges": [{"from_id", "to_id", "label"}]   // CHAPTER_LINK relationships
+    }
+    """
+    from backend.graph.traversal import get_chapters
+    from backend.config.settings import get_settings
+    from supabase import create_client
+
+    mastered_ids: set[str] = set()
+    if student_id:
+        cfg = get_settings()
+        sb  = create_client(cfg.supabase_url, cfg.supabase_service_key)
+        res = sb.table("student_progress") \
+                .select("subconcept_id") \
+                .eq("student_id", student_id) \
+                .eq("mastered", True) \
+                .execute()
+        mastered_ids = {row["subconcept_id"] for row in res.data}
+
+    return await get_chapters(
+        _driver,
+        mastered_sc_ids=mastered_ids,
+        grade=grade,
+        subject=subject,
+    )
 
 
 # ---------------------------------------------------------------------------

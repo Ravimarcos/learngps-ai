@@ -11,15 +11,62 @@ export const TEST_CHAPTER_ID = "ch_force_pressure";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+// Chapter — represents one chapter in the Neo4j knowledge graph.
+// ov_x / ov_y / ov_radius are the chapter's position on the overview SVG canvas
+// (viewBox "0 0 760 590").  color is the hex accent used for the orb + ring.
+// These properties are stored in Neo4j — never hardcoded in the frontend.
+export interface Chapter {
+  id:                 string;
+  name:               string;
+  grade:              number;
+  subject:            string;
+  color:              string;
+  ov_x:               number;
+  ov_y:               number;
+  ov_radius:          number;
+  eta:                string;
+  ncert_chapter_num?: number;
+  subconcept_count:   number;
+  mastery_pct:        number;   // 0 when no student_id provided
+}
+
+// Cross-chapter dependency edge shown in the overview map
+export interface ChapterEdge {
+  from_id: string;
+  to_id:   string;
+  label:   string;
+}
+
+export interface ChaptersResponse {
+  chapters: Chapter[];
+  edges:    ChapterEdge[];
+}
+
+export interface GPSNode {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  bloom_target?: string;
+  vark_hint?: string;
+}
+
+export interface GPSEdge {
+  from_id: string;
+  to_id: string;
+}
+
 export interface GPSRoute {
   student_id: string;
   chapter_id: string;
-  current: { id: string; name: string } | null;
-  route: { id: string; name: string }[];
+  current:   { id: string; name: string } | null;
+  route:     { id: string; name: string }[];   // reachable, not started (excludes current)
   completed: { id: string; name: string }[];
-  locked: { id: string; name: string }[];   // ghost nodes — visible, prereqs pending
+  locked:    { id: string; name: string }[];   // ghost nodes — prereqs pending
   locked_count: number;
   progress_pct: number;
+  nodes: GPSNode[];   // ALL nodes in chapter with x,y for 2D map rendering
+  edges: GPSEdge[];   // ALL prerequisite edges for drawing directional lines
 }
 
 export interface ChatResponse {
@@ -61,6 +108,26 @@ export interface DikshaResource {
 }
 
 // ── API functions ──────────────────────────────────────────────────────────
+
+/**
+ * Fetch all chapters for the overview map.
+ * Optionally filter by grade / subject, and include per-chapter mastery_pct
+ * when studentId is provided.
+ */
+export async function getChapters(params?: {
+  grade?:     number;
+  subject?:   string;
+  studentId?: string;
+}): Promise<ChaptersResponse> {
+  const q = new URLSearchParams();
+  if (params?.grade     !== undefined) q.set("grade",      String(params.grade));
+  if (params?.subject)                  q.set("subject",    params.subject);
+  if (params?.studentId)                q.set("student_id", params.studentId);
+  const qs  = q.toString();
+  const res = await fetch(`${API}/chapters${qs ? `?${qs}` : ""}`);
+  if (!res.ok) throw new Error("Chapters fetch failed");
+  return res.json();
+}
 
 export async function getGPSRoute(
   studentId: string,
