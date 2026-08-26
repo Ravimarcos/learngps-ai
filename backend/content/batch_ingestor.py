@@ -353,7 +353,7 @@ async def run(rebuild: bool = False):
 
     # Save raw chunks to JSON for inspection / reuse
     import json
-    out_path = Path(__file__).parents[3] / "data" / "diksha_chunks.json"
+    out_path = Path(__file__).parents[2] / "data" / "diksha_chunks.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(chunks, f, indent=2)
@@ -365,5 +365,19 @@ async def run(rebuild: bool = False):
 
 
 if __name__ == "__main__":
-    rebuild = "--rebuild" in sys.argv
-    asyncio.run(run(rebuild=rebuild))
+    rebuild    = "--rebuild"    in sys.argv
+    index_only = "--index-only" in sys.argv
+
+    if index_only:
+        import json
+        cache_path = Path(__file__).parents[2] / "data" / "diksha_chunks.json"
+        if not cache_path.exists():
+            print(f"❌ Cache not found: {cache_path}\n   Run without --index-only first.")
+            sys.exit(1)
+        with open(cache_path) as f:
+            chunks = json.load(f)
+        print(f"\n📦 Loaded {len(chunks)} chunks from cache → indexing...\n")
+        count = index_chunks(chunks, rebuild=True)
+        print(f"\n🎉 Done! {count} chunks indexed.\n")
+    else:
+        asyncio.run(run(rebuild=rebuild))

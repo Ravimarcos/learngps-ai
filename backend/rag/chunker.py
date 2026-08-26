@@ -219,11 +219,33 @@ def chunk_activities_json() -> Iterator[dict]:
 
 
 def get_all_chunks() -> list[dict]:
-    """Return all chunks from all sources."""
+    """
+    Return all chunks from all sources.
+    Priority: DIKSHA batch cache (all 34 chapters) → local PDF → questions JSON
+    """
+    import json
+
     chunks = []
-    chunks.extend(chunk_ncert_pdf())
+
+    # ── 1. DIKSHA batch cache (preferred — covers all 34 chapters) ────────────
+    diksha_cache = BASE / "data" / "diksha_chunks.json"
+    if diksha_cache.exists():
+        try:
+            with open(diksha_cache) as f:
+                diksha_chunks = json.load(f)
+            print(f"📦 Loaded {len(diksha_chunks)} DIKSHA chunks from cache")
+            chunks.extend(diksha_chunks)
+        except Exception as e:
+            print(f"⚠️  Could not load DIKSHA cache: {e}")
+
+    # ── 2. Local NCERT PDF (Force & Pressure only, if not already in DIKSHA) ──
+    if not chunks:
+        chunks.extend(chunk_ncert_pdf())
+
+    # ── 3. Level-wise questions JSON ──────────────────────────────────────────
     chunks.extend(chunk_questions_json())
     chunks.extend(chunk_activities_json())
+
     return chunks
 
 
