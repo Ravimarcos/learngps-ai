@@ -122,19 +122,10 @@ async def health():
 async def get_gps(student_id: str, chapter_id: str):
     """Returns the student's GPS route through a chapter."""
     from backend.graph.traversal import get_gps_route
-    from backend.config.settings import get_settings
-    from supabase import create_client
+    from backend.db.mastery import get_mastered_subconcept_ids
 
-    cfg = get_settings()
-
-    # Fetch mastered subconcepts for this student from Supabase
-    sb = create_client(cfg.supabase_url, cfg.supabase_service_key)
-    result = sb.table("student_progress") \
-               .select("subconcept_id") \
-               .eq("student_id", student_id) \
-               .eq("mastered", True) \
-               .execute()
-    mastered_ids = {row["subconcept_id"] for row in result.data}
+    # Subconcepts where mastery_score >= 70 count as GPS-done
+    mastered_ids = await get_mastered_subconcept_ids(student_id)
 
     # Get GPS route from Neo4j
     gps = await get_gps_route(_driver, chapter_id, mastered_ids)
@@ -187,14 +178,8 @@ async def get_chapters_endpoint(
 
     mastered_ids: set[str] = set()
     if student_id:
-        cfg = get_settings()
-        sb  = create_client(cfg.supabase_url, cfg.supabase_service_key)
-        res = sb.table("student_progress") \
-                .select("subconcept_id") \
-                .eq("student_id", student_id) \
-                .eq("mastered", True) \
-                .execute()
-        mastered_ids = {row["subconcept_id"] for row in res.data}
+        from backend.db.mastery import get_mastered_subconcept_ids
+        mastered_ids = await get_mastered_subconcept_ids(student_id)
 
     return await get_chapters(
         _driver,
@@ -387,56 +372,56 @@ async def chat(body: dict):
             except Exception as lf_err:
                 print(f"⚠️  Langfuse trace failed: {lf_err}")
 
-        # ── Save progress to Supabase (fire-and-forget) ──────────────────
+        # ── Save mastery to Supabase (fire-and-forget) ───────────────────
         if student_id:
             try:
+                from backend.db.mastery import upsert_after_session
                 from backend.config.settings import get_settings
                 from supabase import create_client
-                cfg = get_settings()
-                sb  = create_client(cfg.supabase_url, cfg.supabase_service_key)
 
-                xp           = result.get("xp_earned", 0)
-                is_correct   = xp >= 20
-                bloom_order  = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"]
-                current_bloom = body.get("bloom_level", "Remember")
-                new_bloom    = current_bloom
-                if result.get("bloom_advance") and current_bloom in bloom_order:
-                    idx = bloom_order.index(current_bloom)
+                xp             = result.get("xp_earned", 0)
+                subconcept_id  = body.get("subconcept_id", "sc_contact_force")
+                current_bloom  = body.get("bloom_level", "remember")
+                bloom_target   = body.get("bloom_target", "apply")   # sent from frontend GPS node
+                hints_sent_req = body.get("hint_count", 0)
+                hints_sent_res = result.get("hint_count", 0)
+                hints_this_turn = max(0, hints_sent_res - hints_sent_req)
+
+                # Advance bloom level if Gyaan says so
+                bloom_order   = ["remember", "understand", "apply", "analyse", "evaluate", "create"]
+                current_lower = current_bloom.lower()
+                new_bloom     = current_lower
+                if result.get("bloom_advance") and current_lower in bloom_order:
+                    idx = bloom_order.index(current_lower)
                     if idx < len(bloom_order) - 1:
                         new_bloom = bloom_order[idx + 1]
 
-                subconcept_id = body.get("subconcept_id", "sc_contact_force")
+                # correct = student got it right this turn (xp >= 20 is the proxy)
+                correct = xp >= 20
 
-                # Read current consecutive_correct
-                existing = sb.table("student_progress") \
-                    .select("consecutive_correct") \
-                    .eq("student_id", student_id) \
-                    .eq("subconcept_id", subconcept_id) \
-                    .execute()
-                current_cc = existing.data[0]["consecutive_correct"] if existing.data else 0
-                new_cc = (current_cc + 1) if is_correct else 0
+                # Fire-and-forget — don't await, let it run in background
+                asyncio.create_task(upsert_after_session(
+                    student_id      = student_id,
+                    subconcept_id   = subconcept_id,
+                    chapter_id      = body.get("chapter_id", ""),
+                    new_bloom_level = new_bloom,
+                    bloom_target    = bloom_target,
+                    hints_used      = hints_this_turn,
+                    correct         = correct,
+                    xp_earned       = xp,
+                ))
 
-                # Mastery: 2+ consecutive correct answers (bloom level tracked separately)
-                mastered = new_cc >= 2
-
-                # Upsert per-subconcept progress
-                sb.table("student_progress").upsert({
-                    "student_id":          student_id,
-                    "subconcept_id":       subconcept_id,
-                    "subconcept_name":     subconcept_name,
-                    "bloom_level":         new_bloom,
-                    "xp_earned":           xp,
-                    "consecutive_correct": new_cc,
-                    "mastered":            mastered,
-                    "updated_at":          "now()",
-                }, on_conflict="student_id,subconcept_id").execute()
-
-                # Increment total_xp in student_profiles (only if xp earned)
+                # Also increment total_xp in student_profiles (legacy table)
                 if xp > 0:
-                    sb.rpc("increment_xp", {"uid": student_id, "amount": xp}).execute()
+                    try:
+                        cfg = get_settings()
+                        sb  = create_client(cfg.supabase_url, cfg.supabase_service_key)
+                        sb.rpc("increment_xp", {"uid": student_id, "amount": xp}).execute()
+                    except Exception:
+                        pass
 
             except Exception as prog_err:
-                print(f"⚠️  Progress save failed: {prog_err}")
+                print(f"⚠️  Mastery save failed: {prog_err}")
 
         return result
 

@@ -59,8 +59,8 @@ export interface GPSEdge {
 export interface GPSRoute {
   student_id: string;
   chapter_id: string;
-  current:   { id: string; name: string } | null;
-  route:     { id: string; name: string }[];   // reachable, not started (excludes current)
+  current:   { id: string; name: string; bloom_target?: string; vark_hint?: string } | null;
+  route:     { id: string; name: string; bloom_target?: string; vark_hint?: string }[];
   completed: { id: string; name: string }[];
   locked:    { id: string; name: string }[];   // ghost nodes — prereqs pending
   locked_count: number;
@@ -145,7 +145,10 @@ export async function sendChat(params: {
   conversationHistory: { role: string; content: string }[];
   subconcept_id: string;
   subconcept_name: string;
+  chapter_id: string;
+  chapter_name: string;
   bloom_level: string;
+  bloom_target?: string;   // subconcept's target bloom level (from GPS node)
   vark_style: string;
   hint_count?: number;
   mode?: string;
@@ -163,8 +166,10 @@ export async function sendChat(params: {
       conversation_history: params.conversationHistory,
       subconcept_id:        params.subconcept_id,
       subconcept_name:      params.subconcept_name,
-      chapter_name:         "Force & Pressure",
+      chapter_id:           params.chapter_id,
+      chapter_name:         params.chapter_name,
       bloom_level:          params.bloom_level,
+      bloom_target:         params.bloom_target ?? "apply",
       vark_style:           params.vark_style,
       hint_count:           params.hint_count ?? 0,
       mode:                 params.mode ?? "learning",
