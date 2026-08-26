@@ -470,7 +470,8 @@ function MapScreen({ studentId, onStart }: {
   const [view,       setView]       = useState<"overview" | string>("overview");
   const [detailNode, setDetailNode] = useState<{ id: string; name: string; state: string; bloomTarget?: string; varkHint?: string } | null>(null);
   const [routeMode,  setRouteMode]  = useState<"focused" | "deep" | "revision">("focused");
-  const [gradeFilter, setGradeFilter] = useState<number | null>(null);
+  const [gradeFilter,   setGradeFilter]   = useState<number | null>(null);
+  const [subjectFilter, setSubjectFilter] = useState<string | null>(null);
 
   // ── pan / zoom ──────────────────────────────────────────────────────────────
   const [pan,   setPan]   = useState({ x: 0, y: 0 });
@@ -535,9 +536,13 @@ function MapScreen({ studentId, onStart }: {
     return "ghost";
   }
 
-  // Grade filter — derived from chapters data
-  const grades          = [...new Set(chapters.map(c => c.grade))].sort((a, b) => a - b);
-  const visibleChapters = gradeFilter ? chapters.filter(c => c.grade === gradeFilter) : chapters;
+  // Grade + subject filters — derived from chapters data
+  const grades    = [...new Set(chapters.map(c => c.grade))].sort((a, b) => a - b);
+  const subjects  = [...new Set(chapters.map(c => c.subject))].sort();
+  const visibleChapters = chapters.filter(c =>
+    (!gradeFilter   || c.grade   === gradeFilter) &&
+    (!subjectFilter || c.subject === subjectFilter)
+  );
 
   // ── Touch pan / pinch-zoom ─────────────────────────────────────────────────
   function onTouchStart(e: React.TouchEvent) {
@@ -654,25 +659,44 @@ function MapScreen({ studentId, onStart }: {
             </button>
           ))}
 
-          {/* Grade filter tabs — only in overview, only when multiple grades exist */}
-          {isOverview && grades.length > 1 && (
-            <div style={{ marginLeft: "auto", display: "flex", gap: "4px" }}>
-              <button onClick={() => setGradeFilter(null)}
-                style={{ padding: "2px 7px", borderRadius: "8px", fontSize: "9px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                  background: gradeFilter === null ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.05)",
-                  color: gradeFilter === null ? "#fff" : "rgba(255,255,255,0.4)",
-                  border: "1px solid rgba(255,255,255,0.1)" }}>
-                All
-              </button>
-              {grades.map(g => (
-                <button key={g} onClick={() => setGradeFilter(g)}
-                  style={{ padding: "2px 7px", borderRadius: "8px", fontSize: "9px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                    background: gradeFilter === g ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.05)",
-                    color: gradeFilter === g ? "#fff" : "rgba(255,255,255,0.4)",
-                    border: "1px solid rgba(255,255,255,0.1)" }}>
-                  Gr {g}
-                </button>
-              ))}
+          {/* Subject + grade filter tabs — overview only */}
+          {isOverview && (subjects.length > 1 || grades.length > 1) && (
+            <div style={{ marginLeft: "auto", display: "flex", gap: "4px", flexWrap: "wrap" }}>
+              {/* Subject filter */}
+              {subjects.length > 1 && (
+                <>
+                  {["All", ...subjects].map(s => {
+                    const active = s === "All" ? subjectFilter === null : subjectFilter === s;
+                    return (
+                      <button key={s} onClick={() => setSubjectFilter(s === "All" ? null : s)}
+                        style={{ padding: "2px 8px", borderRadius: "8px", fontSize: "9px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                          background: active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.05)",
+                          color: active ? "#fff" : "rgba(255,255,255,0.4)",
+                          border: "1px solid rgba(255,255,255,0.1)" }}>
+                        {s}
+                      </button>
+                    );
+                  })}
+                  {grades.length > 1 && <span style={{ color: "rgba(255,255,255,0.15)", fontSize: "11px", alignSelf: "center" }}>|</span>}
+                </>
+              )}
+              {/* Grade filter */}
+              {grades.length > 1 && (
+                <>
+                  {[null, ...grades].map(g => {
+                    const active = gradeFilter === g;
+                    return (
+                      <button key={g ?? "all"} onClick={() => setGradeFilter(g)}
+                        style={{ padding: "2px 7px", borderRadius: "8px", fontSize: "9px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                          background: active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.05)",
+                          color: active ? "#fff" : "rgba(255,255,255,0.4)",
+                          border: "1px solid rgba(255,255,255,0.1)" }}>
+                        {g === null ? "All Grades" : `Gr ${g}`}
+                      </button>
+                    );
+                  })}
+                </>
+              )}
             </div>
           )}
 
@@ -775,22 +799,32 @@ function MapScreen({ studentId, onStart }: {
                         strokeLinecap="round"
                         transform={`rotate(-90 ${px} ${py})`} />
                     )}
-                    {/* Orb body */}
+                    {/* Orb body — dimmed for coming-soon chapters */}
                     <circle cx={px} cy={py} r={r}
-                      fill={hexToRgba(ch.color, 0.18)} stroke={ch.color} strokeWidth="1.5" />
+                      fill={hexToRgba(ch.color, ch.subconcept_count > 0 ? 0.18 : 0.07)}
+                      stroke={ch.color} strokeWidth="1.5"
+                      opacity={ch.subconcept_count > 0 ? 1 : 0.5}
+                      strokeDasharray={ch.subconcept_count === 0 ? "5 3" : undefined} />
                     {/* Chapter name */}
                     {words.map((word, wi) => (
                       <text key={wi} x={px} y={startY + wi * 14}
                         textAnchor="middle" dominantBaseline="middle"
-                        fill="#fff" fontSize={r > 48 ? "12" : "11"} fontWeight="800">
+                        fill={ch.subconcept_count > 0 ? "#fff" : "rgba(255,255,255,0.45)"}
+                        fontSize={r > 48 ? "12" : "11"} fontWeight="800"
+                        opacity={ch.subconcept_count > 0 ? 1 : 0.6}>
                         {word}
                       </text>
                     ))}
+                    {/* "Soon" badge for chapters without content */}
+                    {ch.subconcept_count === 0 && (
+                      <text x={px} y={py + r - 10} textAnchor="middle" dominantBaseline="middle"
+                        fill="rgba(255,255,255,0.35)" fontSize="8" fontWeight="600">Coming Soon</text>
+                    )}
                     {/* Subject + ETA */}
                     <text x={px} y={py + ringR + 12} textAnchor="middle"
-                      fill={ch.color} fontSize="10" fontWeight="700">{ch.subject}</text>
+                      fill={ch.color} fontSize="10" fontWeight="700" opacity={ch.subconcept_count > 0 ? 1 : 0.5}>{ch.subject}</text>
                     <text x={px} y={py + ringR + 24} textAnchor="middle"
-                      fill="rgba(255,255,255,0.28)" fontSize="9">{ch.eta}</text>
+                      fill="rgba(255,255,255,0.28)" fontSize="9" opacity={ch.subconcept_count > 0 ? 1 : 0.5}>{ch.eta}</text>
                     {/* Mastery % */}
                     {pct > 0 && (
                       <text x={px} y={py + r - 8} textAnchor="middle" dominantBaseline="middle"

@@ -28,23 +28,44 @@ from backend.graph.schema import create_constraints
 # Chapter
 # ---------------------------------------------------------------------------
 CHAPTERS = [
-    {
-        "id":               "ch_force_pressure",
-        "name":             "Force & Pressure",
-        "grade":            8,
-        "subject":          "Science",
-        "ncert_chapter_num": 11,
-        # Overview-map display properties (stored in Neo4j, never hardcoded in frontend)
-        # ov_x / ov_y → position on overview SVG canvas (viewBox "0 0 760 590")
-        # ov_radius    → orb radius in SVG units
-        # color        → hex accent colour for this chapter's orb + ring
-        # eta          → human-readable estimated time to complete
-        "color":     "#2979ff",
-        "ov_x":      550.0,
-        "ov_y":      330.0,
-        "ov_radius": 52.0,
-        "eta":       "~8 sessions",
-    }
+    # ── Grade 8 Science ────────────────────────────────────────────────────────
+    # ov_x / ov_y = 0 → auto-layout ellipse in the frontend (no hardcoded position)
+    # ov_radius / color / eta → stored in Neo4j, never hardcoded in frontend
+    {"id": "ch_crop_production",   "name": "Crop Production and Management",         "grade": 8, "subject": "Science", "ncert_chapter_num": 1,  "color": "#43a047", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~6 sessions"},
+    {"id": "ch_microorganisms",    "name": "Microorganisms: Friend and Foe",          "grade": 8, "subject": "Science", "ncert_chapter_num": 2,  "color": "#66bb6a", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~7 sessions"},
+    {"id": "ch_synthetic_fibres",  "name": "Synthetic Fibres and Plastics",           "grade": 8, "subject": "Science", "ncert_chapter_num": 3,  "color": "#ff8f00", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~5 sessions"},
+    {"id": "ch_metals_nonmetals",  "name": "Metals and Non-Metals",                   "grade": 8, "subject": "Science", "ncert_chapter_num": 4,  "color": "#ffa726", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~7 sessions"},
+    {"id": "ch_coal_petroleum",    "name": "Coal and Petroleum",                       "grade": 8, "subject": "Science", "ncert_chapter_num": 5,  "color": "#8d6e63", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 42.0, "eta": "~5 sessions"},
+    {"id": "ch_combustion",        "name": "Combustion and Flame",                     "grade": 8, "subject": "Science", "ncert_chapter_num": 6,  "color": "#ef5350", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~6 sessions"},
+    {"id": "ch_conservation",      "name": "Conservation of Plants and Animals",       "grade": 8, "subject": "Science", "ncert_chapter_num": 7,  "color": "#26a69a", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~6 sessions"},
+    {"id": "ch_cell",              "name": "Cell: Structure and Functions",             "grade": 8, "subject": "Science", "ncert_chapter_num": 8,  "color": "#00897b", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~8 sessions"},
+    {"id": "ch_reproduction",      "name": "Reproduction in Animals",                  "grade": 8, "subject": "Science", "ncert_chapter_num": 9,  "color": "#4db6ac", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 42.0, "eta": "~6 sessions"},
+    {"id": "ch_adolescence",       "name": "Reaching the Age of Adolescence",          "grade": 8, "subject": "Science", "ncert_chapter_num": 10, "color": "#80cbc4", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~5 sessions"},
+    {"id": "ch_force_pressure",    "name": "Force & Pressure",                         "grade": 8, "subject": "Science", "ncert_chapter_num": 11, "color": "#2979ff", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 52.0, "eta": "~8 sessions"},
+    {"id": "ch_friction",          "name": "Friction",                                 "grade": 8, "subject": "Science", "ncert_chapter_num": 12, "color": "#1976d2", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~6 sessions"},
+    {"id": "ch_sound",             "name": "Sound",                                    "grade": 8, "subject": "Science", "ncert_chapter_num": 13, "color": "#e040fb", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~7 sessions"},
+    {"id": "ch_chemical_effects",  "name": "Chemical Effects of Electric Current",     "grade": 8, "subject": "Science", "ncert_chapter_num": 14, "color": "#ffd740", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~7 sessions"},
+    {"id": "ch_natural_phenomena", "name": "Some Natural Phenomena",                   "grade": 8, "subject": "Science", "ncert_chapter_num": 15, "color": "#00bcd4", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~6 sessions"},
+    {"id": "ch_light",             "name": "Light",                                    "grade": 8, "subject": "Science", "ncert_chapter_num": 16, "color": "#ff9100", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~9 sessions"},
+    {"id": "ch_stars_solar",       "name": "Stars and the Solar System",               "grade": 8, "subject": "Science", "ncert_chapter_num": 17, "color": "#7e57c2", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~7 sessions"},
+    {"id": "ch_pollution",         "name": "Pollution of Air and Water",               "grade": 8, "subject": "Science", "ncert_chapter_num": 18, "color": "#78909c", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~5 sessions"},
+    # ── Grade 8 Maths ──────────────────────────────────────────────────────────
+    {"id": "ch_rational_numbers",      "name": "Rational Numbers",                     "grade": 8, "subject": "Maths", "ncert_chapter_num": 1,  "color": "#9c27b0", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~6 sessions"},
+    {"id": "ch_linear_equations",      "name": "Linear Equations",                     "grade": 8, "subject": "Maths", "ncert_chapter_num": 2,  "color": "#8e24aa", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~7 sessions"},
+    {"id": "ch_quadrilaterals",        "name": "Understanding Quadrilaterals",          "grade": 8, "subject": "Maths", "ncert_chapter_num": 3,  "color": "#ab47bc", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~7 sessions"},
+    {"id": "ch_practical_geometry",    "name": "Practical Geometry",                   "grade": 8, "subject": "Maths", "ncert_chapter_num": 4,  "color": "#7b1fa2", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 42.0, "eta": "~5 sessions"},
+    {"id": "ch_data_handling",         "name": "Data Handling",                        "grade": 8, "subject": "Maths", "ncert_chapter_num": 5,  "color": "#00acc1", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~6 sessions"},
+    {"id": "ch_squares_roots",         "name": "Squares and Square Roots",             "grade": 8, "subject": "Maths", "ncert_chapter_num": 6,  "color": "#6a1b9a", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~7 sessions"},
+    {"id": "ch_cubes_roots",           "name": "Cubes and Cube Roots",                 "grade": 8, "subject": "Maths", "ncert_chapter_num": 7,  "color": "#4a148c", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 42.0, "eta": "~6 sessions"},
+    {"id": "ch_comparing_quantities",  "name": "Comparing Quantities",                 "grade": 8, "subject": "Maths", "ncert_chapter_num": 8,  "color": "#512da8", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~7 sessions"},
+    {"id": "ch_algebraic_expressions", "name": "Algebraic Expressions and Identities", "grade": 8, "subject": "Maths", "ncert_chapter_num": 9,  "color": "#4527a0", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~8 sessions"},
+    {"id": "ch_solid_shapes",          "name": "Visualising Solid Shapes",             "grade": 8, "subject": "Maths", "ncert_chapter_num": 10, "color": "#283593", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~5 sessions"},
+    {"id": "ch_mensuration",           "name": "Mensuration",                          "grade": 8, "subject": "Maths", "ncert_chapter_num": 11, "color": "#1565c0", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~8 sessions"},
+    {"id": "ch_exponents",             "name": "Exponents and Powers",                 "grade": 8, "subject": "Maths", "ncert_chapter_num": 12, "color": "#0277bd", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~6 sessions"},
+    {"id": "ch_proportions",           "name": "Direct and Inverse Proportions",       "grade": 8, "subject": "Maths", "ncert_chapter_num": 13, "color": "#01579b", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 46.0, "eta": "~6 sessions"},
+    {"id": "ch_factorisation",         "name": "Factorisation",                        "grade": 8, "subject": "Maths", "ncert_chapter_num": 14, "color": "#006064", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 44.0, "eta": "~7 sessions"},
+    {"id": "ch_intro_graphs",          "name": "Introduction to Graphs",               "grade": 8, "subject": "Maths", "ncert_chapter_num": 15, "color": "#00695c", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 42.0, "eta": "~5 sessions"},
+    {"id": "ch_playing_numbers",       "name": "Playing with Numbers",                 "grade": 8, "subject": "Maths", "ncert_chapter_num": 16, "color": "#1b5e20", "ov_x": 0.0, "ov_y": 0.0, "ov_radius": 42.0, "eta": "~4 sessions"},
 ]
 
 # Cross-chapter dependency edges shown in the overview map.
@@ -281,13 +302,8 @@ async def seed(driver):
             )
 
         # ── CHAPTER_LINK edges (cross-chapter conceptual bridges) ────────────
-        # Delete stale links from this chapter first, then recreate
-        await session.run(
-            """
-            MATCH (a:Chapter {id:'ch_force_pressure'})-[r:CHAPTER_LINK]->()
-            DELETE r
-            """
-        )
+        # Delete ALL existing links then recreate from CHAPTER_LINKS list
+        await session.run("MATCH ()-[r:CHAPTER_LINK]->() DELETE r")
         for from_id, to_id, label in CHAPTER_LINKS:
             await session.run(
                 """
