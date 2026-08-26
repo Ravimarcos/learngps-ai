@@ -16,7 +16,7 @@ import anthropic
 import asyncio
 from backend.config.models import get_model, TaskType
 from backend.config.settings import get_settings
-from backend.content.question_bank import get_questions_for_subconcept, get_bloom_style_guide
+from backend.content.question_bank import get_questions_for_subconcept, get_bloom_style_guide, SUBCONCEPT_TO_CONCEPTS
 from backend.rag.retriever import retrieve, format_for_prompt
 
 settings = get_settings()
@@ -171,6 +171,45 @@ def _activity_trigger(bloom_level: str, already_shown: bool) -> str:
 
 # ── System prompt ──────────────────────────────────────────────────────────────
 
+def _adaptive_jump_block(prereq_names: list[str]) -> str:
+    """
+    Gyaan's Adaptive Jump instructions — injected only when student has skipped prereqs.
+    Gap size drives how many bridging steps Gyaan gives before diving into the topic.
+    """
+    n = len(prereq_names)
+    if n == 0:
+        return ""
+    prereq_list = ", ".join(f'"{p}"' for p in prereq_names)
+    if n == 1:
+        bridge = (
+            f"The student skipped 1 prerequisite topic ({prereq_list}). "
+            "Before you start the session, give exactly ONE bridging sentence that links that topic to the current one. "
+            "Example: 'Since we're jumping in, just know that [bridging idea] — now let's explore...'"
+        )
+    elif n <= 3:
+        bridge = (
+            f"The student skipped {n} prerequisite topics ({prereq_list}). "
+            "Before diving in, run 2-3 quick warm-up questions — one per skipped topic — "
+            "to detect what the student already knows. Keep them short (MCQ). "
+            "If they answer correctly, proceed normally. If they struggle, give a one-sentence bridge for that concept, then continue."
+        )
+    else:
+        bridge = (
+            f"The student skipped {n} prerequisite topics ({prereq_list}). "
+            "This is a significant gap. Start the session at Bloom Remember level regardless of their stored level. "
+            "Begin with: 'Let me quickly lay the foundation before we explore this topic.' "
+            "Give 2 calibration questions to check existing knowledge. "
+            "If they show prior knowledge, fast-track to their Bloom level. "
+            "If not, build up step by step from Remember."
+        )
+    return f"""
+ADAPTIVE JUMP MODE — STUDENT JUMPED AHEAD:
+{bridge}
+After the bridge / calibration, continue your normal teaching flow.
+Do NOT make the student feel bad for jumping ahead — frame it as curiosity: "Great that you're exploring ahead!"
+"""
+
+
 def build_system_prompt(context: dict) -> str:
     student_name   = context.get("student_name", "Student")
     vark_style     = context.get("vark_style", "K")
@@ -184,6 +223,7 @@ def build_system_prompt(context: dict) -> str:
     mode           = context.get("mode", "learning")
     activity_shown = context.get("activity_shown", False)
     subconcept_id  = context.get("subconcept_id", "")
+    prereq_names   = context.get("prereq_names", [])
 
     vark_instructions = {
         "V": "Use diagrams described in words, spatial metaphors. Say 'picture this...' or 'imagine a diagram where...'",
@@ -201,9 +241,10 @@ def build_system_prompt(context: dict) -> str:
         "Open-ended scenario question — no options. Ask student to explain their reasoning."
     )
 
-    hint_block   = _hint_guidance(hint_count)
-    mode_block   = _mode_block(mode)
-    activity_tip = _activity_trigger(bloom_level, activity_shown)
+    hint_block    = _hint_guidance(hint_count)
+    mode_block    = _mode_block(mode)
+    activity_tip  = _activity_trigger(bloom_level, activity_shown)
+    jump_block    = _adaptive_jump_block(prereq_names)
 
     # Resources for this subconcept
     resources = _get_resources(subconcept)
@@ -214,7 +255,7 @@ def build_system_prompt(context: dict) -> str:
 
     memory_line = f"\nYou remember from last session: {last_note}" if last_note else ""
 
-    prompt = f"""You are Gyaan, a warm and encouraging AI tutor for Indian Class 8-10 students.
+    prompt = f"""{jump_block}You are Gyaan, a warm and encouraging AI tutor for Indian Class 8-10 students.
 You are tutoring {student_name} right now.{memory_line}
 
 CURRENT FOCUS:
@@ -294,6 +335,7 @@ async def chat(
     hint_count: int = 0,
     mode: str = "learning",
     activity_shown: bool = False,
+    prereq_names: list[str] | None = None,
 ) -> dict:
     """
     One turn of Gyaan's conversation.
@@ -308,8 +350,16 @@ async def chat(
         }
     """
 
-    # Fetch relevant questions for context — pass 5 so Claude picks a different one each turn
-    questions = get_questions_for_subconcept(subconcept_id, bloom_level, limit=5)
+    # Fetch questions: 3 from current subconcept + 2 from other subconcepts (interleaving)
+    questions = get_questions_for_subconcept(subconcept_id, bloom_level, limit=3)
+    other_sc_ids = [sc for sc in SUBCONCEPT_TO_CONCEPTS if sc != subconcept_id]
+    import random as _random
+    _random.shuffle(other_sc_ids)
+    for other_sc in other_sc_ids[:3]:
+        extra = get_questions_for_subconcept(other_sc, bloom_level, limit=1)
+        questions += extra
+        if len(questions) >= 5:
+            break
     style_guide = get_bloom_style_guide(bloom_level)
 
     if questions:
@@ -377,6 +427,7 @@ async def chat(
         "hint_count":        hint_count,
         "mode":              mode,
         "activity_shown":    activity_shown,
+        "prereq_names":      prereq_names or [],
     }
 
     system_prompt = build_system_prompt(context)

@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LearnGPS · Knowledge Navigation Platform — Architecture Graph</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --navy:   #1E3A5F;
+    --teal:   #0D9488;
+    --amber:  #D97706;
+    --coral:  #DC2626;
+    --violet: #7C3AED;
+    --green:  #16A34A;
+    --bg:     #F8FAFC;
+    --panel:  #FFFFFF;
+    --line:   #E2E8F0;
+    --text:   #0F172A;
+    --muted:  #64748B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg); }
+
+  /* ── Layout ── */
+  .layout { display: flex; flex-direction: column; min-height: 100vh; }
+  .header { background: var(--navy); color: #fff; padding: 20px 32px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .header .sub { font-size: 13px; color: #93C5FD; }
+  .header .tag { margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #FCD34D; }
+
+  .body { display: flex; flex: 1; overflow: hidden; }
+  .graph-col { flex: 1; overflow: auto; padding: 24px; }
+  .detail-col { width: 320px; min-width: 280px; border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
+
+  /* ── Graph container ── */
+  .graph-wrap { background: white; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  svg.graph { width: 100%; height: auto; display: block; cursor: default; }
+
+  /* ── SVG styles (inlined for self-containment) ── */
+  .band-kg  { fill: #EEF2FF; stroke: #C7D2FE; }
+  .band-me  { fill: #F0FDFA; stroke: #99F6E4; }
+  .band-ag  { fill: #FFF7ED; stroke: #FED7AA; }
+  .band-sj  { fill: #FDF4FF; stroke: #E9D5FF; }
+
+  .band-lbl { font: 700 11px ui-sans-serif,system-ui,sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+  .lbl-kg { fill: #3730A3; }
+  .lbl-me { fill: #134E4A; }
+  .lbl-ag { fill: #92400E; }
+  .lbl-sj { fill: #581C87; }
+
+  /* Node base */
+  .node { stroke-width: 1.5; transition: filter .15s; cursor: pointer; }
+  .node:hover { filter: drop-shadow(0 0 6px rgba(0,0,0,.25)); }
+  .node.active { filter: drop-shadow(0 0 8px rgba(30,58,95,.6)); }
+
+  /* Node types */
+  .n-subject  { fill: #EEF2FF; stroke: #4F46E5; }
+  .n-chapter  { fill: #DBEAFE; stroke: #2563EB; }
+  .n-concept  { fill: #E0F2FE; stroke: #0284C7; }
+  .n-dest     { fill: #F0FDF4; stroke: #16A34A; }
+  .n-bloom    { fill: #FDF4FF; stroke: #9333EA; }
+  .n-signal   { fill: #F0FDFA; stroke: #0D9488; }
+  .n-mastery  { fill: #FEF3C7; stroke: #D97706; }
+  .n-agent    { fill: #FFF7ED; stroke: #EA580C; }
+  .n-orchestr { fill: #FEF2F2; stroke: #DC2626; }
+  .n-route    { fill: #FAF5FF; stroke: #7C3AED; }
+  .n-student  { fill: #1E3A5F; stroke: #93C5FD; }
+
+  /* Text */
+  .nt  { font: 600 10.5px ui-sans-serif,system-ui,sans-serif; }
+  .ns  { font: 9px ui-sans-serif,system-ui,sans-serif; fill: #64748B; }
+  .nt-subject  { fill: #312E81; }
+  .nt-chapter  { fill: #1E40AF; }
+  .nt-concept  { fill: #075985; }
+  .nt-dest     { fill: #166534; }
+  .nt-bloom    { fill: #6B21A8; }
+  .nt-signal   { fill: #134E4A; }
+  .nt-mastery  { fill: #92400E; }
+  .nt-agent    { fill: #9A3412; }
+  .nt-orchestr { fill: #991B1B; }
+  .nt-route    { fill: #581C87; }
+  .nt-student  { fill: #BAE6FD; }
+
+  /* Edges */
+  .edge { stroke-width: 1.2; fill: none; }
+  .e-part   { stroke: #6366F1; }
+  .e-rec    { stroke: #2563EB; stroke-dasharray: none; }
+  .e-str    { stroke: #0D9488; stroke-dasharray: 4 2; }
+  .e-apply  { stroke: #D97706; stroke-dasharray: 6 3; }
+  .e-conf   { stroke: #DC2626; stroke-dasharray: 2 3; }
+  .e-feed   { stroke: #94A3B8; }
+  .e-orch   { stroke: #EA580C; stroke-width: 1.8; }
+
+  /* Arrowheads defined in SVG defs */
+
+  /* Band label background */
+  .band-tag { font: 700 10.5px ui-sans-serif,system-ui,sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+
+  /* ── Detail panel ── */
+  .detail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 32px; text-align: center; color: var(--muted); gap: 12px; }
+  .detail-empty svg { opacity: .3; }
+  .detail-content { padding: 24px; flex: 1; overflow-y: auto; display: none; }
+  .detail-content.show { display: block; }
+  .detail-empty.hide { display: none; }
+
+  .detail-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 12px; }
+  .detail-name { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .detail-desc { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+  .detail-section { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 14px 0 6px; }
+  .detail-kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 12px; }
+  .detail-kv dt { color: var(--muted); white-space: nowrap; }
+  .detail-kv dd { font-weight: 500; }
+  .detail-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chip { padding: 3px 10px; border-radius: 99px; font-size: 11px; border: 1px solid; }
+
+  /* ── Legend ── */
+  .legend-strip { background: white; border-top: 1px solid var(--line); padding: 16px 24px; display: flex; gap: 24px; flex-wrap: wrap; }
+  .legend-group { display: flex; flex-direction: column; gap: 4px; }
+  .legend-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 2px; }
+  .legend-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid; }
+  .legend-line { width: 28px; height: 2px; }
+  .legend-dash { background: repeating-linear-gradient(90deg, var(--c) 0,var(--c) 5px,transparent 5px,transparent 9px); }
+
+  /* ── Bottom tabs ── */
+  .tabs { background: white; border-top: 1px solid var(--line); display: flex; }
+  .tab { flex: 1; padding: 10px 6px; font-size: 12px; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all .15s; }
+  .tab.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 600; }
+
+  .tab-panel { display: none; padding: 16px 24px; background: white; border-top: 1px solid var(--line); font-size: 12px; }
+  .tab-panel.active { display: block; }
+
+  table.edges { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.edges th { background: #F8FAFC; color: var(--navy); padding: 7px 10px; text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; border-bottom: 2px solid var(--line); }
+  table.edges td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.edges code { background: #EEF2FF; padding: 1px 5px; border-radius: 4px; color: #4338CA; font-size: 11px; }
+
+  @media (max-width: 900px) {
+    .body { flex-direction: column; }
+    .detail-col { width: 100%; border-left: none; border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Header -->
+<div class="header">
+  <h1>LearnGPS</h1>
+  <span class="sub">Knowledge Navigation Platform — Full Architecture Graph</span>
+  <span class="tag">Click any node to explore</span>
+</div>
+
+<div class="body">
+<!-- ── Graph Column ── -->
+<div class="graph-col">
+<div class="graph-wrap">
+<svg class="graph" viewBox="0 0 1080 830" xmlns="http://www.w3.org/2000/svg" id="mainsvg">
+<defs>
+  <marker id="arr"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/></marker>
+  <marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/></marker>
+  <marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0D9488"/></marker>
+  <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97706"/></marker>
+  <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/></marker>
+  <marker id="arrO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#EA580C"/></marker>
+  <marker id="arrP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+</defs>
+
+<!-- ════════════════════════════════════════════════════
+     BAND 1 — KNOWLEDGE GRAPH
+     ════════════════════════════════════════════════════ -->
+<rect x="12" y="14" width="1056" height="268" rx="10" class="band-kg"/>
+<text x="28" y="34" class="band-lbl lbl-kg">① Knowledge Graph  ·  subjects → chapters → concepts → cross-domain connections → career &amp; exam destinations</text>
+
+<!-- Subjects row (y=65) -->
+<!-- Science -->
+<rect id="n-science" x="28" y="52" width="110" height="38" rx="7" class="node n-subject" onclick="showNode('science')"/>
+<text x="83" y="67" class="nt nt-subject" text-anchor="middle">Science</text>
+<text x="83" y="80" class="ns" text-anchor="middle">Class 8–10</text>
+<!-- Mathematics -->
+<rect id="n-math" x="158" y="52" width="110" height="38" rx="7" class="node n-subject" onclick="showNode('math')"/>
+<text x="213" y="67" class="nt nt-subject" text-anchor="middle">Mathematics</text>
+<text x="213" y="80" class="ns" text-anchor="middle">Class 8–10</text>
+<!-- Biology (cross-domain target) -->
+<rect id="n-bio" x="288" y="52" width="110" height="38" rx="7" class="node n-subject" onclick="showNode('bio')"/>
+<text x="343" y="67" class="nt nt-subject" text-anchor="middle">Biology</text>
+<text x="343" y="80" class="ns" text-anchor="middle">cross-domain</text>
+<!-- Geography -->
+<rect id="n-geo" x="418" y="52" width="110" height="38" rx="7" class="node n-subject" onclick="showNode('geo')"/>
+<text x="473" y="67" class="nt nt-subject" text-anchor="middle">Geography</text>
+<text x="473" y="80" class="ns" text-anchor="middle">cross-domain</text>
+
+<!-- Destinations (top-right) -->
+<rect id="n-cbse" x="578" y="52" width="90" height="38" rx="7" class="node n-dest" onclick="showNode('cbse')"/>
+<text x="623" y="67" class="nt nt-dest" text-anchor="middle">CBSE Board</text>
+<text x="623" y="80" class="ns" text-anchor="middle">Exam</text>
+<rect id="n-jee" x="678" y="52" width="90" height="38" rx="7" class="node n-dest" onclick="showNode('jee')"/>
+<text x="723" y="67" class="nt nt-dest" text-anchor="middle">JEE / NEET</text>
+<text x="723" y="80" class="ns" text-anchor="middle">Exam</text>
+<rect id="n-eng" x="778" y="52" width="100" height="38" rx="7" class="node n-dest" onclick="showNode('eng')"/>
+<text x="828" y="67" class="nt nt-dest" text-anchor="middle">Engineer</text>
+<text x="828" y="80" class="ns" text-anchor="middle">Career</text>
+<rect id="n-doc" x="888" y="52" width="100" height="38" rx="7" class="node n-dest" onclick="showNode('doc')"/>
+<text x="938" y="67" class="nt nt-dest" text-anchor="middle">Doctor</text>
+<text x="938" y="80" class="ns" text-anchor="middle">Career</text>
+<rect id="n-ds" x="998" y="52" width="74" height="38" rx="7" class="node n-dest" onclick="showNode('ds')"/>
+<text x="1035" y="67" class="nt nt-dest" text-anchor="middle">Data</text>
+<text x="1035" y="80" class="ns" text-anchor="middle">Scientist</text>
+
+<!-- Chapters row (y=120) -->
+<rect id="n-fp" x="28" y="118" width="118" height="38" rx="7" class="node n-chapter" onclick="showNode('fp')"/>
+<text x="87" y="133" class="nt nt-chapter" text-anchor="middle">Force &amp; Pressure</text>
+<text x="87" y="146" class="ns" text-anchor="middle">Sci · Ch11</text>
+
+<rect id="n-light" x="156" y="118" width="90" height="38" rx="7" class="node n-chapter" onclick="showNode('light')"/>
+<text x="201" y="133" class="nt nt-chapter" text-anchor="middle">Light</text>
+<text x="201" y="146" class="ns" text-anchor="middle">Sci · Ch16</text>
+
+<rect id="n-sound" x="256" y="118" width="90" height="38" rx="7" class="node n-chapter" onclick="showNode('sound')"/>
+<text x="301" y="133" class="nt nt-chapter" text-anchor="middle">Sound</text>
+<text x="301" y="146" class="ns" text-anchor="middle">Sci · Ch13</text>
+
+<rect id="n-motion" x="356" y="118" width="90" height="38" rx="7" class="node n-chapter" onclick="showNode('motion')"/>
+<text x="401" y="133" class="nt nt-chapter" text-anchor="middle">Motion</text>
+<text x="401" y="146" class="ns" text-anchor="middle">Sci · Ch8</text>
+
+<rect id="n-lineq" x="456" y="118" width="110" height="38" rx="7" class="node n-chapter" onclick="showNode('lineq')"/>
+<text x="511" y="133" class="nt nt-chapter" text-anchor="middle">Linear Equations</text>
+<text x="511" y="146" class="ns" text-anchor="middle">Math · Ch2</text>
+
+<rect id="n-mens" x="576" y="118" width="100" height="38" rx="7" class="node n-chapter" onclick="showNode('mens')"/>
+<text x="626" y="133" class="nt nt-chapter" text-anchor="middle">Mensuration</text>
+<text x="626" y="146" class="ns" text-anchor="middle">Math · Ch11</text>
+
+<rect id="n-stat" x="686" y="118" width="100" height="38" rx="7" class="node n-chapter" onclick="showNode('stat')"/>
+<text x="736" y="133" class="nt nt-chapter" text-anchor="middle">Statistics</text>
+<text x="736" y="146" class="ns" text-anchor="middle">Math · Ch14</text>
+
+<rect id="n-quad" x="796" y="118" width="100" height="38" rx="7" class="node n-chapter" onclick="showNode('quad')"/>
+<text x="846" y="133" class="nt nt-chapter" text-anchor="middle">Quadrilaterals</text>
+<text x="846" y="146" class="ns" text-anchor="middle">Math · Ch3</text>
+
+<rect id="n-cells" x="906" y="118" width="80" height="38" rx="7" class="node n-chapter" onclick="showNode('cells')"/>
+<text x="946" y="133" class="nt nt-chapter" text-anchor="middle">Cell</text>
+<text x="946" y="146" class="ns" text-anchor="middle">Sci · Bio</text>
+
+<rect id="n-chem" x="996" y="118" width="74" height="38" rx="7" class="node n-chapter" onclick="showNode('chem')"/>
+<text x="1033" y="133" class="nt nt-chapter" text-anchor="middle">Atoms</text>
+<text x="1033" y="146" class="ns" text-anchor="middle">Sci · Chem</text>
+
+<!-- Concepts row (y=190) -->
+<rect id="n-friction" x="28" y="188" width="88" height="38" rx="7" class="node n-concept" onclick="showNode('friction')"/>
+<text x="72" y="203" class="nt nt-concept" text-anchor="middle">Friction</text>
+<text x="72" y="216" class="ns" text-anchor="middle">SC08</text>
+
+<rect id="n-pressure" x="126" y="188" width="88" height="38" rx="7" class="node n-concept" onclick="showNode('pressure')"/>
+<text x="170" y="203" class="nt nt-concept" text-anchor="middle">Pressure</text>
+<text x="170" y="216" class="ns" text-anchor="middle">SC10</text>
+
+<rect id="n-gravity" x="224" y="188" width="88" height="38" rx="7" class="node n-concept" onclick="showNode('gravity')"/>
+<text x="268" y="203" class="nt nt-concept" text-anchor="middle">Gravity</text>
+<text x="268" y="216" class="ns" text-anchor="middle">SC07</text>
+
+<rect id="n-nforce" x="322" y="188" width="100" height="38" rx="7" class="node n-concept" onclick="showNode('nforce')"/>
+<text x="372" y="203" class="nt nt-concept" text-anchor="middle">Normal Force</text>
+<text x="372" y="216" class="ns" text-anchor="middle">SC06</text>
+
+<rect id="n-atmpres" x="432" y="188" width="102" height="38" rx="7" class="node n-concept" onclick="showNode('atmpres')"/>
+<text x="483" y="203" class="nt nt-concept" text-anchor="middle">Atm. Pressure</text>
+<text x="483" y="216" class="ns" text-anchor="middle">SC12</text>
+
+<rect id="n-liqpres" x="544" y="188" width="102" height="38" rx="7" class="node n-concept" onclick="showNode('liqpres')"/>
+<text x="595" y="203" class="nt nt-concept" text-anchor="middle">Liquid Pressure</text>
+<text x="595" y="216" class="ns" text-anchor="middle">SC11</text>
+
+<rect id="n-area" x="656" y="188" width="80" height="38" rx="7" class="node n-concept" onclick="showNode('area')"/>
+<text x="696" y="203" class="nt nt-concept" text-anchor="middle">Area</text>
+<text x="696" y="216" class="ns" text-anchor="middle">Mensuration</text>
+
+<rect id="n-var" x="746" y="188" width="80" height="38" rx="7" class="node n-concept" onclick="showNode('var')"/>
+<text x="786" y="203" class="nt nt-concept" text-anchor="middle">Variable</text>
+<text x="786" y="216" class="ns" text-anchor="middle">Lin. Eq.</text>
+
+<rect id="n-vector" x="836" y="188" width="80" height="38" rx="7" class="node n-concept" onclick="showNode('vector')"/>
+<text x="876" y="203" class="nt nt-concept" text-anchor="middle">Vectors</text>
+<text x="876" y="216" class="ns" text-anchor="middle">Math/Phys</text>
+
+<rect id="n-ratio" x="926" y="188" width="80" height="38" rx="7" class="node n-concept" onclick="showNode('ratio')"/>
+<text x="966" y="203" class="nt nt-concept" text-anchor="middle">Ratio/Prop.</text>
+<text x="966" y="216" class="ns" text-anchor="middle">Math</text>
+
+<rect id="n-bloodp" x="1016" y="188" width="56" height="38" rx="7" class="node n-concept" onclick="showNode('bloodp')"/>
+<text x="1044" y="203" class="nt nt-concept" text-anchor="middle">Blood</text>
+<text x="1044" y="216" class="ns" text-anchor="middle">Pressure</text>
+
+<!-- PART_OF edges: Subject → Chapter -->
+<path class="edge e-part" d="M83 90 L83 118" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M83 90 Q170 108 201 118" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M83 90 Q300 108 301 118" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M83 90 Q400 108 401 118" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M213 90 L511 118" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M213 90 Q626 108 626 118" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M213 90 Q736 108 736 118" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M213 90 Q846 108 846 118" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M343 90 L946 118" marker-end="url(#arrB)"/>
+<!-- Chapter → Concept -->
+<path class="edge e-part" d="M72 156 L72 188" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M87 156 L170 188" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M87 156 L268 188" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M87 156 L372 188" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M87 156 Q483 170 483 188" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M87 156 Q595 170 595 188" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M626 156 L696 188" marker-end="url(#arrB)"/>
+<path class="edge e-part" d="M511 156 L786 188" marker-end="url(#arrB)"/>
+
+<!-- RECOMMENDED_BEFORE within F&P (selected key ones) -->
+<path class="edge e-rec" d="M160 207 L224 207" marker-end="url(#arrB)"/>
+<text x="192" y="204" style="font:8.5px sans-serif;fill:#2563EB" text-anchor="middle">before</text>
+<path class="edge e-rec" d="M268 226 Q320 240 322 226" marker-end="url(#arrB)"/>
+<path class="edge e-rec" d="M410 207 L432 207" marker-end="url(#arrB)"/>
+
+<!-- APPLIES_IN cross-domain (dashed amber) -->
+<path class="edge e-apply" d="M595 226 Q620 250 660 226" marker-end="url(#arrA)"/>
+<text x="630" y="252" style="font:8px sans-serif;fill:#D97706" text-anchor="middle">APPLIES_IN</text>
+<path class="edge e-apply" d="M595 206 Q900 170 1016 206" marker-end="url(#arrA)"/>
+<text x="820" y="192" style="font:8px sans-serif;fill:#D97706" text-anchor="middle">APPLIES_IN (blood pressure)</text>
+<path class="edge e-apply" d="M72 226 Q460 260 786 226" marker-end="url(#arrA)"/>
+<text x="440" y="262" style="font:8px sans-serif;fill:#D97706" text-anchor="middle">APPLIES_IN (inclined planes → vectors)</text>
+<path class="edge e-apply" d="M483 226 Q510 260 926 226" marker-end="url(#arrA)"/>
+
+<!-- ASSESSED_IN edges to destinations -->
+<path class="edge e-feed" d="M87 90 Q300 40 623 52" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+<path class="edge e-feed" d="M201 90 Q450 30 723 52" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+<path class="edge e-feed" d="M268 90 Q550 28 828 52" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+
+
+<!-- ════════════════════════════════════════════════════
+     BAND 2 — MASTERY ENGINE
+     ════════════════════════════════════════════════════ -->
+<rect x="12" y="296" width="1056" height="182" rx="10" class="band-me"/>
+<text x="28" y="316" class="band-lbl lbl-me">② Mastery Engine  ·  6-dimensional Bloom × Retention decay × Confidence × Transfer → composite Mastery Score → Mastery Level</text>
+
+<!-- Bloom nodes (y=330) -->
+<rect id="n-remember" x="28" y="328" width="82" height="36" rx="7" class="node n-bloom" onclick="showNode('remember')"/>
+<text x="69" y="342" class="nt nt-bloom" text-anchor="middle">Remember</text>
+<text x="69" y="355" class="ns nt-bloom" text-anchor="middle">L1 · 5%</text>
+
+<rect id="n-understand" x="120" y="328" width="88" height="36" rx="7" class="node n-bloom" onclick="showNode('understand')"/>
+<text x="164" y="342" class="nt nt-bloom" text-anchor="middle">Understand</text>
+<text x="164" y="355" class="ns nt-bloom" text-anchor="middle">L2 · 10%</text>
+
+<rect id="n-apply" x="218" y="328" width="82" height="36" rx="7" class="node n-bloom" onclick="showNode('apply')"/>
+<text x="259" y="342" class="nt nt-bloom" text-anchor="middle">Apply</text>
+<text x="259" y="355" class="ns nt-bloom" text-anchor="middle">L3 · 25%</text>
+
+<rect id="n-analyse" x="310" y="328" width="82" height="36" rx="7" class="node n-bloom" onclick="showNode('analyse')"/>
+<text x="351" y="342" class="nt nt-bloom" text-anchor="middle">Analyse</text>
+<text x="351" y="355" class="ns nt-bloom" text-anchor="middle">L4 · 30%</text>
+
+<rect id="n-evaluate" x="402" y="328" width="82" height="36" rx="7" class="node n-bloom" onclick="showNode('evaluate')"/>
+<text x="443" y="342" class="nt nt-bloom" text-anchor="middle">Evaluate</text>
+<text x="443" y="355" class="ns nt-bloom" text-anchor="middle">L5 · 20%</text>
+
+<rect id="n-create" x="494" y="328" width="82" height="36" rx="7" class="node n-bloom" onclick="showNode('create')"/>
+<text x="535" y="342" class="nt nt-bloom" text-anchor="middle">Create</text>
+<text x="535" y="355" class="ns nt-bloom" text-anchor="middle">L6 · 10%</text>
+
+<!-- Quality signals (y=330 right side) -->
+<rect id="n-retention" x="606" y="328" width="104" height="36" rx="7" class="node n-signal" onclick="showNode('retention')"/>
+<text x="658" y="342" class="nt nt-signal" text-anchor="middle">Retention</text>
+<text x="658" y="355" class="ns nt-signal" text-anchor="middle">e^(-t/stability)</text>
+
+<rect id="n-confidence" x="720" y="328" width="96" height="36" rx="7" class="node n-signal" onclick="showNode('confidence')"/>
+<text x="768" y="342" class="nt nt-signal" text-anchor="middle">Confidence</text>
+<text x="768" y="355" class="ns nt-signal" text-anchor="middle">latency signal</text>
+
+<rect id="n-hint" x="826" y="328" width="104" height="36" rx="7" class="node n-signal" onclick="showNode('hint')"/>
+<text x="878" y="342" class="nt nt-signal" text-anchor="middle">Hint Dependency</text>
+<text x="878" y="355" class="ns nt-signal" text-anchor="middle">1 − (hints/turns)</text>
+
+<rect id="n-transfer" x="940" y="328" width="104" height="36" rx="7" class="node n-signal" onclick="showNode('transfer')"/>
+<text x="992" y="342" class="nt nt-signal" text-anchor="middle">Transfer Score</text>
+<text x="992" y="355" class="ns nt-signal" text-anchor="middle">cross-domain Q</text>
+
+<!-- Bloom arrow chain -->
+<path class="edge" stroke="#9333EA" stroke-width="1" d="M110 346 L120 346" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#9333EA" stroke-width="1" d="M208 346 L218 346" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#9333EA" stroke-width="1" d="M300 346 L310 346" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#9333EA" stroke-width="1" d="M392 346 L402 346" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#9333EA" stroke-width="1" d="M484 346 L494 346" marker-end="url(#arrP)"/>
+
+<!-- Mastery Score (y=400) -->
+<rect id="n-mscore" x="28" y="398" width="134" height="42" rx="8" class="node n-mastery" onclick="showNode('mscore')"/>
+<text x="95" y="413" class="nt nt-mastery" text-anchor="middle">Mastery Score</text>
+<text x="95" y="427" class="ns nt-mastery" text-anchor="middle">0.35B + 0.25R + 0.20C + …</text>
+
+<!-- Mastery levels -->
+<rect id="n-exploring" x="184" y="398" width="88" height="42" rx="7" class="node n-mastery" onclick="showNode('exploring')"/>
+<text x="228" y="413" class="nt" text-anchor="middle" fill="#78350F">Exploring</text>
+<text x="228" y="427" class="ns" text-anchor="middle" fill="#92400E">&lt; 0.30</text>
+
+<rect id="n-developing" x="282" y="398" width="88" height="42" rx="7" class="node n-mastery" onclick="showNode('developing')"/>
+<text x="326" y="413" class="nt" text-anchor="middle" fill="#78350F">Developing</text>
+<text x="326" y="427" class="ns" text-anchor="middle" fill="#92400E">0.30–0.55</text>
+
+<rect id="n-proficient" x="380" y="398" width="88" height="42" rx="7" class="node n-mastery" onclick="showNode('proficient')"/>
+<text x="424" y="413" class="nt" text-anchor="middle" fill="#78350F">Proficient</text>
+<text x="424" y="427" class="ns" text-anchor="middle" fill="#92400E">0.55–0.75</text>
+
+<rect id="n-advanced" x="478" y="398" width="88" height="42" rx="7" class="node n-mastery" onclick="showNode('advanced')"/>
+<text x="522" y="413" class="nt" text-anchor="middle" fill="#78350F">Advanced</text>
+<text x="522" y="427" class="ns" text-anchor="middle" fill="#92400E">0.75–0.90</text>
+
+<rect id="n-expert" x="576" y="398" width="88" height="42" rx="7" class="node n-mastery" onclick="showNode('expert')"/>
+<text x="620" y="413" class="nt" text-anchor="middle" fill="#78350F">Expert</text>
+<text x="620" y="427" class="ns" text-anchor="middle" fill="#92400E">≥ 0.90</text>
+
+<!-- VARK nodes (right side, y=398) -->
+<rect id="n-visual" x="700" y="398" width="80" height="42" rx="7" class="node n-signal" onclick="showNode('visual')"/>
+<text x="740" y="413" class="nt nt-signal" text-anchor="middle">Visual</text>
+<text x="740" y="427" class="ns nt-signal" text-anchor="middle">Maps · Diagrams</text>
+
+<rect id="n-auditory" x="790" y="398" width="80" height="42" rx="7" class="node n-signal" onclick="showNode('auditory')"/>
+<text x="830" y="413" class="nt nt-signal" text-anchor="middle">Auditory</text>
+<text x="830" y="427" class="ns nt-signal" text-anchor="middle">Verbal dialogue</text>
+
+<rect id="n-rw" x="880" y="398" width="80" height="42" rx="7" class="node n-signal" onclick="showNode('rw')"/>
+<text x="920" y="413" class="nt nt-signal" text-anchor="middle">Read/Write</text>
+<text x="920" y="427" class="ns nt-signal" text-anchor="middle">Notes · Text</text>
+
+<rect id="n-kines" x="970" y="398" width="82" height="42" rx="7" class="node n-signal" onclick="showNode('kines')"/>
+<text x="1011" y="413" class="nt nt-signal" text-anchor="middle">Kinesthetic</text>
+<text x="1011" y="427" class="ns nt-signal" text-anchor="middle">Practice · Apply</text>
+
+<!-- VARK label -->
+<text x="700" y="393" style="font:700 9px sans-serif;fill:#134E4A;letter-spacing:.08em;text-transform:uppercase">VARK LEARNING MODES →</text>
+
+<!-- Bloom → Mastery Score -->
+<path class="edge e-feed" d="M535 364 Q400 390 162 398" marker-end="url(#arr)"/>
+<!-- Signals → Mastery Score -->
+<path class="edge e-feed" d="M658 364 Q450 390 162 414" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+<path class="edge e-feed" d="M768 364 Q500 392 162 418" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+<path class="edge e-feed" d="M878 364 Q550 392 162 422" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+<!-- Score → Levels -->
+<path class="edge" stroke="#D97706" stroke-width="1.2" d="M162 419 L184 419" marker-end="url(#arrA)"/>
+<path class="edge" stroke="#D97706" stroke-width="1.2" d="M272 419 L282 419" marker-end="url(#arrA)"/>
+<path class="edge" stroke="#D97706" stroke-width="1.2" d="M370 419 L380 419" marker-end="url(#arrA)"/>
+<path class="edge" stroke="#D97706" stroke-width="1.2" d="M468 419 L478 419" marker-end="url(#arrA)"/>
+<path class="edge" stroke="#D97706" stroke-width="1.2" d="M566 419 L576 419" marker-end="url(#arrA)"/>
+
+<!-- ════════════════════════════════════════════════════
+     BAND 3 — AGENT ARCHITECTURE
+     ════════════════════════════════════════════════════ -->
+<rect x="12" y="492" width="1056" height="146" rx="10" class="band-ag"/>
+<text x="28" y="512" class="band-lbl lbl-ag">③ Agent Architecture  ·  5 specialized agents orchestrated by Navigator to personalize every learning interaction</text>
+
+<!-- Navigator (orchestrator, larger) -->
+<rect id="n-navigator" x="28" y="524" width="130" height="46" rx="8" class="node n-orchestr" onclick="showNode('navigator')"/>
+<text x="93" y="540" class="nt nt-orchestr" text-anchor="middle">Navigator Agent</text>
+<text x="93" y="554" class="ns" text-anchor="middle" fill="#991B1B">Orchestrator</text>
+<text x="93" y="565" class="ns" text-anchor="middle" fill="#991B1B">Route · Mode · Timing</text>
+
+<!-- Gyaan -->
+<rect id="n-gyaan" x="188" y="524" width="116" height="46" rx="8" class="node n-agent" onclick="showNode('gyaan')"/>
+<text x="246" y="540" class="nt nt-agent" text-anchor="middle">Gyaan</text>
+<text x="246" y="554" class="ns nt-agent" text-anchor="middle">Socratic Tutor</text>
+<text x="246" y="565" class="ns nt-agent" text-anchor="middle">Questions · Adaptive Jump</text>
+
+<!-- Assessment -->
+<rect id="n-assessment" x="314" y="524" width="116" height="46" rx="8" class="node n-agent" onclick="showNode('assessment')"/>
+<text x="372" y="540" class="nt nt-agent" text-anchor="middle">Assessment Agent</text>
+<text x="372" y="554" class="ns nt-agent" text-anchor="middle">IRT-calibrated Qs</text>
+<text x="372" y="565" class="ns nt-agent" text-anchor="middle">Bloom-targeted</text>
+
+<!-- Retention -->
+<rect id="n-retention-agent" x="440" y="524" width="116" height="46" rx="8" class="node n-agent" onclick="showNode('retention-agent')"/>
+<text x="498" y="540" class="nt nt-agent" text-anchor="middle">Retention Agent</text>
+<text x="498" y="554" class="ns nt-agent" text-anchor="middle">SM-2 Forgetting Curve</text>
+<text x="498" y="565" class="ns nt-agent" text-anchor="middle">Nightly decay cron</text>
+
+<!-- Misconception -->
+<rect id="n-misconception" x="566" y="524" width="130" height="46" rx="8" class="node n-agent" onclick="showNode('misconception')"/>
+<text x="631" y="540" class="nt nt-agent" text-anchor="middle">Misconception Agent</text>
+<text x="631" y="554" class="ns nt-agent" text-anchor="middle">Embedding similarity</text>
+<text x="631" y="565" class="ns nt-agent" text-anchor="middle">Proactive correction</text>
+
+<!-- Parent Digest -->
+<rect id="n-parent" x="706" y="524" width="130" height="46" rx="8" class="node n-agent" onclick="showNode('parent')"/>
+<text x="771" y="540" class="nt nt-agent" text-anchor="middle">Parent Digest Agent</text>
+<text x="771" y="554" class="ns nt-agent" text-anchor="middle">Weekly summary</text>
+<text x="771" y="565" class="ns nt-agent" text-anchor="middle">Email · WhatsApp</text>
+
+<!-- Tech Stack nodes -->
+<rect id="n-neo4j" x="856" y="524" width="80" height="46" rx="8" class="node" style="fill:#E7F3E7;stroke:#166534" onclick="showNode('neo4j')"/>
+<text x="896" y="540" class="nt" text-anchor="middle" fill="#14532D">Neo4j</text>
+<text x="896" y="554" class="ns" text-anchor="middle" fill="#166534">Graph DB</text>
+<text x="896" y="565" class="ns" text-anchor="middle" fill="#166534">Route engine</text>
+
+<rect id="n-chroma" x="946" y="524" width="80" height="46" rx="8" class="node" style="fill:#E7F3E7;stroke:#166534" onclick="showNode('chroma')"/>
+<text x="986" y="540" class="nt" text-anchor="middle" fill="#14532D">ChromaDB</text>
+<text x="986" y="554" class="ns" text-anchor="middle" fill="#166534">Vector store</text>
+<text x="986" y="565" class="ns" text-anchor="middle" fill="#166534">RAG + misconc.</text>
+
+<!-- Navigator orchestrates all -->
+<path class="edge e-orch" d="M158 547 L188 547" marker-end="url(#arrO)"/>
+<path class="edge e-orch" d="M158 553 L314 553" marker-end="url(#arrO)"/>
+<path class="edge e-orch" d="M158 559 L440 559" marker-end="url(#arrO)"/>
+<path class="edge e-orch" d="M158 565 L566 565" marker-end="url(#arrO)"/>
+<path class="edge e-orch" d="M93 570 Q93 580 706 570" marker-end="url(#arrO)"/>
+
+<!-- ════════════════════════════════════════════════════
+     BAND 4 — STUDENT JOURNEY
+     ════════════════════════════════════════════════════ -->
+<rect x="12" y="650" width="1056" height="168" rx="10" class="band-sj"/>
+<text x="28" y="670" class="band-lbl lbl-sj">④ Student Journey  ·  Personalized route → GPS-style ETA → map reveals as student learns → destination achieved</text>
+
+<!-- Student Profile -->
+<rect id="n-student" x="28" y="682" width="110" height="50" rx="8" class="node n-student" onclick="showNode('student')"/>
+<text x="83" y="698" class="nt" text-anchor="middle" fill="#BAE6FD">Student Profile</text>
+<text x="83" y="710" class="ns" text-anchor="middle" fill="#93C5FD">MasteryProfile</text>
+<text x="83" y="722" class="ns" text-anchor="middle" fill="#93C5FD">Learning history</text>
+
+<!-- Route modes -->
+<rect id="n-focused" x="168" y="682" width="100" height="50" rx="8" class="node n-route" onclick="showNode('focused')"/>
+<text x="218" y="698" class="nt nt-route" text-anchor="middle">Focused Route</text>
+<text x="218" y="710" class="ns nt-route" text-anchor="middle">Min. path · Apply</text>
+<text x="218" y="722" class="ns nt-route" text-anchor="middle">Exam prep</text>
+
+<rect id="n-deep" x="278" y="682" width="100" height="50" rx="8" class="node n-route" onclick="showNode('deep')"/>
+<text x="328" y="698" class="nt nt-route" text-anchor="middle">Deep Route</text>
+<text x="328" y="710" class="ns nt-route" text-anchor="middle">Full bloom · Analyse</text>
+<text x="328" y="722" class="ns nt-route" text-anchor="middle">Foundation</text>
+
+<rect id="n-revision" x="388" y="682" width="100" height="50" rx="8" class="node n-route" onclick="showNode('revision')"/>
+<text x="438" y="698" class="nt nt-route" text-anchor="middle">Revision Route</text>
+<text x="438" y="710" class="ns nt-route" text-anchor="middle">Retention-first</text>
+<text x="438" y="722" class="ns nt-route" text-anchor="middle">After a break</text>
+
+<!-- Ghost opacity node (concept) -->
+<rect id="n-ghost" x="508" y="682" width="110" height="50" rx="8" class="node n-route" style="opacity:0.55" onclick="showNode('ghost')"/>
+<text x="563" y="698" class="nt nt-route" text-anchor="middle">Ghost Node</text>
+<text x="563" y="710" class="ns nt-route" text-anchor="middle">30% opacity</text>
+<text x="563" y="722" class="ns nt-route" text-anchor="middle">Signal · Tappable</text>
+
+<!-- ETA -->
+<rect id="n-eta" x="638" y="682" width="100" height="50" rx="8" class="node n-mastery" onclick="showNode('eta')"/>
+<text x="688" y="698" class="nt nt-mastery" text-anchor="middle">Learning ETA</text>
+<text x="688" y="710" class="ns nt-mastery" text-anchor="middle">XP velocity</text>
+<text x="688" y="722" class="ns nt-mastery" text-anchor="middle">~47 sessions</text>
+
+<!-- Map -->
+<rect id="n-map" x="748" y="682" width="100" height="50" rx="8" class="node n-route" onclick="showNode('map')"/>
+<text x="798" y="698" class="nt nt-route" text-anchor="middle">Knowledge Map</text>
+<text x="798" y="710" class="ns nt-route" text-anchor="middle">Galaxy view</text>
+<text x="798" y="722" class="ns nt-route" text-anchor="middle">Reveals as learnt</text>
+
+<!-- Supabase + tech -->
+<rect id="n-supabase" x="868" y="682" width="90" height="50" rx="8" class="node" style="fill:#E7F3E7;stroke:#166534" onclick="showNode('supabase')"/>
+<text x="913" y="698" class="nt" text-anchor="middle" fill="#14532D">Supabase</text>
+<text x="913" y="710" class="ns" text-anchor="middle" fill="#166534">Student state</text>
+<text x="913" y="722" class="ns" text-anchor="middle" fill="#166534">concept_mastery</text>
+
+<rect id="n-langfuse" x="968" y="682" width="90" height="50" rx="8" class="node" style="fill:#E7F3E7;stroke:#166534" onclick="showNode('langfuse')"/>
+<text x="1013" y="698" class="nt" text-anchor="middle" fill="#14532D">Langfuse</text>
+<text x="1013" y="710" class="ns" text-anchor="middle" fill="#166634">Observability</text>
+<text x="1013" y="722" class="ns" text-anchor="middle" fill="#166634">LLM tracing</text>
+
+<!-- Student → routes -->
+<path class="edge" stroke="#7C3AED" d="M138 707 L168 707" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#7C3AED" d="M268 707 L278 707" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#7C3AED" d="M378 707 L388 707" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#7C3AED" stroke-dasharray="4 2" d="M488 707 L508 707" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#7C3AED" d="M618 707 L638 707" marker-end="url(#arrP)"/>
+<path class="edge" stroke="#7C3AED" d="M738 707 L748 707" marker-end="url(#arrP)"/>
+
+<!-- Cross-band: Mastery → Student (feedback loop) -->
+<path class="edge e-feed" d="M95 398 Q30 500 83 682" stroke-dasharray="5 3" marker-end="url(#arr)"/>
+<!-- Agents → Student -->
+<path class="edge e-feed" d="M246 570 Q246 620 218 682" stroke-dasharray="5 3" marker-end="url(#arr)"/>
+<!-- Knowledge Graph → Mastery Engine -->
+<path class="edge e-feed" d="M170 226 Q160 270 95 398" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+
+<!-- Title annotations on cross-band edges -->
+<text x="22" y="550" style="font:8px sans-serif;fill:#64748B;writing-mode:vertical-lr">mastery updates</text>
+<text x="248" y="628" style="font:8px sans-serif;fill:#64748B">Gyaan teaches →</text>
+
+</svg>
+</div><!-- graph-wrap -->
+
+<!-- ── Legend ── -->
+<div class="legend-strip">
+  <div class="legend-group">
+    <div class="legend-title">Node types</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#EEF2FF;border-color:#4F46E5"></div> Subject</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#DBEAFE;border-color:#2563EB"></div> Chapter</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#E0F2FE;border-color:#0284C7"></div> Concept</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#F0FDF4;border-color:#16A34A"></div> Career/Exam destination</div>
+  </div>
+  <div class="legend-group">
+    <div class="legend-title">Mastery engine</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#FDF4FF;border-color:#9333EA"></div> Bloom level</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#F0FDFA;border-color:#0D9488"></div> Quality signal / VARK</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#FEF3C7;border-color:#D97706"></div> Mastery score / level</div>
+  </div>
+  <div class="legend-group">
+    <div class="legend-title">Agents</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#FEF2F2;border-color:#DC2626"></div> Navigator (orchestrator)</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#FFF7ED;border-color:#EA580C"></div> Specialized agent</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#E7F3E7;border-color:#166534"></div> Infrastructure / DB</div>
+  </div>
+  <div class="legend-group">
+    <div class="legend-title">Edge types</div>
+    <div class="legend-row"><div class="legend-line" style="background:#2563EB;height:2px;width:28px"></div> PART_OF / RECOMMENDED_BEFORE</div>
+    <div class="legend-row"><div class="legend-line legend-dash" style="--c:#D97706;height:2px;width:28px"></div> APPLIES_IN (cross-domain)</div>
+    <div class="legend-row"><div class="legend-line legend-dash" style="--c:#94A3B8;height:2px;width:28px"></div> Feeds into / informs</div>
+    <div class="legend-row"><div class="legend-line" style="background:#EA580C;height:2.5px;width:28px"></div> Navigator orchestrates</div>
+  </div>
+</div>
+
+<!-- ── Tabs ── -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('edges')">Edge Types</div>
+  <div class="tab" onclick="switchTab('mastery')">Mastery Formula</div>
+  <div class="tab" onclick="switchTab('agents')">Agent Duties</div>
+  <div class="tab" onclick="switchTab('vark')">VARK + Bloom</div>
+</div>
+
+<div class="tab-panel active" id="tab-edges">
+  <table class="edges">
+    <tr><th>Relationship</th><th>Meaning</th><th>Enforced?</th><th>Example</th></tr>
+    <tr><td><code>RECOMMENDED_BEFORE</code></td><td>Suggested learning order. Gyaan adapts if student skips.</td><td>No — advisory only</td><td>Normal Force → Friction</td></tr>
+    <tr><td><code>STRENGTHENS</code></td><td>Mastering A makes B easier, but B is always accessible.</td><td>No</td><td>Gravity → Pressure problems</td></tr>
+    <tr><td><code>APPLIES_IN</code></td><td>Concept from one domain appears in another. Gyaan surfaces as "did you know."</td><td>No</td><td>Pressure → Mensuration (area)</td></tr>
+    <tr><td><code>CONFLICTS_WITH</code></td><td>Known misconception. Navigator proactively flags for Gyaan to address.</td><td>No</td><td>Friction ↔ "always opposes motion"</td></tr>
+    <tr><td><code>ASSESSED_IN</code></td><td>Concept appears in an exam. Navigator weights it higher when student targets that exam.</td><td>No</td><td>Pressure → CBSE Board</td></tr>
+    <tr><td><code>LEADS_TO</code></td><td>Mastering a concept cluster contributes to a career path.</td><td>No</td><td>Physics cluster → Engineer</td></tr>
+  </table>
+</div>
+<div class="tab-panel" id="tab-mastery">
+  <table class="edges">
+    <tr><th>Component</th><th>Weight</th><th>How measured</th><th>Initial value</th></tr>
+    <tr><td>Bloom composite</td><td>0.35</td><td>Weighted sum: Remember×5% + Understand×10% + Apply×25% + Analyse×30% + Evaluate×20% + Create×10%</td><td>0.00</td></tr>
+    <tr><td>Retention</td><td>0.25</td><td>e^(-days_since / stability). Stability doubles on recall, halves on failure.</td><td>1.00 (fades after 1 day)</td></tr>
+    <tr><td>Confidence</td><td>0.20</td><td>Inferred from response latency + certainty words in student answer</td><td>0.50</td></tr>
+    <tr><td>Transfer score</td><td>0.10</td><td>Correct on cross-domain questions (Physics concept in a Math context)</td><td>0.00</td></tr>
+    <tr><td>1 − Hint dependency</td><td>0.10</td><td>1 − (hints_used / total_turns)</td><td>1.00</td></tr>
+    <tr><td colspan="4" style="background:#FEF3C7;font-weight:600">Proficient threshold = 0.55 → unlocks next node on recommended path</td></tr>
+  </table>
+</div>
+<div class="tab-panel" id="tab-agents">
+  <table class="edges">
+    <tr><th>Agent</th><th>When it runs</th><th>What it decides</th><th>Key tech</th></tr>
+    <tr><td><strong>Navigator</strong></td><td>Before &amp; after every session turn</td><td>What concept, what mode (explain/question/revise), when to advance</td><td>Neo4j Dijkstra route, Mastery Engine</td></tr>
+    <tr><td><strong>Gyaan</strong></td><td>Every chat turn</td><td>How to ask the next question, what bridge to build if student jumped ahead</td><td>GPT-4o / Claude, ChromaDB RAG</td></tr>
+    <tr><td><strong>Assessment</strong></td><td>After Gyaan response</td><td>Which question to ask next (IRT-calibrated to student's theta)</td><td>Question bank, IRT difficulty tags</td></tr>
+    <tr><td><strong>Retention</strong></td><td>Nightly cron + in-session check</td><td>Which mastered concepts are fading, when to insert a recall question</td><td>SM-2 formula, Supabase cron</td></tr>
+    <tr><td><strong>Misconception</strong></td><td>On every student explanation</td><td>Whether the student's answer matches a known misconception embedding</td><td>ChromaDB cosine similarity ≥ 0.85</td></tr>
+    <tr><td><strong>Parent Digest</strong></td><td>Weekly async</td><td>Summary of time, progress, concepts at-risk of forgetting</td><td>Email / WhatsApp (future)</td></tr>
+  </table>
+</div>
+<div class="tab-panel" id="tab-vark">
+  <table class="edges">
+    <tr><th>VARK Mode</th><th>What LearnGPS does</th><th>Bloom levels best served</th></tr>
+    <tr><td><strong>Visual</strong></td><td>Knowledge map (galaxy/terrain), concept graph, Bloom progress rings, retention sparklines</td><td>Remember, Understand — seeing the structure aids recall</td></tr>
+    <tr><td><strong>Auditory</strong></td><td>Gyaan's conversational Socratic dialogue — questions, discussion, verbal reasoning prompts</td><td>Understand, Apply, Analyse — reasoning aloud deepens understanding</td></tr>
+    <tr><td><strong>Read/Write</strong></td><td>Structured explanations, step-by-step written solutions, concept summaries student can scroll</td><td>Remember, Understand — text anchors concepts</td></tr>
+    <tr><td><strong>Kinesthetic</strong></td><td>Apply-level practice problems, simulations, "try it yourself" prompts, real-world scenario Qs</td><td>Apply, Analyse, Evaluate, Create — doing is the deepest encoding</td></tr>
+    <tr><td colspan="3" style="background:#F0FDFA;font-weight:600">LearnGPS maps each student's VARK preference (inferred from engagement patterns) to Gyaan's question format and Bloom targeting.</td></tr>
+  </table>
+</div>
+
+</div><!-- graph-col -->
+
+<!-- ── Detail Column ── -->
+<div class="detail-col">
+  <div class="detail-empty" id="detail-empty">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+    <p style="font-size:13px">Click any node in the graph to learn what it does in LearnGPS</p>
+  </div>
+  <div class="detail-content" id="detail-content">
+    <div class="detail-badge" id="d-badge"></div>
+    <div class="detail-name" id="d-name"></div>
+    <div class="detail-desc" id="d-desc"></div>
+    <div class="detail-section" id="d-sec1"></div>
+    <dl class="detail-kv" id="d-kv"></dl>
+    <div class="detail-section" id="d-sec2"></div>
+    <div class="detail-chips" id="d-chips"></div>
+  </div>
+</div>
+
+</div><!-- body -->
+</div><!-- layout -->
+
+<script>
+const NODES = {
+  science:   { badge:"Subject", bg:"#EEF2FF", bc:"#4F46E5", name:"Science (Class 8–10)", desc:"The primary subject domain in LearnGPS. Contains Physics, Chemistry, Biology chapters aligned to CBSE curriculum. Each chapter is a cluster of concepts connected by RECOMMENDED_BEFORE and STRENGTHENS edges.", kv:[["Chapters","Force & Pressure, Light, Sound, Motion, Cell, Atoms, Chemical Reactions…"],["Grade range","Class 8, 9, 10"],["Concepts","~80 concepts mapped (target: 300+)"],["Cross-links","→ Math (Mensuration, Vectors), → Biology (Blood Pressure), → Geography (Weather)"]], sec1:"What it powers", chips:["Knowledge Map","Route Calculation","Exam alignment (CBSE/JEE/NEET)"] },
+  math:      { badge:"Subject", bg:"#EEF2FF", bc:"#4F46E5", name:"Mathematics (Class 8–10)", desc:"Cross-domain target for many Science concepts. Mensuration provides the Area formula needed for Pressure (P=F/A). Trigonometry underpins inclined plane friction. Vectors formalize Gravity and Force direction.", kv:[["Chapters","Linear Equations, Mensuration, Statistics, Quadrilaterals, Polynomials…"],["Key cross-links","← Pressure (needs Area), ← Friction (needs sin/cos), ← Gravity (needs Vectors)"],["Grade range","Class 8, 9, 10"]], sec1:"Cross-domain edges into Math", chips:["APPLIES_IN: Pressure→Area","APPLIES_IN: Friction→Trigonometry","APPLIES_IN: Gravity→Vectors"] },
+  bio:       { badge:"Cross-domain", bg:"#F0FDF4", bc:"#16A34A", name:"Biology (Cross-domain target)", desc:"Liquid Pressure in Physics directly applies to blood pressure in Biology. Gyaan surfaces this connection: 'Your blood is a liquid — blood pressure follows the same P=ρgh formula!' This is the APPLIES_IN edge at its best.", kv:[["Receiving concept","Blood Pressure (circulatory system)"],["Source concept","Liquid Pressure (SC11 in Force & Pressure)"],["When surfaced","After student reaches Apply level on Liquid Pressure"]], sec1:"Connection example", chips:["SC11 Liquid Pressure →APPLIES_IN→ Biology:Circulation"] },
+  geo:       { badge:"Cross-domain", bg:"#F0FDF4", bc:"#16A34A", name:"Geography (Cross-domain target)", desc:"Atmospheric Pressure in Physics is the same phenomenon as high-pressure and low-pressure weather systems in Geography. Gyaan plants the seed: 'High pressure = clear sky, low pressure = rain — same concept you just learned!'", kv:[["Receiving concept","Weather Systems"],["Source concept","Atmospheric Pressure (SC12)"],["Bloom level","Apply → Analyse"]], sec1:"Connection example", chips:["SC12 Atm. Pressure →APPLIES_IN→ Geography:Weather"] },
+  cbse:      { badge:"Destination", bg:"#F0FDF4", bc:"#16A34A", name:"CBSE Board Exam", desc:"One of the primary student destinations. When a student sets this as their goal, Navigator weights concepts by their CBSE exam frequency and adjusts route to maximize coverage of high-weightage topics first.", kv:[["Concepts covered","All Class 8–10 CBSE Science & Math"],["Route effect","Focused mode default, Apply-level minimum"],["ETA display","Sessions to board-ready"]],sec1:"How it changes the route", chips:["Focused Route preferred","High-weightage concepts first","ETA countdown to exam date"] },
+  jee:       { badge:"Destination", bg:"#F0FDF4", bc:"#16A34A", name:"JEE / NEET Exam", desc:"Advanced destination for Class 10+ students. JEE targets Physics/Math depth (Analyse/Evaluate bloom). NEET targets Biology + Physics. Navigator loads the exam's concept cluster and re-calculates the route to include deeper concepts earlier.", kv:[["JEE focus","Physics depth: Mechanics, Electrostatics, Optics"],["NEET focus","Biology + Physics concepts"],["Route mode","Deep Route preferred (Analyse minimum)"]], sec1:"Route impact", chips:["Deep Route","Bloom minimum: Analyse","Cross-subject connections prioritized"] },
+  eng:       { badge:"Destination", bg:"#F0FDF4", bc:"#16A34A", name:"Engineer Career", desc:"Career destination that pulls a cluster of Physics + Math concepts. When Dhwani selects 'Engineer,' the system shows her the full concept map she'll need — and her current green/ghost status on each one. This is the 'GPS destination' in the product name.", kv:[["Key concepts","Mechanics, Force, Pressure, Electricity, Calculus, Vectors"],["Relevance score","Edges weighted by relevance_to_goal"],["Pull motivation","'You're 34% of the way to Engineer'"]], sec1:"What it reveals", chips:["LEADS_TO edges from Physics/Math","Full route with ETA","Gap analysis vs. current mastery"] },
+  doc:       { badge:"Destination", bg:"#F0FDF4", bc:"#16A34A", name:"Doctor Career", desc:"Career destination emphasising Biology + Chemistry + Physics (NEET path). Motivates learning of blood pressure, cell biology, chemical reactions as directly career-relevant — not just 'exam stuff.'", kv:[["Key concepts","Biology (cell, genetics), Chemistry (reactions, acids), Physics (pressure, optics)"],["Cross-links","Liquid Pressure → Blood Pressure is directly career-meaningful here"]], sec1:"Value proposition", chips:["Makes abstract Science feel purposeful","NEET alignment","Cross-domain connections matter most"] },
+  ds:        { badge:"Destination", bg:"#F0FDF4", bc:"#16A34A", name:"Data Scientist Career", desc:"Future career destination. Emphasises Statistics, Probability, Algebra — shows Math-heavy students a path that doesn't require Physics. Demonstrates the platform's ability to serve diverse student goals.", kv:[["Key concepts","Statistics, Probability, Linear Algebra, Functions"],["Relevant chapters","Statistics (Class 8–10), Quadrilaterals → coordinate geometry"]], sec1:"Why it matters", chips:["Serves Math-preferring students","Not all paths go through Physics","Motivates statistics as career-relevant"] },
+  fp:        { badge:"Chapter", bg:"#DBEAFE", bc:"#2563EB", name:"Force & Pressure", desc:"The flagship chapter in LearnGPS — the first chapter to be fully mapped with 12 subconcepts, 25 relationships, 4 traversal routes. This is the proof-of-concept that the knowledge graph approach works.", kv:[["SubConcepts","SC01 Muscular Force → SC12 Atmospheric Pressure"],["Relationships","12 RECOMMENDED_BEFORE, 4 STRENGTHENS, 5 APPLIES_IN, 4 CONFLICTS_WITH"],["Cross-links","→ Mensuration (Area), → Biology (Blood Pressure), → Math (Vectors), → Geography (Weather)"],["CBSE weight","High — consistently appears in Class 8 exam"]], sec1:"Key traversal routes", chips:["Focused: 10 steps, ~8 sessions","Deep: 12 steps, ~13 sessions","Revision: retention-first","Parallel: SC06‖SC07, SC11‖SC12"] },
+  light:     { badge:"Chapter", bg:"#DBEAFE", bc:"#2563EB", name:"Light (Reflection & Refraction)", desc:"Phase 1 expansion chapter. Contains concepts like reflection laws, mirrors, refraction, lenses. Strong APPLIES_IN connections to optics in JEE and vision biology in NEET.", kv:[["Status","Phase 1 expansion — graph being built"],["Key concepts","Reflection, Refraction, Mirrors, Lenses, Spectrum"],["Cross-links","→ Photography, → Eye biology"]], sec1:"Coming in Phase 1", chips:["Second chapter on the map","Cross-links to JEE Optics","Visual demos possible"] },
+  sound:     { badge:"Chapter", bg:"#DBEAFE", bc:"#2563EB", name:"Sound", desc:"Covers wave mechanics, frequency, amplitude, resonance, echo. APPLIES_IN music (frequency = note), APPLIES_IN medicine (ultrasound). Strong everyday-life examples for Gyaan.", kv:[["Key concepts","Wave, Frequency, Amplitude, Resonance, Echo, Ultrasound"],["Cross-links","→ Music (frequency), → Medicine (ultrasound), → Math (graphs of waves)"]], sec1:"Planned", chips:["Phase 1 expansion","Rich real-world applications","APPLIES_IN to multiple domains"] },
+  lineq:     { badge:"Chapter", bg:"#DBEAFE", bc:"#2563EB", name:"Linear Equations in Two Variables", desc:"Key Math chapter. Variables and equations are foundations for Physics formulas (P=F/A is a linear relationship). This is the conceptual bridge between Math and Physics formula work.", kv:[["Concepts","Variable, Equation, Solution, Graph of linear equation"],["Cross-link","← Physics formulas all use linear relationships"],["Grade","Class 8–9"]], sec1:"Cross-domain value", chips:["Bridge: Math formula → Physics application","RECOMMENDED_BEFORE: Algebra → Physics calculations"] },
+  mens:      { badge:"Chapter", bg:"#DBEAFE", bc:"#2563EB", name:"Mensuration", desc:"Area and volume calculations. Directly required by Pressure (P=F/A needs area), Volume needed for liquid pressure and density. This is the clearest APPLIES_IN bridge in Class 8.", kv:[["Key concepts","Area (square, rectangle, circle), Volume, Surface area"],["Receives from","SC10 Pressure: APPLIES_IN (need area to calculate pressure)"],["Grade","Class 8"]], sec1:"APPLIES_IN connection", chips:["P=F/A needs area calculation","Gyaan asks: 'What's the area of this surface?'","Bridge makes Math feel purposeful"] },
+  friction:  { badge:"Concept", bg:"#E0F2FE", bc:"#0284C7", name:"Friction (SC08)", desc:"One of the richest concepts in Force & Pressure. Has both RECOMMENDED_BEFORE edges (needs Normal Force + Gravity) and a key CONFLICTS_WITH misconception ('friction always opposes motion' — subtly wrong, it opposes relative motion and can drive a wheel forward).", kv:[["Bloom ceiling","Analyse"],["Prerequisites (recommended)","Normal Force (SC06), Gravity (SC07)"],["Misconception","'Friction always opposes motion' — false for static friction driving a wheel"],["Cross-link","→ Math: Trigonometry (inclined plane friction needs sin/cos)"],["Est. hours","2.0"]], sec1:"Gyaan's approach", chips:["Addresses misconception proactively","APPLIES_IN: Inclined planes → Trig","Everyday examples: walking, car brakes, chalk on board"] },
+  pressure:  { badge:"Concept", bg:"#E0F2FE", bc:"#0284C7", name:"Pressure (SC10)", desc:"Central concept: P = F/A. Requires understanding of Resultant Force (SC09) and unlocks both Liquid Pressure (SC11) and Atmospheric Pressure (SC12). Key APPLIES_IN: needs Mensuration Area for calculations.", kv:[["Formula","P = F/A"],["Bloom ceiling","Apply"],["RECOMMENDED_BEFORE","SC09 Resultant Force"],["Unlocks","SC11 Liquid Pressure, SC12 Atmospheric Pressure"],["APPLIES_IN","Mensuration:Area, Biology:Blood Pressure"]], sec1:"Why it matters", chips:["Central node: many things depend on it","P=F/A links Math (area) and Science (force)","Blood pressure = direct real-world meaning"] },
+  gravity:   { badge:"Concept", bg:"#E0F2FE", bc:"#0284C7", name:"Gravity (SC07)", desc:"Non-contact force. Recommended before Friction (chain: gravity→weight→normal force→friction). Key APPLIES_IN: Gravity is a vector, seeding Class 9 Math Vectors. Misconception: 'gravity only affects heavy objects.'", kv:[["Bloom ceiling","Apply"],["RECOMMENDED_BEFORE","SC03 Non-Contact Force"],["Chain","Gravity → Weight → Normal Force → Friction"],["APPLIES_IN","Math: Vectors (gravity = vector quantity)"],["Misconception","'Gravity only pulls heavy objects' — false, g is constant regardless of mass"]], sec1:"Gyaan's key move", chips:["Plants seed: 'Gravity has direction → that's a vector'","Connects to Class 9 Math","Parallel with SC06 Normal Force"] },
+  nforce:    { badge:"Concept", bg:"#E0F2FE", bc:"#0284C7", name:"Normal Force (SC06)", desc:"The perpendicular contact force between surfaces. Directly needed for friction (F_friction = μN). Key misconception: 'Normal force always equals weight' — only true on flat horizontal surfaces.", kv:[["Formula","F_friction = μN (requires Normal Force)"],["Bloom ceiling","Apply"],["RECOMMENDED_BEFORE","SC02 Contact Force"],["Misconception","Normal Force = Weight always — false on slopes or in elevators"],["Parallel with","SC07 Gravity (can learn both in same session)"]], sec1:"Gyaan approach", chips:["Must address N≠Weight misconception","Parallel with Gravity","Unlocks Friction (SC08)"] },
+  atmpres:   { badge:"Concept", bg:"#E0F2FE", bc:"#0284C7", name:"Atmospheric Pressure (SC12)", desc:"Air as a fluid exerts pressure. APPLIES_IN Geography: high/low pressure weather systems. Misconception: 'We don't feel atmospheric pressure' — we evolved to balance it, altitude sickness is when it changes.", kv:[["Formula","P = ρgh (fluid, air as fluid)"],["RECOMMENDED_BEFORE","SC10 Pressure"],["APPLIES_IN","Geography: Weather Systems"],["Misconception","'We don't feel it' — we do, at altitude it becomes very obvious"],["Parallel with","SC11 Liquid Pressure"]], sec1:"Cross-domain magic", chips:["APPLIES_IN: Geography Weather","Parallel with SC11","Gyaan: 'High pressure = clear sky'"] },
+  liqpres:   { badge:"Concept", bg:"#E0F2FE", bc:"#0284C7", name:"Liquid Pressure (SC11)", desc:"Pressure in fluids: P = ρgh. Directly applies to blood pressure in Biology. This is the most powerful APPLIES_IN edge — abstract physics becomes deeply personal and medical.", kv:[["Formula","P = ρgh"],["RECOMMENDED_BEFORE","SC10 Pressure"],["APPLIES_IN","Biology: Blood Pressure in circulatory system"],["Parallel with","SC12 Atmospheric Pressure"]], sec1:"The 'aha' moment", chips:["'Your blood is a fluid — same formula!'","Direct Biology cross-link","NEET-relevant"] },
+  area:      { badge:"Concept", bg:"#E0F2FE", bc:"#0284C7", name:"Area (Mensuration)", desc:"Area of 2D shapes. Receives APPLIES_IN from Pressure: to calculate P=F/A, you need to know the area of the surface. This makes Mensuration feel relevant to Science students who otherwise see it as abstract Math.", kv:[["Formula","Area of rectangle = l×b, circle = πr²…"],["Receives APPLIES_IN from","SC10 Pressure"],["Gyaan moment","'To find pressure on this surface, what's its area? Do you remember how to calculate that?'"]], sec1:"Bridge value", chips:["Makes Math feel purposeful","Physics pulls Math into context","Students remember area better after this"] },
+  remember:  { badge:"Bloom L1", bg:"#FDF4FF", bc:"#9333EA", name:"Remember", desc:"The foundation bloom level: can the student recall a fact? 'What is the formula for pressure?' In LearnGPS, Remember contributes only 5% to the bloom composite — recall alone is not meaningful learning.", kv:[["Weight in composite","5%"],["Question type","MCQ, fill-in-the-blank, definition recall"],["Mastery signal","Can state the formula/definition without hints"],["Danger","Students who only reach Remember often believe they have 'mastered' a concept"]], sec1:"Example question", chips:["'What does P stand for in P=F/A?'","'State Newton's First Law'","'Name two types of contact forces'"] },
+  understand:{ badge:"Bloom L2", bg:"#FDF4FF", bc:"#9333EA", name:"Understand", desc:"Can the student explain in their own words? 'Why does a sharp knife cut better than a blunt one?' Understand means the student can connect the formula to the idea behind it.", kv:[["Weight","10%"],["Question type","Explain, describe, paraphrase, compare"],["Mastery signal","Correct explanation in own words, no formula copy-paste"]], sec1:"Example question", chips:["'Explain why pressure increases when area decreases'","'Compare contact and non-contact forces'"] },
+  apply:     { badge:"Bloom L3", bg:"#FDF4FF", bc:"#9333EA", name:"Apply", desc:"Can the student use the concept to solve a problem? 'A force of 20N acts on 4m² — what is the pressure?' Apply is the minimum for 'Proficient' status (mastery_score ≥ 0.55) and is required before the student's route advances to the next node.", kv:[["Weight","25%"],["Proficient threshold","mastery_score ≥ 0.55 → route advances"],["Question type","Numerical problem, scenario application"],["Gyaan approach","Gives a real-world problem, students work through it step by step"]], sec1:"Example question", chips:["'Calculate pressure on a 2m² surface with 100N force'","'Which surface exerts more pressure — wide or narrow?'"] },
+  analyse:   { badge:"Bloom L4", bg:"#FDF4FF", bc:"#9333EA", name:"Analyse", desc:"Can the student break a complex scenario apart and reason about each component? 'Why does a camel's foot area change its ability to walk on sand?' Analyse is the target for the Deep Route and is where genuine understanding lives.", kv:[["Weight","30% — highest weight"],["Question type","Multi-step reasoning, identify cause/effect, compare scenarios"],["Deep Route target","Analyse before advancing"]], sec1:"Example question", chips:["'Analyse why a nail is sharp at one end but flat at the other'","'Why do snow shoes work on snow but not on hard ground?'"] },
+  evaluate:  { badge:"Bloom L5", bg:"#FDF4FF", bc:"#9333EA", name:"Evaluate", desc:"Can the student judge, critique, or compare approaches? 'Which design would minimize pressure on this surface?' Evaluate is rare at Class 8 level but appears in Olympiad and JEE Advanced questions.", kv:[["Weight","20%"],["Question type","Judgement, critique, best-solution selection"],["When assessed","Advanced students, Olympiad track"]], sec1:"Example question", chips:["'Compare two brake pad designs — which exerts more controlled pressure?'","'Evaluate the safety of a hydraulic system design'"] },
+  create:    { badge:"Bloom L6", bg:"#FDF4FF", bc:"#9333EA", name:"Create", desc:"Can the student design something new using the concept? 'Design a hydraulic brake system using what you know about pressure.' Create is the Expert level. In LearnGPS, this is a long-term target for gifted students and project-based learning.", kv:[["Weight","10%"],["When reached","Expert mastery level (score ≥ 0.90)"],["Question type","Design challenge, open-ended problem, build a model"]], sec1:"Example", chips:["'Design a water tank where pressure distributes evenly'","'Create a way to measure atmospheric pressure with household items'"] },
+  retention: { badge:"Mastery Signal", bg:"#F0FDFA", bc:"#0D9488", name:"Retention (Forgetting Curve)", desc:"Models how quickly a student forgets a mastered concept. Based on the SM-2 / Ebbinghaus forgetting curve. Retention decays exponentially and is the trigger for Revision Route.", kv:[["Formula","retention(t) = e^(-t / stability)"],["Stability","Starts at 1 day. Doubles on correct recall. Halves on failure."],["Example","Dhwani mastered Friction Monday. By Friday: e^(-4/1) ≈ 0.02 — nearly forgotten."],["After review","Stability becomes 2 days → 4 → 8 → 16… (spaced repetition)"]], sec1:"Why this matters", chips:["Without this: 'mastered' concepts fade silently","With this: Navigator inserts recall before the next concept","Explains why spaced repetition works"] },
+  confidence:{ badge:"Mastery Signal", bg:"#F0FDFA", bc:"#0D9488", name:"Confidence Signal", desc:"A proxy for genuine understanding vs. lucky guessing. Inferred from two sources: response latency (slow answers on easy questions = low confidence) and certainty language ('I think', 'maybe', 'not sure' = low confidence).", kv:[["Weight in formula","0.20"],["Sources","Response latency (ms) + hedge words in student answer"],["Range","0.0 (always hesitant) to 1.0 (always certain and correct)"]], sec1:"How Gyaan uses it", chips:["Low confidence → Gyaan stays at same bloom level","High confidence + correct → Gyaan advances bloom","'Not sure' detected → one more clarifying question"] },
+  hint:      { badge:"Mastery Signal", bg:"#F0FDFA", bc:"#0D9488", name:"Hint Dependency", desc:"How much does the student need help to get answers right? A student who only answers correctly after multiple hints hasn't really mastered the concept — the hint did the thinking.", kv:[["Formula","1 − (hints_used / total_turns)"],["Weight","0.10 of mastery score"],["High dependency","0.8+ hints used → mastery score capped"],["Low dependency","Student answering correctly without hints → strong Apply signal"]], sec1:"Behavioural insight", chips:["Catches 'false mastery' from over-hinting","Gyaan tracks hints per concept","Gradually reduces hints as bloom advances"] },
+  transfer:  { badge:"Mastery Signal", bg:"#F0FDFA", bc:"#0D9488", name:"Transfer Score", desc:"The hardest mastery signal to earn. Can the student apply a concept in an unfamiliar context — a different domain, a different problem format? Transfer is the deepest test of understanding.", kv:[["Formula","Correct on cross-domain questions / total cross-domain questions asked"],["Weight","0.10"],["Example","Student learned Pressure in Physics — can they solve a Mensuration-framed pressure problem?"],["When assessed","After Apply level is reached, Navigator inserts a cross-domain question"]], sec1:"Why it's the hardest", chips:["Most students fail transfer even after 'mastery'","Requires APPLIES_IN edges in the knowledge graph","Gyaan frames: 'Here's the same idea in a different context'"] },
+  mscore:    { badge:"Mastery Engine", bg:"#FEF3C7", bc:"#D97706", name:"Mastery Score", desc:"The composite number that drives everything: which node to advance to, whether to insert revision, how to set Gyaan's bloom target. Replaces the simple 'correct_answers ≥ 2' boolean.", kv:[["Formula","0.35×bloom + 0.25×retention + 0.20×confidence + 0.10×transfer + 0.10×(1−hint_dependency)"],["Proficient","≥ 0.55 → route advances"],["Advanced","≥ 0.75 → deep bloom unlocked"],["Expert","≥ 0.90 → can help peers"]], sec1:"What changes with this vs. boolean", chips:["Can't 'cheat' with one lucky correct answer","Forgetting reduces the score over time","Transfer to other domains counts","Hint dependency penalizes scaffolded answers"] },
+  exploring: { badge:"Mastery Level", bg:"#FEF3C7", bc:"#D97706", name:"Exploring (< 0.30)", desc:"Just started. Student has seen the concept but cannot reliably recall or apply it. Gyaan stays at Remember and Understand bloom levels, using many examples and simpler question formats.", kv:[["Score range","0.00 – 0.29"],["Bloom target","Remember, Understand"],["Map display","Ghost node (30% opacity) → transitions to Ready"],["Gyaan mode","Heavy scaffolding, more hints allowed"]], sec1:"Transition trigger", chips:["Move to Developing when score ≥ 0.30","Happens after ~2-3 sessions"] },
+  developing:{ badge:"Mastery Level", bg:"#FEF3C7", bc:"#D97706", name:"Developing (0.30–0.55)", desc:"Student can recall and explain but cannot yet reliably apply. Most Class 8 students land here after a single session. Gyaan pushes toward Apply-level problems.", kv:[["Score range","0.30 – 0.54"],["Bloom target","Apply"],["Map display","Ready (full opacity, outlined)"],["Gyaan mode","Fewer hints, practice problems introduced"]], sec1:"Transition trigger", chips:["Move to Proficient when score ≥ 0.55","Route advances to next recommended concept"] },
+  proficient:{ badge:"Mastery Level", bg:"#FEF3C7", bc:"#D97706", name:"Proficient (0.55–0.75)", desc:"The key threshold. Student can reliably apply the concept in standard problems. The recommended path advances. This is equivalent to the old 'mastered = true' boolean but earned properly.", kv:[["Score range","0.55 – 0.74"],["Effect","Next node unlocks on recommended path"],["Map display","Yellow filled node"],["Bloom target","Analyse (for Deep Route)"]], sec1:"Why this is the threshold", chips:["Apply-level = can do exam questions","Proficient = ready to build on this concept","Not 'done' — retention still decays"] },
+  advanced:  { badge:"Mastery Level", bg:"#FEF3C7", bc:"#D97706", name:"Advanced (0.75–0.90)", desc:"Student can analyse and evaluate. Can handle multi-step problems, identify cause-effect, compare scenarios. Bloom levels 4-5 consistently scored. JEE-level readiness for this concept.", kv:[["Score range","0.75 – 0.89"],["Bloom target","Evaluate"],["Map display","Green filled node (bright)"],["Route","Deep Route preferred, Discovery Route unlocked"]], sec1:"What Gyaan does differently", chips:["Olympiad-track questions introduced","Cross-domain scenarios used","Less scaffolding, more open-ended"] },
+  expert:    { badge:"Mastery Level", bg:"#FEF3C7", bc:"#D97706", name:"Expert (≥ 0.90)", desc:"The highest level. Student can create, design, teach the concept. In a future version, Expert students can see 'peer comparison' data and unlock mentor/peer-explain features.", kv:[["Score range","0.90+"],["Bloom target","Create"],["Map display","Gold star node"],["Future feature","Can explain to peers, unlock teaching mode"]], sec1:"The goal state", chips:["Create-level problems","Design challenges","Future: peer tutoring feature"] },
+  visual:    { badge:"VARK Mode", bg:"#F0FDFA", bc:"#0D9488", name:"Visual Learning Mode", desc:"Students who learn best from seeing structure and spatial relationships. LearnGPS's knowledge map is fundamentally a Visual tool — the galaxy view, concept connections, and Bloom progress rings all serve Visual learners.", kv:[["Gyaan adaptation","More diagrams, maps, concept web references"],["Best bloom levels","Remember (structure), Understand (seeing connections)"],["LearnGPS feature","The knowledge map itself"]], sec1:"Visual elements in LearnGPS", chips:["Galaxy/terrain knowledge map","Bloom progress rings","Retention sparklines","Concept connection graph"] },
+  auditory:  { badge:"VARK Mode", bg:"#F0FDFA", bc:"#0D9488", name:"Auditory Learning Mode", desc:"Students who learn through dialogue, discussion, and verbal reasoning. Gyaan's Socratic conversation is inherently Auditory — it's a verbal exchange of questions and reasoning, not a textbook.", kv:[["Gyaan adaptation","More conversational prompts, verbal reasoning chains"],["Best bloom levels","Understand, Apply, Analyse — reasoning aloud deepens these"],["LearnGPS feature","The Gyaan chat itself"]], sec1:"Auditory elements", chips:["Socratic dialogue","'Walk me through your reasoning'","Verbal analogies ('friction is like...') "] },
+  rw:        { badge:"VARK Mode", bg:"#F0FDFA", bc:"#0D9488", name:"Read/Write Learning Mode", desc:"Students who prefer text, notes, and structured written information. Gyaan can adapt to provide more written explanations, step-by-step derivations, and summary notes at the end of a concept session.", kv:[["Gyaan adaptation","More written explanations, structured summaries"],["Best bloom levels","Remember (reading definitions), Understand (reading derivations)"],["LearnGPS feature","Concept summary cards, written solutions"]], sec1:"R/W elements", chips:["Concept summary at end of session","Step-by-step written solutions","NCERT content via RAG (ChromaDB)"] },
+  kines:     { badge:"VARK Mode", bg:"#F0FDFA", bc:"#0D9488", name:"Kinesthetic Learning Mode", desc:"Students who learn by doing, practicing, and applying. Apply-level questions are inherently Kinesthetic — students are actively working through a problem rather than reading or listening. This is the highest-value VARK mode for deep learning.", kv:[["Gyaan adaptation","More practice problems, scenario-based questions, 'try this yourself'"],["Best bloom levels","Apply, Analyse, Evaluate — active problem-solving"],["LearnGPS feature","Practice problem sets, IRT-calibrated difficulty"]], sec1:"Kinesthetic elements", chips:["Apply-level problem sets","IRT difficulty calibration","Real-world scenario questions"] },
+  navigator: { badge:"Agent", bg:"#FEF2F2", bc:"#DC2626", name:"Navigator Agent (Orchestrator)", desc:"The brain of LearnGPS. Runs before every chat turn and after every response. Reads the outputs of all other agents and decides: what concept to teach next, what mode (explain/question/revise/celebrate), and when to advance the student's route.", kv:[["Runs","Before every session, after every response"],["Reads from","RetentionAgent (fading concepts), MisconceivedAgent (active misconceptions), MasteryEngine (current score), Neo4j (route graph)"],["Decides","Next concept · Bloom target · Route mode · Whether to advance"],["Tech","FastAPI service, calls Neo4j for route, Supabase for mastery"]], sec1:"Decision tree per session", chips:["1. Any urgent reviews? → insert revision","2. Active misconceptions? → address first","3. Proficient on current? → advance route","4. Continue at current bloom"] },
+  gyaan:     { badge:"Agent", bg:"#FFF7ED", bc:"#EA580C", name:"Gyaan — Socratic Tutor", desc:"The conversational heart of LearnGPS. Never lectures first — always asks. Receives a rich system prompt from Navigator including current concept, bloom target, known misconceptions to address, and prerequisite context.", kv:[["Role","Socratic dialogue — questions not lectures"],["Input","Concept, bloom target, misconceptions to address, prerequisite mastery context"],["Output","Reply, xp_earned, bloom_advance signal, misconception_detected flag, confidence_signal"],["Adaptive Jump","If student jumped ahead: covers prerequisite gap conversationally before teaching target"],["Named after","Gyaan = Knowledge (Sanskrit)"]], sec1:"Gyaan's Adaptive Jump", chips:["1-node gap: 1-sentence bridge","2-3 node gap: 2-3 warm-up questions","4+ node gap: starts at Remember bloom","Prior knowledge: 2 calibration Qs first"] },
+  assessment:{ badge:"Agent", bg:"#FFF7ED", bc:"#EA580C", name:"Assessment Agent", desc:"Extracts question selection from Gyaan and makes it a calibrated, dedicated step. Uses Item Response Theory to select questions at the right difficulty for this student's current ability.", kv:[["IRT principle","Question difficulty should match student's ability ± 0.5 SD"],["Too easy","No information gain — student is bored"],["Too hard","Demotivation — student feels lost"],["Question tags","difficulty: 0.0–1.0 per question in the bank"],["If mastery=0.55","Target questions with difficulty 0.50–0.65"]], sec1:"IRT in practice", chips:["Question bank: difficulty-tagged","Bloom-targeted (Remember→Create)","Adapts per concept, per student","Feeds bloom_delta back to MasteryEngine"] },
+  'retention-agent': { badge:"Agent", bg:"#FFF7ED", bc:"#EA580C", name:"Retention Agent", desc:"The agent that prevents 'silent forgetting.' Runs nightly to compute current retention for every mastered concept. Flags concepts fading below 0.50. Generates a revision schedule. Also called in-session by Navigator.", kv:[["Runs","Nightly Railway cron job"],["Computes","retention = e^(-days_since / stability_days) for all mastered concepts"],["Flags","retention < 0.50 → insert in revision_schedule table"],["In-session","Navigator checks: 'This student hasn't touched Muscular Force in 12 days (retention=0.22) — insert a recall question'"]], sec1:"Why this is valuable", chips:["Prevents false confidence after a break","Powers the Revision Route","Parents see 'at-risk of forgetting' in digest","Stability grows with each successful review"] },
+  misconception:{ badge:"Agent", bg:"#FFF7ED", bc:"#EA580C", name:"Misconception Agent", desc:"Detects when a student has learned something wrong — the most common and most damaging learning failure. Uses embedding similarity between the student's explanation and known misconception descriptions.", kv:[["Method","Embed student answer → compare cosine similarity to misconception vectors in ChromaDB"],["Threshold","Similarity ≥ 0.85 → flag misconception"],["Known misconceptions","25 mapped for Force & Pressure alone"],["When addressed","Flagged to Gyaan → addressed next turn before advancing bloom"],["Example","Student says 'friction always opposes motion' → detected → Gyaan responds: 'Here's an interesting case where friction actually drives something forward…'"]], sec1:"Why misconceptions matter", chips:["Wrong mental model → fails application Qs for years","Proactive detection before it calcifies","Tracks: first_seen, severity, cleared_at","Parents notified if high-severity misconception persists"] },
+  parent:    { badge:"Agent", bg:"#FFF7ED", bc:"#EA580C", name:"Parent Digest Agent", desc:"Weekly async agent that compiles a human-readable progress report for parents. No access to chat history (privacy) — only mastery data, time spent, and retention risk.", kv:[["Runs","Weekly async, per student-parent link"],["Content","Time spent this week, concepts mastered, retention-at-risk list, Bloom level per concept"],["Format","Email + future WhatsApp"],["Example output","'This week Dhwani spent 3 sessions on Friction. She reached Apply level. Her retention of Contact Force is fading — a review this weekend would help.'"]], sec1:"Value for parents", chips:["No chat history access (privacy)","Actionable: 'review Contact Force this weekend'","Bloom-level breakdown: not just 'done/not done'","Future: teacher class-level digest"] },
+  neo4j:     { badge:"Infrastructure", bg:"#E7F3E7", bc:"#166534", name:"Neo4j (Knowledge Graph DB)", desc:"The graph database that stores all concepts, chapters, subjects, and their relationships. The Navigator Agent queries Neo4j to calculate routes (Dijkstra-style traversal). As the graph grows to 500+ concepts, Neo4j's O(n) graph traversal outperforms SQL's O(n²).", kv:[["Stores","All Concept, SubConcept, Chapter, Subject, Career, Exam nodes + all relationship edges"],["Used by","Navigator Agent (route calculation), Gyaan (prerequisite context)"],["Why not SQL","Graph traversal is O(concepts) in Neo4j vs O(concepts²) in SQL joins"]], sec1:"Current state", chips:["Force & Pressure fully loaded","12 nodes, 25 edges in production","Expanding to Light, Motion chapters in Phase 1"] },
+  chroma:    { badge:"Infrastructure", bg:"#E7F3E7", bc:"#166534", name:"ChromaDB (Vector Store)", desc:"Stores semantic embeddings for NCERT content chunks (254 indexed), question bank, student explanations, and misconception descriptions. Powers both RAG for Gyaan and misconception detection.", kv:[["Stores","254 NCERT content chunks (embedded), question bank embeddings, student past explanations, known misconception vectors"],["Used by","Gyaan (RAG: retrieves relevant NCERT text), Misconception Agent (cosine similarity matching)"],["Model","text-embedding-ada-002 or equivalent"]], sec1:"Two use cases", chips:["RAG: Gyaan retrieves curriculum-accurate content","Misconception detection: similarity to known wrong ideas","Future: student explanation history"] },
+  student:   { badge:"Student Journey", bg:"#1E3A5F", bc:"#93C5FD", name:"Student Profile", desc:"The central entity everything connects to. Holds the student's MasteryProfile per concept, VARK preference (inferred), current learning route, session history, and retention schedule.", kv:[["Contains","MasteryProfile per (student_id, subconcept_id) — bloom vector, retention, confidence, hints, transfer"],["VARK","Inferred from engagement patterns, updated per session"],["Current route","Active route mode (Focused/Deep/Revision) + current concept"],["Dhwani","Primary test student — Class 9, interested in Medicine"]], sec1:"What Dhwani sees", chips:["Knowledge map with her mastery coloring","Gyaan chat with her context","'You are 34% of the way to NEET readiness'","ETA countdown"] },
+  focused:   { badge:"Route Mode", bg:"#FAF5FF", bc:"#7C3AED", name:"Focused Route", desc:"Minimum concepts, Apply-level mastery. Like highway mode in Google Maps. Skips deep subtypes (SC04 Electrostatic, SC05 Magnetic — covered briefly within SC03). Best for exam prep with a deadline.", kv:[["Target bloom","Apply (0.55 mastery minimum)"],["Steps in F&P","10 nodes (skips SC04, SC05 as standalone stops)"],["Time","~8 sessions"],["When to choose","Exam in 2 weeks, specific chapter to cover quickly"]], sec1:"Trade-off", chips:["Faster to Proficient","Narrower coverage","Can switch to Deep later","Skips evaluative depth"] },
+  deep:      { badge:"Route Mode", bg:"#FAF5FF", bc:"#7C3AED", name:"Deep Route", desc:"Full Bloom traversal — must reach Analyse before advancing to next node. Includes all subconcept subtypes. Best for students building a genuine foundation (JEE prep, gifted track, curious learner).", kv:[["Target bloom","Analyse (minimum before advancing)"],["Steps in F&P","12 nodes (includes SC04, SC05)"],["Time","~13 sessions"],["When to choose","Long-term JEE/NEET prep, strong foundation desired"]], sec1:"Trade-off", chips:["Slower but deeper","Analyse-level means genuinely useful knowledge","Misconceptions caught and cleared","Better Transfer Score development"] },
+  revision:  { badge:"Route Mode", bg:"#FAF5FF", bc:"#7C3AED", name:"Revision Route", desc:"Retention-first: reviews all mastered concepts where retention < 0.60 before continuing forward. Best when student returns after a long break. The Retention Agent's output directly drives this mode.", kv:[["First step","Find all mastered concepts with retention < 0.60"],["Order","Sort by lowest retention first"],["Then","Continue forward on original route"],["When auto-triggered","Student hasn't logged in for 5+ days"]], sec1:"The key insight", chips:["Don't build on a crumbling foundation","Reviewing before advancing prevents the 'relearn everything' crisis","Stability grows with each review → exponentially less revision needed"] },
+  ghost:     { badge:"Map Feature", bg:"#FAF5FF", bc:"#7C3AED", name:"Ghost Node (30% Opacity)", desc:"Every concept is always visible. No concept is ever hidden or locked. Ghost means 'recommended prerequisites pending.' The student can tap a ghost node and Gyaan will open, adapting to cover the gap.", kv:[["Opacity","30% — visible, dimmed"],["Tappable?","Yes — always"],["Advisory badge","'Complete SC06 first for best results'"],["What happens on tap","Gyaan opens with jumped_ahead=true flag → covers prerequisite gap first"]], sec1:"Why not hide it?", chips:["Hiding kills motivation ('can't see what's coming')","Ghost creates pull: 'I see Friction coming'","Student agency: curious students can always jump","Gyaan's Adaptive Jump handles the gap"] },
+  eta:       { badge:"Navigation", bg:"#FEF3C7", bc:"#D97706", name:"Learning ETA", desc:"Like a Maps ETA that updates as you drive faster. Calculated from the student's XP velocity (XP per hour of study) and the remaining concepts on their route. When Dhwani has a great session, her ETA drops. This is deeply motivating.", kv:[["Formula","remaining_xp / xp_per_hour = estimated hours"],["Display","'~47 sessions at your current pace'"],["Updates","After every session — live feedback"],["Exam mode","'You need to master 8 more concepts. At your pace: 3 weeks. Exam: 4 weeks. You're on track.'"]], sec1:"Motivational power", chips:["Shows progress concretely","Great session → ETA drops → dopamine","Exam deadline mode: tracks against date","JFYI: 'You closed 3 sessions of gap today'"] },
+  map:       { badge:"UI", bg:"#FAF5FF", bc:"#7C3AED", name:"Knowledge Map (Galaxy View)", desc:"The home screen of LearnGPS V2. A zoomable, pannable knowledge graph where every concept is a node, colored by mastery level. Ghost nodes at 30% opacity signal what's ahead. The map reveals itself as the student learns.", kv:[["Zoom out","See all subjects — entire knowledge universe"],["Zoom in","Chapter detail: all subconcepts with edges"],["Node colors","Green=Proficient+, Blue=In Progress, Gray outlined=Ready, 30% ghost=Prerequisites pending"],["Interaction","Tap any node → Quick Info card → Start Here"]], sec1:"Design principle", chips:["The map IS the product","Exploration feels like a game","'I can see where I'm going'","Cross-subject edges visible (Physics → Math → Biology)"] },
+  supabase:  { badge:"Infrastructure", bg:"#E7F3E7", bc:"#166534", name:"Supabase (Student State DB)", desc:"PostgreSQL via Supabase stores all student-specific data: concept_mastery table with bloom scores, retention, confidence; assessment_events for every Q&A; misconception_instances; revision_schedule.", kv:[["Key tables","concept_mastery, assessment_events, misconception_instances, revision_schedule"],["Auth","Supabase Auth (phone OTP for students)"],["RLS","Row-Level Security ensures students only see their own data"],["anon key","Safe for frontend; service_role key server-only (never commit)"]], sec1:"Data model", chips:["concept_mastery replaces old student_progress","6 bloom score columns per concept","Retention and stability tracked","Mastery score computed by trigger"] },
+  langfuse:  { badge:"Infrastructure", bg:"#E7F3E7", bc:"#166534", name:"Langfuse (Observability)", desc:"LLM tracing for every Gyaan response. Logs the prompt, retrieved RAG chunks, response, token count, latency, and the student's answer. Essential for debugging why Gyaan gave a wrong or unhelpful response.", kv:[["Traces","Every /chat endpoint call"],["Captures","System prompt, user message, RAG chunks, LLM response, latency, tokens"],["Used for","Debug misconceptions in Gyaan's reasoning, measure response quality"],["Dashboard","Session-level traces, cost tracking"]], sec1:"Why it matters", chips:["Can replay any Gyaan session","Debug: why did Gyaan give wrong answer?","Track prompt quality over time","Cost per student session visible"] },
+};
+
+function showNode(id) {
+  const n = NODES[id];
+  if (!n) return;
+
+  // Update active state on SVG
+  document.querySelectorAll('.node.active').forEach(el => el.classList.remove('active'));
+  const svgNode = document.getElementById('n-' + id);
+  if (svgNode) svgNode.classList.add('active');
+
+  // Populate panel
+  const badge = document.getElementById('d-badge');
+  badge.textContent = n.badge;
+  badge.style.background = n.bg;
+  badge.style.border = '1px solid ' + n.bc;
+  badge.style.color = n.bc;
+
+  document.getElementById('d-name').textContent = n.name;
+  document.getElementById('d-desc').textContent = n.desc;
+
+  const kv = document.getElementById('d-kv');
+  kv.innerHTML = '';
+  if (n.kv) {
+    n.kv.forEach(([k, v]) => {
+      kv.innerHTML += `<dt>${k}</dt><dd>${v}</dd>`;
+    });
+  }
+
+  document.getElementById('d-sec1').textContent = n.sec1 || '';
+
+  const chips = document.getElementById('d-chips');
+  chips.innerHTML = '';
+  if (n.chips) {
+    n.chips.forEach(c => {
+      chips.innerHTML += `<span class="chip" style="background:${n.bg};border-color:${n.bc};color:${n.bc}">${c}</span>`;
+    });
+  }
+
+  document.getElementById('detail-empty').classList.add('hide');
+  document.getElementById('detail-content').classList.add('show');
+}
+
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+</script>
+</body>
+</html>

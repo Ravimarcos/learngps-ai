@@ -238,10 +238,11 @@ function HomeScreen({ gps, studentName, totalXp, streakDays, onContinue, onMap }
   onContinue: () => void;
   onMap: () => void;
 }) {
-  const current  = gps?.current;
-  const progress = gps?.progress_pct ?? 0;
+  const current   = gps?.current;
+  const progress  = gps?.progress_pct ?? 0;
   const completed = gps?.completed?.length ?? 0;
-  const route    = gps?.route ?? [];
+  const route     = gps?.route ?? [];
+  const locked    = gps?.locked ?? [];
 
   return (
     <div className="flex flex-col gap-3 p-4 pb-24">
@@ -317,93 +318,243 @@ function HomeScreen({ gps, studentName, totalXp, streakDays, onContinue, onMap }
           {current && (
             <div className="w-8 h-8 rounded-full bg-indigo-600 gps-current flex items-center justify-center text-white text-xs">📍</div>
           )}
-          {route.slice(0, 2).map((_, i) => (
-            <div key={`r${i}`} className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">🔒</div>
+          {route.slice(0, 2).map((n, i) => (
+            <div key={`r${i}`} className="w-8 h-8 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-gray-400 text-xs" title={n.name}>○</div>
+          ))}
+          {locked.slice(0, 2).map((n, i) => (
+            <div key={`g${i}`} className="w-8 h-8 rounded-full bg-amber-50 border border-dashed border-amber-300 flex items-center justify-center text-amber-400 text-xs opacity-50" title={`${n.name} (tap anytime)`}>👁</div>
           ))}
           <div className="flex-1 h-0.5 bg-gray-100 mx-1" />
         </div>
         <p className="text-xs mt-2 text-gray-600">
-          <span className="text-indigo-600 font-semibold">{route.length} SubConcept{route.length !== 1 ? "s" : ""} left</span> to complete Force & Pressure
+          <span className="text-indigo-600 font-semibold">{route.length} up next</span>
+          {locked.length > 0 && <span className="text-amber-500 ml-2 opacity-70">· {locked.length} visible ahead 👁</span>}
         </p>
       </div>
     </div>
   );
 }
 
-// ── MAP SCREEN ─────────────────────────────────────────────────────────────
+// ── MAP SCREEN — Knowledge constellation (dark space theme) ────────────────
 function MapScreen({ gps, onStart }: { gps: GPSRoute | null; onStart: () => void }) {
+  const [detailNode, setDetailNode] = useState<{ id: string; name: string; state: string } | null>(null);
+
   const current   = gps?.current;
   const completed = gps?.completed ?? [];
   const route     = gps?.route ?? [];
+  const locked    = gps?.locked ?? [];
   const progress  = gps?.progress_pct ?? 0;
 
-  // Build ordered list: completed → current → upcoming
   const allNodes = [
-    ...completed.map((n) => ({ ...n, state: "done" as const })),
+    ...completed.map((n) => ({ ...n, state: "done"    as const })),
     ...(current ? [{ ...current, state: "current" as const }] : []),
-    ...route.map((n) => ({ ...n, state: "locked" as const })),
-    { id: "__finish__", name: "Chapter Complete! 🏆", state: "finish" as const },
+    ...route.map((n)    => ({ ...n, state: "ready"   as const })),
+    ...locked.map((n)   => ({ ...n, state: "ghost"   as const })),
+    { id: "__finish__", name: "Chapter Complete!", state: "finish" as const },
   ];
 
-  const nodeConfig = {
-    done:    { bg: "bg-emerald-500", border: "border-emerald-500", text: "text-white", icon: "✓", label: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    current: { bg: "bg-indigo-600",  border: "border-indigo-600",  text: "text-white", icon: "📍", label: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-    locked:  { bg: "bg-gray-200",    border: "border-gray-200",    text: "text-gray-400", icon: "🔒", label: "bg-gray-50 text-gray-400 border-gray-200" },
-    finish:  { bg: "bg-amber-400",   border: "border-amber-400",   text: "text-white", icon: "🏆", label: "bg-amber-50 text-amber-700 border-amber-200" },
+  // Per-state visual config — dark constellation palette
+  const CFG = {
+    done:    { color: "#00e676", glow: "0 0 14px rgba(0,230,118,0.7),0 0 28px rgba(0,230,118,0.25)", size: 44, border: "2px solid #00e676",                   bg: "rgba(0,40,20,0.85)",  icon: "✓",   badge: "✓ MASTERED",       badgeCol: "#00e676", lineCol: "rgba(0,230,118,0.45)", dim: 1    },
+    current: { color: "#2979ff", glow: "0 0 20px rgba(41,121,255,0.85),0 0 40px rgba(41,121,255,0.4)", size: 52, border: "2px solid #2979ff",                  bg: "rgba(10,30,80,0.9)",  icon: "📍",  badge: "📍 YOU ARE HERE",  badgeCol: "#82b1ff", lineCol: "rgba(255,255,255,0.12)", dim: 1  },
+    ready:   { color: "#ffd740", glow: "0 0 10px rgba(255,215,64,0.5),0 0 22px rgba(255,215,64,0.2)",  size: 38, border: "2px solid #ffd740",                   bg: "rgba(40,30,0,0.75)",  icon: "○",   badge: "READY ▶",          badgeCol: "#ffd740", lineCol: "rgba(255,255,255,0.1)",  dim: 1    },
+    ghost:   { color: "rgba(255,255,255,0.28)", glow: "none",                                           size: 34, border: "2px dashed rgba(255,255,255,0.22)", bg: "rgba(20,25,45,0.55)", icon: "···", badge: "👁 VISIBLE AHEAD",  badgeCol: "rgba(255,255,255,0.3)", lineCol: "rgba(255,255,255,0.07)", dim: 0.3 },
+    finish:  { color: "#ff9100", glow: "0 0 12px rgba(255,145,0,0.5),0 0 24px rgba(255,145,0,0.2)",    size: 42, border: "2px solid #ff9100",                   bg: "rgba(40,20,0,0.85)",  icon: "🏆",  badge: "🏁 DESTINATION",   badgeCol: "#ff9100", lineCol: "rgba(255,255,255,0.05)", dim: 1   },
   };
 
   return (
-    <div className="flex flex-col pb-36 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="bg-indigo-700 text-white px-4 pt-6 pb-8">
-        <h1 className="font-bold text-xl mb-1">Learning Map 🗺️</h1>
-        <p className="text-indigo-200 text-sm">Force & Pressure · Grade 8 Science</p>
-        <div className="mt-3 bg-white/20 rounded-full h-2">
-          <div className="bg-white rounded-full h-2 transition-all" style={{ width: `${progress}%` }} />
+    <div style={{ background: "#03061a", minHeight: "100vh", paddingBottom: "100px", position: "relative" }}>
+      {/* CSS animations */}
+      <style>{`
+        @keyframes lgps-pulse { 0%{transform:scale(1);opacity:0.6} 70%{transform:scale(2);opacity:0} 100%{transform:scale(2);opacity:0} }
+        .lgps-pulse { animation: lgps-pulse 2s ease-out infinite; position:absolute; inset:0; border-radius:50%; border:2px solid rgba(41,121,255,0.5); pointer-events:none; }
+        @keyframes lgps-stars { 0%,100%{opacity:0.4} 50%{opacity:1} }
+      `}</style>
+
+      {/* Starfield */}
+      {[...Array(28)].map((_, i) => (
+        <div key={i} style={{
+          position: "absolute", borderRadius: "50%",
+          width: i % 3 === 0 ? "2px" : "1px", height: i % 3 === 0 ? "2px" : "1px",
+          background: "rgba(255,255,255,0.6)",
+          top: `${(i * 37 + 11) % 95}%`, left: `${(i * 53 + 7) % 95}%`,
+          animation: `lgps-stars ${2 + (i % 3)}s ease-in-out ${(i * 0.3) % 2}s infinite`,
+          pointerEvents: "none",
+        }} />
+      ))}
+
+      {/* ── Dark header with mastery ring ── */}
+      <div style={{ background: "rgba(4,8,32,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "14px 16px 12px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <div>
+            <p style={{ fontSize: "9px", color: "rgba(165,180,252,0.7)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", marginBottom: "2px" }}>Mastery Map · Learning GPS</p>
+            <p style={{ fontSize: "15px", fontWeight: 800, color: "#fff" }}>Force &amp; Pressure · Grade 8</p>
+          </div>
+          {/* Mastery ring */}
+          <div style={{ position: "relative", width: "50px", height: "50px", flexShrink: 0 }}>
+            <svg width="50" height="50" viewBox="0 0 50 50">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5" transform="rotate(-90 25 25)" />
+              <circle cx="25" cy="25" r="20" fill="none" stroke="#00e676" strokeWidth="5"
+                strokeDasharray="125.66" strokeDashoffset={125.66 * (1 - progress / 100)}
+                strokeLinecap="round" transform="rotate(-90 25 25)" />
+            </svg>
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "#00e676" }}>{progress}%</div>
+          </div>
         </div>
-        <div className="flex justify-between mt-1">
-          <span className="text-xs text-indigo-200">{completed.length} mastered</span>
-          <span className="text-xs text-indigo-200">{progress}% complete</span>
+        {/* Stats row */}
+        <div style={{ display: "flex", gap: "10px", fontSize: "10.5px" }}>
+          <span style={{ color: "#00e676", fontWeight: 700 }}>✓ {completed.length} mastered</span>
+          <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
+          <span style={{ color: "#2979ff", fontWeight: 700 }}>▶ {current ? 1 : 0} active</span>
+          <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
+          <span style={{ color: "#ffd740" }}>{route.length} ready</span>
+          <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
+          <span style={{ color: "rgba(255,255,255,0.25)" }}>{locked.length} ahead</span>
         </div>
       </div>
 
-      {/* GPS Route — vertical path */}
-      <div className="px-6 -mt-4">
+      {/* ── Constellation node chain ── */}
+      <div style={{ padding: "16px 18px" }}>
         {allNodes.map((node, i) => {
-          const cfg = nodeConfig[node.state];
-          const isLast = i === allNodes.length - 1;
+          const cfg = CFG[node.state];
+          const isLast    = i === allNodes.length - 1;
+          const isCurrent = node.state === "current";
+          const isGhost   = node.state === "ghost";
+
           return (
-            <div key={node.id} className="flex gap-4">
-              {/* Path + Node */}
-              <div className="flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full border-4 ${cfg.bg} ${cfg.border} ${cfg.text} flex items-center justify-center text-sm font-bold shadow-md flex-shrink-0 z-10`}>
-                  {cfg.icon}
+            <div key={node.id} style={{ display: "flex", gap: "12px", opacity: isGhost ? 0.35 : 1 }}>
+
+              {/* Node + connector column */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "56px", flexShrink: 0 }}>
+                {/* Node circle */}
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  {/* Pulse ring for current */}
+                  {isCurrent && <div className="lgps-pulse" />}
+                  <button
+                    onClick={() => {
+                      if (node.state === "finish") return;
+                      if (isCurrent) { onStart(); return; }
+                      setDetailNode(node);
+                    }}
+                    style={{
+                      width: cfg.size, height: cfg.size, borderRadius: "50%",
+                      border: cfg.border, background: cfg.bg,
+                      boxShadow: cfg.glow,
+                      color: cfg.color, fontSize: isCurrent ? "20px" : node.state === "finish" ? "18px" : "13px",
+                      fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: node.state === "finish" ? "default" : "pointer",
+                      outline: "none", position: "relative", zIndex: 1,
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {cfg.icon}
+                  </button>
                 </div>
+                {/* Connector line */}
                 {!isLast && (
-                  <div className={`w-0.5 flex-1 min-h-8 ${node.state === "done" ? "bg-emerald-400" : "bg-gray-200"}`} />
+                  <div style={{
+                    width: "2px", flex: 1, minHeight: "28px",
+                    background: cfg.lineCol,
+                    borderRadius: "1px",
+                    ...(isCurrent ? { backgroundImage: "repeating-linear-gradient(to bottom, rgba(41,121,255,0.7) 0px, rgba(41,121,255,0.7) 6px, transparent 6px, transparent 12px)" } : {}),
+                  }} />
                 )}
               </div>
 
               {/* Label card */}
-              <div className={`mb-2 mt-1 flex-1 rounded-xl border px-3 py-2 ${cfg.label} ${node.state === "current" ? "shadow-md" : ""}`}>
-                <p className={`text-sm font-semibold ${node.state === "locked" ? "text-gray-400" : node.state === "done" ? "text-emerald-700" : node.state === "finish" ? "text-amber-700" : "text-indigo-700"}`}>
-                  {node.name}
+              <div
+                onClick={() => {
+                  if (node.state === "finish") return;
+                  if (isCurrent) { onStart(); return; }
+                  setDetailNode(node);
+                }}
+                style={{
+                  flex: 1, padding: "8px 12px", borderRadius: "12px",
+                  marginBottom: "4px", marginTop: "4px",
+                  background: isCurrent
+                    ? "rgba(41,121,255,0.1)"
+                    : node.state === "done"
+                    ? "rgba(0,230,118,0.05)"
+                    : "rgba(255,255,255,0.02)",
+                  border: isCurrent
+                    ? "1px solid rgba(41,121,255,0.3)"
+                    : node.state === "done"
+                    ? "1px solid rgba(0,230,118,0.15)"
+                    : "1px solid rgba(255,255,255,0.05)",
+                  cursor: node.state === "finish" ? "default" : "pointer",
+                }}
+              >
+                <p style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.8px", textTransform: "uppercase", color: cfg.badgeCol, marginBottom: "3px" }}>
+                  {cfg.badge}
                 </p>
-                {node.state === "done"    && <p className="text-xs text-emerald-500 mt-0.5">Mastered ✓</p>}
-                {node.state === "current" && <p className="text-xs text-indigo-500 mt-0.5 font-medium">▶ You are here — tap to continue</p>}
-                {node.state === "locked"  && <p className="text-xs text-gray-400 mt-0.5">Complete previous topic first</p>}
-                {node.state === "finish"  && <p className="text-xs text-amber-600 mt-0.5">Master all topics to unlock</p>}
+                <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{node.name}</p>
+                <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", marginTop: "3px" }}>
+                  {node.state === "done"    && "Tap to review & reinforce"}
+                  {node.state === "current" && "Tap to continue learning →"}
+                  {node.state === "ready"   && "Prerequisites done — tap to begin"}
+                  {node.state === "ghost"   && "Gyaan bridges the gap if you jump here"}
+                  {node.state === "finish"  && "Master all topics to unlock"}
+                </p>
               </div>
             </div>
           );
         })}
       </div>
 
+      {/* ── Node detail bottom sheet ── */}
+      {detailNode && (
+        <div
+          style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+            background: "rgba(4,8,30,0.97)", backdropFilter: "blur(20px)",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "20px 20px 0 0", padding: "16px 20px 110px",
+          }}
+        >
+          <div style={{ width: "36px", height: "3px", background: "rgba(255,255,255,0.2)", borderRadius: "2px", margin: "0 auto 14px" }} />
+          <p style={{ fontSize: "9px", color: CFG[detailNode.state as keyof typeof CFG]?.badgeCol ?? "#fff", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
+            {CFG[detailNode.state as keyof typeof CFG]?.badge}
+          </p>
+          <p style={{ fontSize: "17px", fontWeight: 800, color: "#fff", marginBottom: "12px" }}>{detailNode.name}</p>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              onClick={() => setDetailNode(null)}
+              style={{ flex: 1, padding: "11px", borderRadius: "12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}
+            >
+              Close
+            </button>
+            <button
+              onClick={() => { setDetailNode(null); onStart(); }}
+              style={{ flex: 2, padding: "11px", borderRadius: "12px", background: "linear-gradient(135deg,#4338ca,#7c3aed)", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit",
+                boxShadow: "0 4px 20px rgba(67,56,202,0.5)" }}
+            >
+              {detailNode.state === "done"  ? "🔄 Review & Reinforce" :
+               detailNode.state === "ready" ? "🚀 Start Learning Now" :
+                                              "▶ Jump here — Gyaan adapts"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sticky CTA ── */}
       <button
         onClick={onStart}
-        className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform"
+        style={{
+          position: "fixed", bottom: "76px", left: "50%", transform: "translateX(-50%)",
+          width: "calc(100% - 2rem)", maxWidth: "380px",
+          background: "linear-gradient(135deg,#4338ca,#7c3aed)",
+          color: "#fff", fontWeight: 800, padding: "14px 20px", borderRadius: "16px",
+          border: "none", cursor: "pointer",
+          boxShadow: "0 4px 24px rgba(67,56,202,0.55)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          fontFamily: "inherit",
+        }}
       >
-        Continue: {current?.name ?? "Start Learning"} →
+        <span>
+          <span style={{ display: "block", fontSize: "10px", color: "rgba(199,210,254,0.75)", fontWeight: 400 }}>Continue learning</span>
+          <span style={{ fontSize: "14px" }}>{current?.name ?? "Start Learning"}</span>
+        </span>
+        <span style={{ fontSize: "22px" }}>→</span>
       </button>
     </div>
   );
@@ -463,6 +614,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
         vark_style:      varkStyle,
         hint_count:      hintCount,
         activity_shown:  activityShown,
+        prereq_names:    gps?.locked?.map((n) => n.name) ?? [],
       });
       setHintCount(res.hint_count ?? 0);
       setActivityShown(res.activity_shown ?? false);
@@ -642,11 +794,25 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
 }
 
 // ── PROGRESS SCREEN ────────────────────────────────────────────────────────
-function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
+function ProgressScreen({ vark, studentId, gps, streakDays }: {
+  vark: VARKProfile | null;
+  studentId: string;
+  gps: GPSRoute | null;
+  streakDays: number;
+}) {
   const dominant   = vark?.dominant ?? "K";
   const confidence = vark ? Math.round(Math.max(vark.v_score, vark.a_score, vark.r_score, vark.k_score) * 100) : 25;
   const sessions   = vark?.session_count ?? 0;
-  const days       = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"];
+  const days       = ["M", "T", "W", "T", "F", "S", "T"];
+
+  // Real mastery from GPS data
+  const completed    = gps?.completed?.length ?? 0;
+  const totalNodes   = completed + (gps?.route?.length ?? 0) + (gps?.current ? 1 : 0);
+  const masteryPct   = totalNodes > 0 ? Math.round((completed / totalNodes) * 100) : 0;
+  const bloomLabels: Record<string, string> = {
+    Remember: "Remember", Understand: "Understand", Apply: "Apply level",
+    Analyse: "Analyse level", Evaluate: "Evaluate level", Create: "Create level",
+  };
 
   return (
     <div className="flex flex-col gap-3 p-4 pb-24">
@@ -661,32 +827,34 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
             <circle cx="40" cy="40" r="32" fill="none" stroke="#e0e7ff" strokeWidth="8" />
             <circle cx="40" cy="40" r="32" fill="none" stroke="#4f46e5" strokeWidth="8"
               strokeDasharray={`${2 * Math.PI * 32}`}
-              strokeDashoffset={`${2 * Math.PI * 32 * (1 - 0.68)}`}
+              strokeDashoffset={`${2 * Math.PI * 32 * (1 - masteryPct / 100)}`}
               strokeLinecap="round" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-bold text-indigo-700 text-lg">68%</span>
+            <span className="font-bold text-indigo-700 text-lg">{masteryPct}%</span>
             <span className="text-gray-400 text-xs">Overall</span>
           </div>
         </div>
         <div>
           <p className="font-bold text-gray-900">Overall Mastery</p>
-          <p className="text-sm text-gray-500 mt-1">Concepts: <span className="font-semibold text-gray-700">8 / 12</span></p>
+          <p className="text-sm text-gray-500 mt-1">Concepts: <span className="font-semibold text-gray-700">{completed} / {totalNodes}</span></p>
           <p className="text-sm text-gray-500">Bloom: <span className="font-semibold text-indigo-600">Apply level</span></p>
-          <p className="text-sm text-gray-500">Sessions: <span className="font-semibold text-gray-700">{sessions || 34}</span></p>
+          <p className="text-sm text-gray-500">Sessions: <span className="font-semibold text-gray-700">{sessions}</span></p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <div className="flex justify-between mb-3">
-          <p className="font-semibold text-gray-800">🔥 7-Day Streak</p>
-          <p className="text-amber-500 text-sm font-semibold">Don&apos;t break it!</p>
+          <p className="font-semibold text-gray-800">🔥 {streakDays}-Day Streak</p>
+          <p className="text-amber-500 text-sm font-semibold">{streakDays > 0 ? "Don't break it!" : "Start today!"}</p>
         </div>
         <div className="flex gap-1">
           {days.map((d, i) => (
-            <div key={d} className="flex-1 flex flex-col items-center gap-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${i === 6 ? "bg-amber-100 ring-2 ring-amber-400" : "bg-amber-50"}`}>🔥</div>
-              <span className="text-xs text-gray-400">{d.slice(0, 1)}</span>
+            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${i === 6 ? "bg-amber-100 ring-2 ring-amber-400" : i < streakDays ? "bg-amber-50" : "bg-gray-100"}`}>
+                {i < streakDays ? "🔥" : "·"}
+              </div>
+              <span className="text-xs text-gray-400">{d}</span>
             </div>
           ))}
         </div>
@@ -694,21 +862,19 @@ function ProgressScreen({ vark }: { vark: VARKProfile | null }) {
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <p className="font-semibold text-gray-800 mb-3">Chapter Mastery</p>
-        {[
-          { name: "Force & Pressure",  pct: 65, color: "bg-indigo-500"  },
-          { name: "Friction",          pct: 92, color: "bg-emerald-500" },
-          { name: "Linear Equations",  pct: 78, color: "bg-indigo-400"  },
-        ].map((c) => (
-          <div key={c.name} className="mb-3 last:mb-0">
-            <div className="flex justify-between mb-1">
-              <span className="text-sm text-gray-700">{c.name}</span>
-              <span className="text-sm font-semibold text-gray-900">{c.pct}%</span>
-            </div>
-            <div className="w-full bg-gray-100 rounded-full h-2">
-              <div className={`${c.color} rounded-full h-2 transition-all`} style={{ width: `${c.pct}%` }} />
-            </div>
+        <div className="mb-3">
+          <div className="flex justify-between mb-1">
+            <span className="text-sm text-gray-700">Force & Pressure</span>
+            <span className="text-sm font-semibold text-gray-900">{masteryPct}%</span>
           </div>
-        ))}
+          <div className="w-full bg-gray-100 rounded-full h-2">
+            <div className="bg-indigo-500 rounded-full h-2 transition-all" style={{ width: `${masteryPct}%` }} />
+          </div>
+          <p className="text-xs text-gray-400 mt-1">{completed} of {totalNodes} subconcepts mastered</p>
+        </div>
+        <div className="py-2 text-xs text-gray-400 text-center border border-dashed border-gray-200 rounded-xl">
+          🔒 More chapters unlock as you progress
+        </div>
       </div>
 
       <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-4">
@@ -974,7 +1140,7 @@ export default function App() {
         {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays} onContinue={() => setScreen("chat")} onMap={() => { if (studentId) loadAppData(studentId); setScreen("map"); }} />}
         {screen === "map"      && <MapScreen      gps={gps} onStart={() => setScreen("chat")} />}
         {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} messages={messages} setMessages={setMessages} bloomLevel={bloomLevel} setBloomLevel={setBloomLevel} hintCount={hintCount} setHintCount={setHintCount} activityShown={activityShown} setActivityShown={setActivityShown} onXpEarned={(xp) => setTotalXp((prev) => prev + xp)} />}
-        {screen === "progress" && <ProgressScreen vark={vark} />}
+        {screen === "progress" && <ProgressScreen vark={vark} studentId={studentId} gps={gps} streakDays={streakDays} />}
         {screen === "profile"  && <ProfileScreen  vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />}
         <BottomNav active={screen} setActive={(s) => {
           // Refresh GPS when navigating away from chat back to home/map

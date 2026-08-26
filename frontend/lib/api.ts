@@ -17,6 +17,7 @@ export interface GPSRoute {
   current: { id: string; name: string } | null;
   route: { id: string; name: string }[];
   completed: { id: string; name: string }[];
+  locked: { id: string; name: string }[];   // ghost nodes — visible, prereqs pending
   locked_count: number;
   progress_pct: number;
 }
@@ -83,6 +84,7 @@ export async function sendChat(params: {
   mode?: string;
   activity_shown?: boolean;
   distress_count?: number;
+  prereq_names?: string[];   // ghost nodes the student jumped over — Gyaan adapts
 }): Promise<ChatResponse> {
   const res = await fetch(`${API}/chat`, {
     method: "POST",
@@ -101,6 +103,7 @@ export async function sendChat(params: {
       mode:                 params.mode ?? "learning",
       activity_shown:       params.activity_shown ?? false,
       distress_count:       params.distress_count ?? 0,
+      prereq_names:         params.prereq_names ?? [],
     }),
   });
   if (!res.ok) throw new Error("Chat failed");

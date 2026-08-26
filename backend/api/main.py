@@ -145,6 +145,7 @@ async def get_gps(student_id: str, chapter_id: str):
         "current": gps["current"],
         "route": gps["route"],
         "completed": gps["completed"],
+        "locked": gps["locked"],
         "locked_count": len(gps["locked"]),
         "progress_pct": round(
             len(gps["completed"]) / max(len(gps["completed"]) + len(gps["route"]) + len(gps["locked"]), 1) * 100
@@ -275,6 +276,7 @@ async def chat(body: dict):
             hint_count           = hint_count,
             mode                 = mode,
             activity_shown       = activity_shown,
+            prereq_names         = body.get("prereq_names", []),
         )
 
         if student_id:
@@ -363,8 +365,8 @@ async def chat(body: dict):
                 current_cc = existing.data[0]["consecutive_correct"] if existing.data else 0
                 new_cc = (current_cc + 1) if is_correct else 0
 
-                # Mastery: 2+ consecutive correct at Apply level or above
-                mastered = new_cc >= 2 and new_bloom in ("Apply", "Analyse", "Evaluate", "Create")
+                # Mastery: 2+ consecutive correct answers (bloom level tracked separately)
+                mastered = new_cc >= 2
 
                 # Upsert per-subconcept progress
                 sb.table("student_progress").upsert({
