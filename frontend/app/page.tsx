@@ -231,12 +231,13 @@ function BottomNav({ active, setActive }: { active: Screen; setActive: (s: Scree
 }
 
 // ── HOME SCREEN ────────────────────────────────────────────────────────────
-function HomeScreen({ gps, studentName, totalXp, streakDays, onContinue, onMap }: {
+function HomeScreen({ gps, studentName, totalXp, streakDays, onContinue, onStartMode, onMap }: {
   gps: GPSRoute | null;
   studentName: string;
   totalXp: number;
   streakDays: number;
   onContinue: () => void;
+  onStartMode: (mode: "quiz" | "explain" | "testprep") => void;
   onMap: () => void;
 }) {
   const current   = gps?.current;
@@ -294,11 +295,11 @@ function HomeScreen({ gps, studentName, totalXp, streakDays, onContinue, onMap }
 
       <div className="grid grid-cols-3 gap-2">
         {[
-          { icon: "⚡", title: "Quick Quiz",   sub: "5 Qs · 5 min"   },
-          { icon: "📖", title: "Explain This", sub: "Ask Gyaan"       },
-          { icon: "📝", title: "Test Prep",    sub: "12 days away"    },
+          { icon: "⚡", title: "Quick Quiz",   sub: "5 Qs · 5 min",  mode: "quiz"     as const },
+          { icon: "📖", title: "Explain This", sub: "Ask Gyaan",      mode: "explain"  as const },
+          { icon: "📝", title: "Test Prep",    sub: "12 days away",   mode: "testprep" as const },
         ].map((a) => (
-          <button key={a.title} onClick={onContinue} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center active:bg-gray-50">
+          <button key={a.title} onClick={() => onStartMode(a.mode)} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center active:bg-gray-50">
             <p className="text-xl">{a.icon}</p>
             <p className="text-xs font-semibold text-gray-700 mt-1">{a.title}</p>
             <p className="text-xs text-gray-400">{a.sub}</p>
@@ -1244,12 +1245,14 @@ function MapScreen({ studentId, onStart }: {
 }
 
 // ── CHAT SCREEN ────────────────────────────────────────────────────────────
-function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, bloomLevel, setBloomLevel, hintCount, setHintCount, activityShown, setActivityShown, onXpEarned }: {
+function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, bloomLevel, setBloomLevel, hintCount, setHintCount, activityShown, setActivityShown, autoPrompt, onAutoPromptSent, onXpEarned }: {
   gps: GPSRoute | null;
   vark: VARKProfile | null;
   studentId: string;
   studentName: string;
   messages: Message[];
+  autoPrompt?: string | null;
+  onAutoPromptSent?: () => void;
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   bloomLevel: string;
   setBloomLevel: React.Dispatch<React.SetStateAction<string>>;
@@ -1276,6 +1279,57 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  // Auto-fire a message when arriving from Quick Quiz / Explain This / Test Prep
+  useEffect(() => {
+    if (!autoPrompt) return;
+    onAutoPromptSent?.();
+    // Small delay so the chat screen has finished mounting
+    const t = setTimeout(() => {
+      setInput(autoPrompt);
+      // Directly trigger send after populating input
+      const doSend = async () => {
+        setInput("");
+        setMessages((m) => [...m, { role: "user", content: autoPrompt }]);
+        setLoading(true);
+        try {
+          const history = messages.slice(-20).map((m) => ({ role: m.role, content: m.content }));
+          const currentSCLocal = gps?.current;
+          const bloomOrder = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"];
+          const res = await sendChat({
+            studentId, studentName,
+            message: autoPrompt,
+            conversationHistory: history,
+            subconcept_id:   currentSCLocal?.id           ?? "sc_contact_force",
+            subconcept_name: currentSCLocal?.name         ?? "Contact Force",
+            chapter_id:      gps?.chapter_id              ?? "",
+            chapter_name:    gps?.chapter_id              ?? "Force & Pressure",
+            bloom_level:     bloomLevel,
+            bloom_target:    currentSCLocal?.bloom_target ?? "apply",
+            vark_style:      varkStyle,
+            hint_count:      hintCount,
+            activity_shown:  activityShown,
+            prereq_names:    gps?.locked?.map((n) => n.name) ?? [],
+          });
+          setHintCount(res.hint_count ?? 0);
+          setActivityShown(res.activity_shown ?? false);
+          if (res.bloom_advance) {
+            const idx = bloomOrder.indexOf(bloomLevel);
+            if (idx < bloomOrder.length - 1) setBloomLevel(bloomOrder[idx + 1]);
+          }
+          if ((res.xp_earned ?? 0) > 0) onXpEarned(res.xp_earned);
+          setMessages((m) => [...m, { role: "assistant", content: res.reply, xp: res.xp_earned }]);
+        } catch {
+          setMessages((m) => [...m, { role: "assistant", content: "Oops! Something went wrong. Try again." }]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      doSend();
+    }, 300);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPrompt]);
 
   async function handleSend() {
     if (!input.trim() || loading) return;
@@ -1423,6 +1477,34 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
         )}
         <div ref={bottomRef} />
       </div>
+
+      {/* ── Suggestion chips — shown at start and after each Gyaan reply ── */}
+      {!loading && messages.length > 0 && messages[messages.length - 1].role === "assistant" && (() => {
+        const sc   = currentSC?.name ?? "this concept";
+        const lvl  = bloomLevel.toLowerCase();
+        const chips: string[] =
+          lvl === "remember"  ? [`What is ${sc}?`, "Explain it simply", "Give me a hint"] :
+          lvl === "understand" ? [`Give me an example of ${sc}`, "Why does this happen?", "Explain in my own words"] :
+          lvl === "apply"      ? ["Give me a question to solve", `Where do we see ${sc} in real life?`, "Test me"] :
+          lvl === "analyse"    ? [`How does ${sc} connect to other forces?`, "Why does this work?", "Give me a harder question"] :
+                                  ["Challenge me with a tough question", "Quiz me", "Give me a real-world problem"];
+        return (
+          <div style={{ padding: "8px 12px 4px", display: "flex", gap: "8px", flexWrap: "wrap", background: "white", borderTop: "0.5px solid #f0f0f0" }}>
+            {chips.map((chip) => (
+              <button key={chip}
+                onClick={() => { setInput(chip); }}
+                style={{
+                  fontSize: "12px", padding: "6px 12px", borderRadius: "20px",
+                  background: "#eef2ff", color: "#4338ca", border: "1px solid #c7d2fe",
+                  cursor: "pointer", whiteSpace: "nowrap", fontWeight: 500,
+                  transition: "background 0.15s",
+                }}>
+                {chip}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
 
       {showPhotoPanel && (
         <div className="bg-white border-t border-gray-100 p-3">
@@ -1690,6 +1772,7 @@ export default function App() {
   });
   const [hintCount,  setHintCount]  = useState(0);
   const [activityShown, setActivityShown] = useState(false);
+  const [autoPrompt, setAutoPrompt] = useState<string | null>(null);
 
   // Sync messages + bloom to sessionStorage on every change
   useEffect(() => {
@@ -1843,7 +1926,16 @@ export default function App() {
           <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
             <div style={{ maxWidth: "820px", margin: "0 auto" }}>
               <HomeScreen gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays}
-                onContinue={() => setScreen("chat")}
+                onContinue={() => { setAutoPrompt(null); setScreen("chat"); }}
+                onStartMode={(mode) => {
+                  const sc = gps?.current?.name ?? "this concept";
+                  setAutoPrompt(
+                    mode === "quiz"     ? `Give me a 5-question quiz on ${sc}` :
+                    mode === "explain"  ? `Explain ${sc} to me step by step` :
+                                          `Help me prepare for my exam on ${sc} with practice questions and tips`
+                  );
+                  setScreen("chat");
+                }}
                 onMap={() => { if (studentId) loadAppData(studentId); setScreen("map"); }} />
             </div>
           </div>
@@ -1858,6 +1950,7 @@ export default function App() {
               bloomLevel={bloomLevel} setBloomLevel={setBloomLevel}
               hintCount={hintCount} setHintCount={setHintCount}
               activityShown={activityShown} setActivityShown={setActivityShown}
+              autoPrompt={autoPrompt} onAutoPromptSent={() => setAutoPrompt(null)}
               onXpEarned={(xp) => setTotalXp((prev) => prev + xp)} />
           </div>
         )}
