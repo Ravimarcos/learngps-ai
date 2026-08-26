@@ -40,8 +40,8 @@ CHAPTERS = [
         # color        → hex accent colour for this chapter's orb + ring
         # eta          → human-readable estimated time to complete
         "color":     "#2979ff",
-        "ov_x":      380.0,
-        "ov_y":      295.0,
+        "ov_x":      550.0,
+        "ov_y":      330.0,
         "ov_radius": 52.0,
         "eta":       "~8 sessions",
     }

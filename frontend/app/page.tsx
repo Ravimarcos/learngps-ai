@@ -336,6 +336,98 @@ function HomeScreen({ gps, studentName, totalXp, streakDays, onContinue, onMap }
   );
 }
 
+// ── SIDEBAR — web navigation + student card ───────────────────────────────────
+function Sidebar({ screen, setScreen, studentName, vark, totalXp, streakDays }: {
+  screen: Screen;
+  setScreen: (s: Screen) => void;
+  studentName: string;
+  vark: VARKProfile | null;
+  totalXp: number;
+  streakDays: number;
+}) {
+  const nav: { id: Screen; icon: string; label: string }[] = [
+    { id: "home",     icon: "🏠", label: "Home"          },
+    { id: "map",      icon: "🧭", label: "Knowledge Map" },
+    { id: "chat",     icon: "🤖", label: "Gyaan AI"      },
+    { id: "progress", icon: "📊", label: "Progress"      },
+    { id: "profile",  icon: "👤", label: "Profile"       },
+  ];
+  return (
+    <aside style={{
+      width: "232px", flexShrink: 0, height: "100vh",
+      background: "rgba(4,8,32,0.98)", borderRight: "1px solid rgba(255,255,255,0.06)",
+      display: "flex", flexDirection: "column",
+    }}>
+      {/* Logo */}
+      <div style={{ padding: "20px 18px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "22px" }}>🧭</span>
+          <div>
+            <p style={{ fontWeight: 800, fontSize: "17px", color: "#fff", lineHeight: 1 }}>
+              Learn<span style={{ color: "#6366f1" }}>GPS</span>
+            </p>
+            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.28)", marginTop: "2px" }}>AI Tutoring · Grade 8–10</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav links */}
+      <nav style={{ padding: "10px 8px", flex: 1 }}>
+        {nav.map(item => {
+          const active = screen === item.id;
+          return (
+            <button key={item.id} onClick={() => setScreen(item.id)}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", gap: "10px",
+                padding: "9px 12px", borderRadius: "10px", border: "none", cursor: "pointer",
+                background: active ? "rgba(99,102,241,0.18)" : "transparent",
+                color: active ? "#a5b4fc" : "rgba(255,255,255,0.45)",
+                fontSize: "13px", fontWeight: active ? 700 : 500,
+                marginBottom: "2px", fontFamily: "inherit", textAlign: "left",
+                transition: "background 0.15s, color 0.15s",
+              }}>
+              <span style={{ fontSize: "15px", flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {active && <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#6366f1", flexShrink: 0 }} />}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Student card */}
+      <div style={{ padding: "12px 14px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "10px" }}>
+          <div style={{
+            width: "30px", height: "30px", borderRadius: "50%", background: "#4338ca",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#fff", fontWeight: 800, fontSize: "12px", flexShrink: 0,
+          }}>
+            {studentName[0]?.toUpperCase() ?? "S"}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {studentName || "Student"}
+            </p>
+            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.28)" }}>Grade 8 · Science</p>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: "5px" }}>
+          {[
+            { val: `🔥 ${streakDays}`, label: "Streak", color: "#f59e0b" },
+            { val: `${totalXp}`,        label: "XP",     color: "#6366f1" },
+            ...(vark ? [{ val: vark.dominant, label: "VARK", color: "#10b981" }] : []),
+          ].map(s => (
+            <div key={s.label} style={{ flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: "8px", padding: "5px 4px", textAlign: "center" }}>
+              <p style={{ fontSize: "12px", fontWeight: 800, color: s.color }}>{s.val}</p>
+              <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.28)" }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 // ── Hex color → rgba fill helper ─────────────────────────────────────────────
 // Converts "#rrggbb" to "rgba(r,g,b,alpha)" for SVG fills.
 // Handles only 6-digit hex (all colors from Neo4j are in that format).
@@ -351,7 +443,7 @@ function hexToRgba(hex: string, alpha: number): string {
 // Arranges chapters on an ellipse centred in the 760×590 viewBox.
 function autoOvPos(idx: number, total: number): { x: number; y: number } {
   const angle = (idx / Math.max(total, 1)) * 2 * Math.PI - Math.PI / 2;
-  return { x: 380 + 270 * Math.cos(angle), y: 295 + 210 * Math.sin(angle) };
+  return { x: 550 + 420 * Math.cos(angle), y: 330 + 260 * Math.sin(angle) };
 }
 
 // ── MAP SCREEN — fully data-driven GPS-style 2D knowledge graph ──────────────
@@ -384,6 +476,8 @@ function MapScreen({ studentId, onStart }: {
   const [pan,   setPan]   = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
   const touchRef = useRef<{ x: number; y: number; dist?: number } | null>(null);
+  const mouseRef = useRef<{ x: number; y: number; dragged: boolean } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // ── Fetch all chapters on mount ────────────────────────────────────────────
   useEffect(() => {
@@ -590,10 +684,26 @@ function MapScreen({ studentId, onStart }: {
 
       {/* ── CANVAS ──────────────────────────────────────────────────────────── */}
       <div
-        style={{ flex: 1, overflow: "hidden", touchAction: "none", position: "relative" }}
+        style={{ flex: 1, overflow: "hidden", touchAction: "none", position: "relative", cursor: isDragging ? "grabbing" : "grab", userSelect: "none" }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
+        onMouseDown={(e) => { mouseRef.current = { x: e.clientX, y: e.clientY, dragged: false }; }}
+        onMouseMove={(e) => {
+          if (!mouseRef.current) return;
+          const dx = e.clientX - mouseRef.current.x;
+          const dy = e.clientY - mouseRef.current.y;
+          if (!mouseRef.current.dragged && Math.sqrt(dx * dx + dy * dy) > 4) {
+            mouseRef.current.dragged = true; setIsDragging(true);
+          }
+          if (mouseRef.current.dragged) {
+            setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+            mouseRef.current = { x: e.clientX, y: e.clientY, dragged: true };
+          }
+        }}
+        onMouseUp={() => { mouseRef.current = null; setIsDragging(false); }}
+        onMouseLeave={() => { mouseRef.current = null; setIsDragging(false); }}
+        onWheel={(e) => { e.preventDefault(); setScale(s => Math.min(4, Math.max(0.2, s * (e.deltaY > 0 ? 0.9 : 1.11)))); }}
       >
         {/* ── OVERVIEW ── */}
         {isOverview && (
@@ -606,7 +716,7 @@ function MapScreen({ studentId, onStart }: {
             </div>
           ) : (
             <svg
-              viewBox="0 0 760 590"
+              viewBox="0 0 1100 660"
               width="100%" height="100%"
               preserveAspectRatio="xMidYMid meet"
               style={{ display: "block", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, transformOrigin: "center center", willChange: "transform" }}
@@ -715,8 +825,7 @@ function MapScreen({ studentId, onStart }: {
           ) : (
             <svg
               viewBox="0 0 340 510"
-              width="340" height="510"
-              style={{ display: "block", margin: "0 auto", overflow: "visible", transformOrigin: "top center", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, willChange: "transform" }}
+              style={{ display: "block", margin: "0 auto", overflow: "visible", width: "min(720px, 88%)", height: "auto", transformOrigin: "top center", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, willChange: "transform" }}
             >
               <defs>
                 <marker id="arr-g" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
@@ -1452,23 +1561,63 @@ export default function App() {
     );
   }
 
-  // ── Main app ─────────────────────────────────────────────────────────────
+  // ── Main app — web layout: sidebar + canvas ─────────────────────────────
+  const handleNav = (s: Screen) => {
+    if (screen === "chat" && (s === "home" || s === "map") && studentId) loadAppData(studentId);
+    setScreen(s);
+  };
+
   return (
-    <div className="flex justify-center bg-gray-100 min-h-screen">
-      <div className="w-full max-w-sm min-h-screen bg-gray-50 relative overflow-hidden">
-        {screen === "home"     && <HomeScreen     gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays} onContinue={() => setScreen("chat")} onMap={() => { if (studentId) loadAppData(studentId); setScreen("map"); }} />}
-        {screen === "map"      && <MapScreen      studentId={studentId} onStart={(g) => { setGPS(g); setScreen("chat"); }} />}
-        {screen === "chat"     && <ChatScreen     gps={gps} vark={vark} studentId={studentId} studentName={studentName} messages={messages} setMessages={setMessages} bloomLevel={bloomLevel} setBloomLevel={setBloomLevel} hintCount={hintCount} setHintCount={setHintCount} activityShown={activityShown} setActivityShown={setActivityShown} onXpEarned={(xp) => setTotalXp((prev) => prev + xp)} />}
-        {screen === "progress" && <ProgressScreen vark={vark} studentId={studentId} gps={gps} streakDays={streakDays} />}
-        {screen === "profile"  && <ProfileScreen  vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />}
-        <BottomNav active={screen} setActive={(s) => {
-          // Refresh GPS when navigating away from chat back to home/map
-          if (screen === "chat" && (s === "home" || s === "map") && studentId) {
-            loadAppData(studentId);
-          }
-          setScreen(s);
-        }} />
-      </div>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#03061a" }}>
+      {/* Left sidebar */}
+      <Sidebar
+        screen={screen}
+        setScreen={handleNav}
+        studentName={studentName}
+        vark={vark}
+        totalXp={totalXp}
+        streakDays={streakDays}
+      />
+
+      {/* Main content area */}
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: screen === "map" ? "#03061a" : "#f0f4f8" }}>
+        {screen === "home" && (
+          <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
+            <div style={{ maxWidth: "820px", margin: "0 auto" }}>
+              <HomeScreen gps={gps} studentName={studentName} totalXp={totalXp} streakDays={streakDays}
+                onContinue={() => setScreen("chat")}
+                onMap={() => { if (studentId) loadAppData(studentId); setScreen("map"); }} />
+            </div>
+          </div>
+        )}
+        {screen === "map" && (
+          <MapScreen studentId={studentId} onStart={(g) => { setGPS(g); setScreen("chat"); }} />
+        )}
+        {screen === "chat" && (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", maxWidth: "920px", width: "100%", margin: "0 auto" }}>
+            <ChatScreen gps={gps} vark={vark} studentId={studentId} studentName={studentName}
+              messages={messages} setMessages={setMessages}
+              bloomLevel={bloomLevel} setBloomLevel={setBloomLevel}
+              hintCount={hintCount} setHintCount={setHintCount}
+              activityShown={activityShown} setActivityShown={setActivityShown}
+              onXpEarned={(xp) => setTotalXp((prev) => prev + xp)} />
+          </div>
+        )}
+        {screen === "progress" && (
+          <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
+            <div style={{ maxWidth: "920px", margin: "0 auto" }}>
+              <ProgressScreen vark={vark} studentId={studentId} gps={gps} streakDays={streakDays} />
+            </div>
+          </div>
+        )}
+        {screen === "profile" && (
+          <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
+            <div style={{ maxWidth: "600px", margin: "0 auto" }}>
+              <ProfileScreen vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
