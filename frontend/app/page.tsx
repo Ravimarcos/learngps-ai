@@ -706,32 +706,32 @@ function MapScreen({ studentId, onStart }: {
         </div>
       </div>
 
-      {/* ── CANVAS ──────────────────────────────────────────────────────────── */}
-      <div
-        style={{ flex: 1, overflow: "hidden", touchAction: "none", position: "relative", cursor: isDragging ? "grabbing" : "grab", userSelect: "none" }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onMouseDown={(e) => { mouseRef.current = { x: e.clientX, y: e.clientY, dragged: false }; }}
-        onMouseMove={(e) => {
-          if (!mouseRef.current) return;
-          const dx = e.clientX - mouseRef.current.x;
-          const dy = e.clientY - mouseRef.current.y;
-          if (!mouseRef.current.dragged && Math.sqrt(dx * dx + dy * dy) > 4) {
-            mouseRef.current.dragged = true; setIsDragging(true);
-          }
-          if (mouseRef.current.dragged) {
-            setPan(p => ({ x: p.x + dx, y: p.y + dy }));
-            mouseRef.current = { x: e.clientX, y: e.clientY, dragged: true };
-          }
-        }}
-        onMouseUp={() => { mouseRef.current = null; setIsDragging(false); }}
-        onMouseLeave={() => { mouseRef.current = null; setIsDragging(false); }}
-        onWheel={(e) => { e.preventDefault(); setScale(s => Math.min(4, Math.max(0.2, s * (e.deltaY > 0 ? 0.9 : 1.11)))); }}
-      >
-        {/* ── OVERVIEW ── */}
-        {isOverview && (
-          loadingChaps ? (
+      {/* ── CANVAS + PANELS ──────────────────────────────────────────────────── */}
+      {isOverview ? (
+        /* Overview: full-width drag canvas */
+        <div
+          style={{ flex: 1, overflow: "hidden", touchAction: "none", position: "relative", cursor: isDragging ? "grabbing" : "grab", userSelect: "none" }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onMouseDown={(e) => { mouseRef.current = { x: e.clientX, y: e.clientY, dragged: false }; }}
+          onMouseMove={(e) => {
+            if (!mouseRef.current) return;
+            const dx = e.clientX - mouseRef.current.x;
+            const dy = e.clientY - mouseRef.current.y;
+            if (!mouseRef.current.dragged && Math.sqrt(dx * dx + dy * dy) > 4) {
+              mouseRef.current.dragged = true; setIsDragging(true);
+            }
+            if (mouseRef.current.dragged) {
+              setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+              mouseRef.current = { x: e.clientX, y: e.clientY, dragged: true };
+            }
+          }}
+          onMouseUp={() => { mouseRef.current = null; setIsDragging(false); }}
+          onMouseLeave={() => { mouseRef.current = null; setIsDragging(false); }}
+          onWheel={(e) => { e.preventDefault(); setScale(s => Math.min(4, Math.max(0.2, s * (e.deltaY > 0 ? 0.9 : 1.11)))); }}
+        >
+          {loadingChaps ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "rgba(255,255,255,0.4)" }}>
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontSize: "28px", marginBottom: "10px" }}>🧭</p>
@@ -834,20 +834,123 @@ function MapScreen({ studentId, onStart }: {
                 );
               })}
             </svg>
-          )
-        )}
+          )}
+        </div>
+      ) : (
+        /* Chapter detail: three-panel layout */
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-        {/* ── CHAPTER DETAIL ── */}
-        {!isOverview && (
-          loadingGps && !activeGps ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "rgba(255,255,255,0.4)" }}>
+          {/* ── LEFT INFO PANEL ─────────────────────────────────────────────── */}
+          <div style={{
+            width: "256px", flexShrink: 0,
+            background: "rgba(4,8,32,0.97)", borderRight: "1px solid rgba(255,255,255,0.06)",
+            padding: "16px 14px", overflowY: "auto", display: "flex", flexDirection: "column",
+          }}>
+            {/* Chapter header */}
+            <div style={{ marginBottom: "14px" }}>
+              <p style={{ fontSize: "9px", color: chColor, fontWeight: 800, letterSpacing: "1px", marginBottom: "2px" }}>
+                {activeChap?.subject?.toUpperCase()}
+              </p>
+              <p style={{ fontSize: "15px", fontWeight: 800, color: "#fff", lineHeight: 1.25, marginBottom: "2px" }}>
+                {activeChap?.name}
+              </p>
+              <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>Class {activeChap?.grade} · NCERT</p>
+            </div>
+
+            {/* Overall mastery ring */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "10px 12px", marginBottom: "12px" }}>
+              <div style={{ position: "relative", width: "44px", height: "44px", flexShrink: 0 }}>
+                <svg width="44" height="44" viewBox="0 0 44 44">
+                  <circle cx="22" cy="22" r="16" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3.5" />
+                  <circle cx="22" cy="22" r="16" fill="none" stroke={chColor} strokeWidth="3.5"
+                    strokeDasharray="100.5" strokeDashoffset={100.5 * (1 - progress / 100)}
+                    strokeLinecap="round" transform="rotate(-90 22 22)" />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 800, color: chColor }}>{progress}%</div>
+              </div>
+              <div>
+                <p style={{ fontSize: "20px", fontWeight: 900, color: chColor, lineHeight: 1 }}>{progress}%</p>
+                <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.38)", marginTop: "1px" }}>OVERALL MASTERY</p>
+                <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)" }}>{completed.length} of {nodes.length} mastered</p>
+              </div>
+            </div>
+
+            {/* Currently learning */}
+            {current && (
+              <div style={{ background: "rgba(41,121,255,0.09)", border: "1px solid rgba(41,121,255,0.18)", borderRadius: "10px", padding: "10px", marginBottom: "10px" }}>
+                <p style={{ fontSize: "8px", fontWeight: 800, color: "#82b1ff", letterSpacing: "1px", marginBottom: "3px" }}>📍 CURRENTLY LEARNING</p>
+                <p style={{ fontSize: "12px", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{current.name}</p>
+                <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{activeChap?.name} · {progress}% mastery</p>
+              </div>
+            )}
+
+            {/* Legend */}
+            <div style={{ marginBottom: "10px" }}>
+              <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.28)", fontWeight: 700, letterSpacing: "1px", marginBottom: "6px" }}>LEGEND</p>
+              {[
+                { color: "#00e676", label: "Mastered" },
+                { color: "#2979ff", label: "In Progress (you)" },
+                { color: "#ffd740", label: "Ready to Learn" },
+                { color: "rgba(255,255,255,0.2)", label: "Not yet reachable" },
+              ].map(l => (
+                <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
+                  <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: l.color, flexShrink: 0 }} />
+                  <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)" }}>{l.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: "1px", background: "rgba(255,255,255,0.05)", marginBottom: "10px" }} />
+
+            {/* Progress stats */}
+            <div style={{ marginBottom: "10px" }}>
+              <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.28)", fontWeight: 700, letterSpacing: "1px", marginBottom: "6px" }}>PROGRESS</p>
+              {[
+                { label: "Mastered",    val: String(completed.length),          color: "#00e676" },
+                { label: "In Progress", val: String(current ? 1 : 0),           color: "#2979ff" },
+                { label: "Ready",       val: String(route.length),               color: "#ffd740" },
+                { label: "Coming up",   val: String(locked.length),              color: "rgba(255,255,255,0.3)" },
+                { label: "ETA",         val: activeChap?.eta ?? "~8 sessions",   color: "rgba(255,255,255,0.5)" },
+              ].map(s => (
+                <div key={s.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "3px" }}>
+                  <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.38)" }}>{s.label}</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: s.color }}>{s.val}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Recommended next */}
+            {current && route.length > 0 && (
+              <div style={{ background: "rgba(99,102,241,0.09)", border: "1px solid rgba(99,102,241,0.18)", borderRadius: "10px", padding: "10px", marginBottom: "10px" }}>
+                <p style={{ fontSize: "8px", fontWeight: 800, color: "#a5b4fc", letterSpacing: "1px", marginBottom: "3px" }}>⚡ RECOMMENDED NEXT</p>
+                <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>
+                  Master <strong style={{ color: "#fff" }}>{current.name}</strong> to unlock <strong style={{ color: "#ffd740" }}>{route[0].name}</strong>
+                </p>
+              </div>
+            )}
+
+            {/* Continue button — pinned to bottom */}
+            <div style={{ marginTop: "auto", paddingTop: "8px" }}>
+              {activeGps && (
+                <button onClick={() => onStart(activeGps)}
+                  style={{ width: "100%", padding: "11px", borderRadius: "11px", background: "linear-gradient(135deg,#4338ca,#7c3aed)", color: "#fff", fontSize: "13px", fontWeight: 800, cursor: "pointer", border: "none", fontFamily: "inherit", boxShadow: "0 2px 14px rgba(67,56,202,0.4)" }}>
+                  {current ? "▶ Continue Practice" : "✓ Chapter Complete!"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ── CENTER CANVAS ────────────────────────────────────────────────── */}
+          {loadingGps && !activeGps ? (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.4)" }}>
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontSize: "28px", marginBottom: "10px" }}>🗺️</p>
                 <p style={{ fontSize: "13px" }}>Loading chapter map…</p>
               </div>
             </div>
           ) : nodes.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "12px", color: "rgba(255,255,255,0.4)", padding: "20px", textAlign: "center" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", color: "rgba(255,255,255,0.4)", padding: "20px", textAlign: "center" }}>
               <p style={{ fontSize: "36px" }}>🔭</p>
               <p style={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}>{activeChap?.name ?? view}</p>
               <p style={{ fontSize: "13px" }}>Content for this chapter is being prepared. Check back soon!</p>
@@ -857,165 +960,222 @@ function MapScreen({ studentId, onStart }: {
               </button>
             </div>
           ) : (
-            <svg
-              viewBox="0 0 340 510"
-              style={{ display: "block", margin: "0 auto", overflow: "visible", width: "min(720px, 88%)", height: "auto", transformOrigin: "top center", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, willChange: "transform" }}
+            <div
+              style={{ flex: 1, overflow: "hidden", touchAction: "none", position: "relative", cursor: isDragging ? "grabbing" : "grab", userSelect: "none" }}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              onMouseDown={(e) => { mouseRef.current = { x: e.clientX, y: e.clientY, dragged: false }; }}
+              onMouseMove={(e) => {
+                if (!mouseRef.current) return;
+                const dx = e.clientX - mouseRef.current.x;
+                const dy = e.clientY - mouseRef.current.y;
+                if (!mouseRef.current.dragged && Math.sqrt(dx * dx + dy * dy) > 4) {
+                  mouseRef.current.dragged = true; setIsDragging(true);
+                }
+                if (mouseRef.current.dragged) {
+                  setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+                  mouseRef.current = { x: e.clientX, y: e.clientY, dragged: true };
+                }
+              }}
+              onMouseUp={() => { mouseRef.current = null; setIsDragging(false); }}
+              onMouseLeave={() => { mouseRef.current = null; setIsDragging(false); }}
+              onWheel={(e) => { e.preventDefault(); setScale(s => Math.min(4, Math.max(0.2, s * (e.deltaY > 0 ? 0.9 : 1.11)))); }}
             >
-              <defs>
-                <marker id="arr-g" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(0,230,118,0.7)" />
-                </marker>
-                <marker id="arr-b" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(41,121,255,0.6)" />
-                </marker>
-                <marker id="arr-d" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(255,255,255,0.18)" />
-                </marker>
-                <filter id="glow-g" x="-80%" y="-80%" width="260%" height="260%">
-                  <feGaussianBlur stdDeviation="4" result="b" />
-                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-                <filter id="glow-b" x="-80%" y="-80%" width="260%" height="260%">
-                  <feGaussianBlur stdDeviation="5" result="b" />
-                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-              </defs>
+              <svg
+                viewBox="0 0 340 510"
+                width="100%" height="100%"
+                preserveAspectRatio="xMidYMid meet"
+                style={{ display: "block", transformOrigin: "center center", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, willChange: "transform" }}
+              >
+                <defs>
+                  <marker id="arr-g" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                    <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(0,230,118,0.7)" />
+                  </marker>
+                  <marker id="arr-b" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                    <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(41,121,255,0.6)" />
+                  </marker>
+                  <marker id="arr-d" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                    <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(255,255,255,0.18)" />
+                  </marker>
+                  <filter id="glow-g" x="-80%" y="-80%" width="260%" height="260%">
+                    <feGaussianBlur stdDeviation="4" result="b" />
+                    <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                  <filter id="glow-b" x="-80%" y="-80%" width="260%" height="260%">
+                    <feGaussianBlur stdDeviation="5" result="b" />
+                    <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
 
-              {/* Edges */}
-              {edges.map((edge, i) => {
-                const fp = posMap[edge.from_id];
-                const tp = posMap[edge.to_id];
-                if (!fp || !tp) return null;
-                const dx   = tp.x - fp.x, dy = tp.y - fp.y;
-                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                const sx   = fp.x + (dx / dist) * (R + 2);
-                const sy   = fp.y + (dy / dist) * (R + 2);
-                const ex   = tp.x - (dx / dist) * (R + 9);
-                const ey   = tp.y - (dy / dist) * (R + 9);
-                const fromState = getState(edge.from_id);
-                const isRec     = isRecommendedEdge(edge.from_id, edge.to_id);
-                return (
-                  <line key={i} x1={sx} y1={sy} x2={ex} y2={ey}
-                    stroke={isRec ? "#2979ff" : edgeColor(edge.from_id)}
-                    strokeWidth={isRec ? 2.5 : fromState === "ghost" ? 1 : 1.5}
-                    strokeDasharray={isRec ? "8 4" : fromState === "ghost" ? "4 3" : undefined}
-                    strokeDashoffset={isRec ? "16" : undefined}
-                    className={isRec ? "flow-edge" : undefined}
-                    markerEnd={fromState === "done" ? "url(#arr-g)" : fromState === "current" ? "url(#arr-b)" : "url(#arr-d)"}
-                  />
-                );
-              })}
-
-              {/* Nodes */}
-              {nodes.map(node => {
-                const state = getState(node.id);
-                const cfg   = SCFG[state];
-                const isCur = state === "current";
-                const isGh  = state === "ghost";
-                const filt  = state === "done" ? "url(#glow-g)" : state === "current" ? "url(#glow-b)" : undefined;
-                const words = node.name.split(" ");
-                const mid   = Math.ceil(words.length / 2);
-                const ln1   = words.slice(0, mid).join(" ");
-                const ln2   = words.slice(mid).join(" ");
-                const ly    = node.y + R + 10;
-                return (
-                  <g key={node.id}
-                    onClick={() => {
-                      if (isCur && activeGps) { onStart(activeGps); return; }
-                      setDetailNode({ id: node.id, name: node.name, state, bloomTarget: node.bloom_target, varkHint: node.vark_hint });
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {isCur && (
-                      <circle cx={node.x} cy={node.y} r={R}
-                        fill="none" stroke="rgba(41,121,255,0.4)" strokeWidth="2"
-                        className="gps-pulse-ring" />
-                    )}
-                    <circle cx={node.x} cy={node.y} r={R}
-                      fill={cfg.fill} stroke={cfg.stroke} strokeWidth={cfg.sw}
-                      strokeDasharray={isGh ? "4 3" : undefined}
-                      opacity={cfg.op} filter={filt} />
-                    <text x={node.x} y={node.y} textAnchor="middle" dominantBaseline="central"
-                      fill={cfg.text} fontSize={isCur ? 17 : state === "done" ? 15 : 12}
-                      fontWeight="800" opacity={cfg.op}>{cfg.icon}</text>
-                    <text x={node.x} y={ly} textAnchor="middle" dominantBaseline="hanging"
-                      fill={cfg.text} fontSize="8" fontWeight="600" opacity={cfg.op}>{ln1}</text>
-                    {ln2 && (
-                      <text x={node.x} y={ly + 10} textAnchor="middle" dominantBaseline="hanging"
-                        fill={cfg.text} fontSize="8" fontWeight="600" opacity={cfg.op}>{ln2}</text>
-                    )}
-                  </g>
-                );
-              })}
-            </svg>
-          )
-        )}
-      </div>
-
-      {/* ── BOTTOM STATS STRIP (chapter detail only) ────────────────────────── */}
-      {!isOverview && nodes.length > 0 && (
-        <div style={{ background: "rgba(4,8,32,0.96)", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "8px 14px", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, zIndex: 10 }}>
-          <span style={{ fontSize: "11px", color: "#00e676", fontWeight: 700 }}>✓ {completed.length}</span>
-          <span style={{ fontSize: "11px", color: "#2979ff", fontWeight: 700 }}>▶ {current ? 1 : 0}</span>
-          <span style={{ fontSize: "11px", color: "#ffd740" }}>○ {route.length}</span>
-          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>· {locked.length} ahead</span>
-          {activeGps && (
-            <button onClick={() => onStart(activeGps)}
-              style={{ marginLeft: "auto", background: "linear-gradient(135deg,#4338ca,#7c3aed)", color: "#fff", fontSize: "12px", fontWeight: 800, padding: "7px 14px", borderRadius: "11px", border: "none", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 12px rgba(67,56,202,0.45)", whiteSpace: "nowrap" }}>
-              {current ? `▶ ${current.name}` : "✓ Complete!"}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* ── NODE DETAIL BOTTOM SHEET ─────────────────────────────────────────── */}
-      {detailNode && !isOverview && (
-        <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-          background: "rgba(4,8,30,0.97)", backdropFilter: "blur(20px)",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "20px 20px 0 0", padding: "16px 20px 36px",
-        }}>
-          <div style={{ width: "36px", height: "3px", background: "rgba(255,255,255,0.2)", borderRadius: "2px", margin: "0 auto 14px" }} />
-          <p style={{ fontSize: "9px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1.2px", marginBottom: "4px",
-            color: detailNode.state === "done" ? "#00e676" : detailNode.state === "ready" ? "#ffd740" : "rgba(255,255,255,0.4)" }}>
-            {detailNode.state === "done" ? "✓ MASTERED" : detailNode.state === "ready" ? "READY ▶" : "👁 VISIBLE AHEAD"}
-          </p>
-          <p style={{ fontSize: "18px", fontWeight: 800, color: "#fff", marginBottom: "4px" }}>{detailNode.name}</p>
-          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.38)", marginBottom: "12px" }}>
-            {activeChap?.name ?? ""}{detailNode.bloomTarget ? ` · Target: ${detailNode.bloomTarget}` : ""}{detailNode.varkHint ? ` · ${detailNode.varkHint} learner` : ""}
-          </p>
-          {detailNode.bloomTarget && (
-            <div style={{ marginBottom: "14px" }}>
-              <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.35)", marginBottom: "5px", fontWeight: 700, letterSpacing: "0.8px" }}>BLOOM LEVEL</p>
-              <div style={{ display: "flex", gap: "3px" }}>
-                {["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"].map((b, bi) => {
-                  const bIdx   = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"].indexOf(detailNode.bloomTarget ?? "Remember");
-                  const active = bi <= bIdx;
-                  return <div key={b} title={b} style={{ flex: 1, height: "5px", borderRadius: "3px", background: active ? "#4338ca" : "rgba(255,255,255,0.08)" }} />;
+                {/* Edges */}
+                {edges.map((edge, i) => {
+                  const fp = posMap[edge.from_id];
+                  const tp = posMap[edge.to_id];
+                  if (!fp || !tp) return null;
+                  const dx   = tp.x - fp.x, dy = tp.y - fp.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                  const sx   = fp.x + (dx / dist) * (R + 2);
+                  const sy   = fp.y + (dy / dist) * (R + 2);
+                  const ex   = tp.x - (dx / dist) * (R + 9);
+                  const ey   = tp.y - (dy / dist) * (R + 9);
+                  const fromState = getState(edge.from_id);
+                  const isRec     = isRecommendedEdge(edge.from_id, edge.to_id);
+                  return (
+                    <line key={i} x1={sx} y1={sy} x2={ex} y2={ey}
+                      stroke={isRec ? "#2979ff" : edgeColor(edge.from_id)}
+                      strokeWidth={isRec ? 2.5 : fromState === "ghost" ? 1 : 1.5}
+                      strokeDasharray={isRec ? "8 4" : fromState === "ghost" ? "4 3" : undefined}
+                      strokeDashoffset={isRec ? "16" : undefined}
+                      className={isRec ? "flow-edge" : undefined}
+                      markerEnd={fromState === "done" ? "url(#arr-g)" : fromState === "current" ? "url(#arr-b)" : "url(#arr-d)"}
+                    />
+                  );
                 })}
+
+                {/* Nodes */}
+                {nodes.map(node => {
+                  const state = getState(node.id);
+                  const cfg   = SCFG[state];
+                  const isCur = state === "current";
+                  const isGh  = state === "ghost";
+                  const filt  = state === "done" ? "url(#glow-g)" : state === "current" ? "url(#glow-b)" : undefined;
+                  const words = node.name.split(" ");
+                  const mid   = Math.ceil(words.length / 2);
+                  const ln1   = words.slice(0, mid).join(" ");
+                  const ln2   = words.slice(mid).join(" ");
+                  const ly    = node.y + R + 10;
+                  return (
+                    <g key={node.id}
+                      onClick={() => {
+                        if (!mouseRef.current?.dragged) {
+                          setDetailNode({ id: node.id, name: node.name, state, bloomTarget: node.bloom_target, varkHint: node.vark_hint });
+                        }
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {/* Status label above node */}
+                      {!isGh && (
+                        <text x={node.x} y={node.y - R - 14} textAnchor="middle"
+                          fill={state === "done" ? "#00e676" : state === "current" ? "#82b1ff" : "#ffd740"}
+                          fontSize="7.5" fontWeight="800">
+                          {state === "done" ? "✓ MASTERED" : state === "current" ? "📍 YOU ARE HERE" : "Ready ▶"}
+                        </text>
+                      )}
+                      {isCur && (
+                        <circle cx={node.x} cy={node.y} r={R}
+                          fill="none" stroke="rgba(41,121,255,0.4)" strokeWidth="2"
+                          className="gps-pulse-ring" />
+                      )}
+                      <circle cx={node.x} cy={node.y} r={R}
+                        fill={cfg.fill} stroke={cfg.stroke} strokeWidth={cfg.sw}
+                        strokeDasharray={isGh ? "4 3" : undefined}
+                        opacity={cfg.op} filter={filt} />
+                      <text x={node.x} y={node.y} textAnchor="middle" dominantBaseline="central"
+                        fill={cfg.text} fontSize={isCur ? 17 : state === "done" ? 15 : 12}
+                        fontWeight="800" opacity={cfg.op}>{cfg.icon}</text>
+                      <text x={node.x} y={ly} textAnchor="middle" dominantBaseline="hanging"
+                        fill={cfg.text} fontSize="8" fontWeight="600" opacity={cfg.op}>{ln1}</text>
+                      {ln2 && (
+                        <text x={node.x} y={ly + 10} textAnchor="middle" dominantBaseline="hanging"
+                          fill={cfg.text} fontSize="8" fontWeight="600" opacity={cfg.op}>{ln2}</text>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          )}
+
+          {/* ── RIGHT NODE DETAIL PANEL ──────────────────────────────────────── */}
+          {detailNode && (
+            <div style={{
+              width: "296px", flexShrink: 0,
+              background: "rgba(4,8,30,0.97)", borderLeft: "1px solid rgba(255,255,255,0.06)",
+              padding: "16px 14px", overflowY: "auto", display: "flex", flexDirection: "column",
+            }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.28)", fontWeight: 700, letterSpacing: "0.8px", lineHeight: 1.5 }}>
+                  {activeChap?.name?.toUpperCase()} · CLASS {activeChap?.grade}
+                </p>
+                <button onClick={() => setDetailNode(null)}
+                  style={{ background: "none", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer", fontSize: "20px", lineHeight: 1, padding: "0", fontFamily: "inherit" }}>×</button>
+              </div>
+
+              {/* Status badge */}
+              <p style={{ fontSize: "8px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1.2px", marginBottom: "3px",
+                color: detailNode.state === "done" ? "#00e676" : detailNode.state === "current" ? "#82b1ff" : detailNode.state === "ready" ? "#ffd740" : "rgba(255,255,255,0.4)" }}>
+                {detailNode.state === "done" ? "✓ MASTERED" : detailNode.state === "current" ? "📍 YOU ARE HERE" : detailNode.state === "ready" ? "READY ▶" : "NOT YET REACHABLE"}
+              </p>
+              <p style={{ fontSize: "19px", fontWeight: 800, color: "#fff", marginBottom: "14px", lineHeight: 1.2 }}>{detailNode.name}</p>
+
+              {/* Bloom's taxonomy bars */}
+              {detailNode.bloomTarget && (
+                <div style={{ marginBottom: "14px" }}>
+                  <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.28)", marginBottom: "7px", fontWeight: 700, letterSpacing: "0.8px" }}>BLOOM&apos;S TAXONOMY</p>
+                  {(["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"] as const).map((b, bi) => {
+                    const targetIdx = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"].indexOf(detailNode.bloomTarget ?? "Remember");
+                    const pct    = bi <= targetIdx ? Math.max(8, 100 - bi * 14) : 0;
+                    const active = bi <= targetIdx;
+                    const barColor = bi < 2 ? "#00e676" : bi < 4 ? "#ff9100" : "#ef5350";
+                    return (
+                      <div key={b} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
+                        <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.45)", width: "68px", flexShrink: 0 }}>{b}</p>
+                        <div style={{ flex: 1, height: "4px", background: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}>
+                          <div style={{ width: `${pct}%`, height: "100%", background: active ? barColor : "transparent", borderRadius: "3px", transition: "width 0.4s ease" }} />
+                        </div>
+                        <p style={{ fontSize: "9px", color: active ? "rgba(255,255,255,0.4)" : "transparent", width: "26px", textAlign: "right" }}>{active ? `${pct}%` : ""}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Best learning mode */}
+              {detailNode.varkHint && (
+                <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "10px", marginBottom: "12px" }}>
+                  <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.28)", marginBottom: "6px", fontWeight: 700, letterSpacing: "0.8px" }}>BEST LEARNING MODE</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "18px" }}>
+                      {detailNode.varkHint === "V" ? "👁️" : detailNode.varkHint === "A" ? "👂" : detailNode.varkHint === "R" ? "📖" : "🤸"}
+                    </span>
+                    <div>
+                      <p style={{ fontSize: "13px", fontWeight: 700, color: "#fff" }}>
+                        {detailNode.varkHint === "V" ? "Visual" : detailNode.varkHint === "A" ? "Auditory" : detailNode.varkHint === "R" ? "Read / Write" : "Kinesthetic"}
+                      </p>
+                      <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.35)" }}>Optimised for your VARK profile</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginBottom: "16px", lineHeight: "1.6" }}>
+                {detailNode.state === "done"    ? "You've mastered this concept. Review periodically to reinforce long-term retention." :
+                 detailNode.state === "current" ? "This is your GPS position. Gyaan will guide you step by step through this concept." :
+                 detailNode.state === "ready"   ? "All prerequisites done! You can start this concept right now." :
+                                                  "Jump here anytime — Gyaan automatically bridges any knowledge gaps for you."}
+              </p>
+
+              {/* Action button */}
+              <div style={{ marginTop: "auto" }}>
+                {activeGps && (
+                  <button onClick={() => { setDetailNode(null); onStart(activeGps); }}
+                    style={{ width: "100%", padding: "12px", borderRadius: "12px", fontFamily: "inherit", cursor: "pointer", border: "none", color: "#fff", fontSize: "13px", fontWeight: 700,
+                      background: detailNode.state === "done"
+                        ? "linear-gradient(135deg,#00695c,#00897b)"
+                        : "linear-gradient(135deg,#4338ca,#7c3aed)",
+                      boxShadow: "0 4px 16px rgba(67,56,202,0.4)" }}>
+                    {detailNode.state === "done"    ? "🔄 Review & Reinforce" :
+                     detailNode.state === "current" ? "▶ Continue Practice"  :
+                     detailNode.state === "ready"   ? "🚀 Start Learning"    :
+                                                      "▶ Jump here — Gyaan adapts"}
+                  </button>
+                )}
               </div>
             </div>
           )}
-          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "16px" }}>
-            {detailNode.state === "done"  && "You've mastered this. Review to reinforce long-term retention."}
-            {detailNode.state === "ready" && "Prerequisites done. Start now — Gyaan will guide you step by step."}
-            {detailNode.state === "ghost" && "Jump here if curious — Gyaan adapts and bridges any gaps automatically."}
-          </p>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={() => setDetailNode(null)}
-              style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}>
-              Close
-            </button>
-            {activeGps && (
-              <button onClick={() => { setDetailNode(null); onStart(activeGps); }}
-                style={{ flex: 2, padding: "12px", borderRadius: "12px", background: "linear-gradient(135deg,#4338ca,#7c3aed)", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", boxShadow: "0 4px 20px rgba(67,56,202,0.5)" }}>
-                {detailNode.state === "done"  ? "🔄 Review & Reinforce" :
-                 detailNode.state === "ready" ? "🚀 Start Learning" :
-                                               "▶ Jump here — Gyaan adapts"}
-              </button>
-            )}
-          </div>
         </div>
       )}
     </div>
