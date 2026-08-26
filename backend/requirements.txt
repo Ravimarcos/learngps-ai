@@ -27,7 +27,8 @@ langfuse==2.27.0
 
 # Content ingestion (Day 4)
 httpx==0.27.2      # DIKSHA API calls
-pypdf2==3.0.1      # NCERT PDF parsing
+pypdf2==3.0.1      # NCERT PDF parsing (fallback)
+pymupdf==1.24.9    # PDF text extraction (preferred — much better quality)
 
 # RAG pipeline (Day 6b)
 chromadb==0.5.3
