@@ -27,7 +27,6 @@ from pathlib import Path
 # ChromaDB + sentence-transformers are optional — fail gracefully if missing
 try:
     import chromadb
-    from chromadb.config import Settings
     HAS_CHROMA = True
 except ImportError:
     HAS_CHROMA = False
@@ -145,6 +144,7 @@ def build_index(rebuild: bool = False) -> int:
         metadatas = [
             {
                 "source":        c.get("source", "unknown"),
+                "chapter_id":    c.get("chapter_id", ""),
                 "subconcept_id": c.get("subconcept_id", ""),
                 "bloom_level":   c.get("bloom_level", ""),
                 "page":          str(c.get("page", "")),

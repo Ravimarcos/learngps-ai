@@ -73,9 +73,9 @@ CHAPTERS = [
 # Only creates the relationship if BOTH chapters exist in Neo4j — safe to
 # add future links here before the target chapter is seeded.
 CHAPTER_LINKS: list[tuple[str, str, str]] = [
-    # Examples for when more chapters are seeded:
-    # ("ch_force_pressure", "ch_mensuration", "P = F/Area"),
-    # ("ch_force_pressure", "ch_sound",        "Vibrations"),
+    ("ch_force_pressure",   "ch_friction",         "Friction is a contact force"),
+    ("ch_squares_roots",    "ch_cubes_roots",       "Squares extend to cubes"),
+    ("ch_linear_equations", "ch_factorisation",     "Algebraic foundations"),
 ]
 
 # ---------------------------------------------------------------------------
