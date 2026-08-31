@@ -257,11 +257,33 @@ async def chat(body: dict):
     student_message = body.get("message", "")
     subconcept_name = body.get("subconcept_name", "Contact Force")
     chapter_name    = body.get("chapter_name", "Force & Pressure")
+    chapter_id      = body.get("chapter_id", "")
     distress_count  = body.get("distress_count", 0)
     hint_count      = body.get("hint_count", 0)
     mode            = body.get("mode", "learning")
     activity_shown  = body.get("activity_shown", False)
     _t_start        = time.monotonic()
+
+    # ── SESSION TRACKING ─────────────────────────────────────────────────────
+    _session_id = None
+    if student_id:
+        try:
+            import uuid as _uuid
+            from datetime import datetime as _dt, timezone as _tz
+            from backend.config.settings import get_settings as _gs
+            from supabase import create_client as _cc
+            _cfg = _gs()
+            _sb  = _cc(_cfg.supabase_url, _cfg.supabase_service_key)
+            _session_id = str(_uuid.uuid4())
+            _sb.table("sessions").insert({
+                "id":         _session_id,
+                "student_id": student_id,
+                "chapter_id": chapter_id,
+                "started_at": _dt.now(_tz.utc).isoformat(),
+            }).execute()
+        except Exception as _se:
+            print(f"⚠️  Session insert failed: {_se}")
+            _session_id = None
 
     try:
         # ── GUARDRAILS ────────────────────────────────────────────────────
@@ -422,6 +444,16 @@ async def chat(body: dict):
 
             except Exception as prog_err:
                 print(f"⚠️  Mastery save failed: {prog_err}")
+
+        # ── Close session ─────────────────────────────────────────────────
+        if _session_id:
+            try:
+                from datetime import datetime as _dt, timezone as _tz
+                _sb.table("sessions").update({
+                    "ended_at": _dt.now(_tz.utc).isoformat()
+                }).eq("id", _session_id).execute()
+            except Exception:
+                pass
 
         return result
 
