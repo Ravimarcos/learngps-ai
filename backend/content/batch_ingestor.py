@@ -30,42 +30,103 @@ import httpx
 # ── Chapter registry — all 34 Grade 8 Science + Maths chapters ─────────────
 
 CHAPTERS = [
-    # ── Science ──────────────────────────────────────────────────────────────
-    {"id": "ch_crop_production",   "name": "Crop Production and Management",      "subject": "Science",     "num": 1},
-    {"id": "ch_microorganisms",    "name": "Microorganisms Friend and Foe",       "subject": "Science",     "num": 2},
-    {"id": "ch_synthetic_fibres",  "name": "Synthetic Fibres and Plastics",       "subject": "Science",     "num": 3},
-    {"id": "ch_metals_nonmetals",  "name": "Materials Metals and Non-Metals",     "subject": "Science",     "num": 4},
-    {"id": "ch_coal_petroleum",    "name": "Coal and Petroleum",                  "subject": "Science",     "num": 5},
-    {"id": "ch_combustion",        "name": "Combustion and Flame",                "subject": "Science",     "num": 6},
-    {"id": "ch_conservation",      "name": "Conservation of Plants and Animals",  "subject": "Science",     "num": 7},
-    {"id": "ch_cell",              "name": "Cell Structure and Functions",         "subject": "Science",     "num": 8},
-    {"id": "ch_reproduction",      "name": "Reproduction in Animals",             "subject": "Science",     "num": 9},
-    {"id": "ch_adolescence",       "name": "Reaching the Age of Adolescence",     "subject": "Science",     "num": 10},
-    {"id": "ch_force_pressure",    "name": "Force and Pressure",                  "subject": "Science",     "num": 11},
-    {"id": "ch_friction",          "name": "Friction",                            "subject": "Science",     "num": 12},
-    {"id": "ch_sound",             "name": "Sound",                               "subject": "Science",     "num": 13},
-    {"id": "ch_chemical_effects",  "name": "Chemical Effects of Electric Current","subject": "Science",     "num": 14},
-    {"id": "ch_natural_phenomena", "name": "Some Natural Phenomena",              "subject": "Science",     "num": 15},
-    {"id": "ch_light",             "name": "Light",                               "subject": "Science",     "num": 16},
-    {"id": "ch_stars_solar",       "name": "Stars and the Solar System",          "subject": "Science",     "num": 17},
-    {"id": "ch_pollution",         "name": "Pollution of Air and Water",          "subject": "Science",     "num": 18},
-    # ── Mathematics ──────────────────────────────────────────────────────────
-    {"id": "ch_rational_numbers",  "name": "Rational Numbers",                    "subject": "Mathematics", "num": 1},
-    {"id": "ch_linear_equations",  "name": "Linear Equations in One Variable",    "subject": "Mathematics", "num": 2},
-    {"id": "ch_quadrilaterals",    "name": "Understanding Quadrilaterals",        "subject": "Mathematics", "num": 3},
-    {"id": "ch_practical_geometry","name": "Practical Geometry",                  "subject": "Mathematics", "num": 4},
-    {"id": "ch_data_handling",     "name": "Data Handling",                       "subject": "Mathematics", "num": 5},
-    {"id": "ch_squares_roots",     "name": "Squares and Square Roots",            "subject": "Mathematics", "num": 6},
-    {"id": "ch_cubes_roots",       "name": "Cubes and Cube Roots",                "subject": "Mathematics", "num": 7},
-    {"id": "ch_comparing_quantities","name": "Comparing Quantities",              "subject": "Mathematics", "num": 8},
-    {"id": "ch_algebraic_expr",    "name": "Algebraic Expressions and Identities","subject": "Mathematics", "num": 9},
-    {"id": "ch_solid_shapes",      "name": "Visualising Solid Shapes",            "subject": "Mathematics", "num": 10},
-    {"id": "ch_mensuration",       "name": "Mensuration",                         "subject": "Mathematics", "num": 11},
-    {"id": "ch_exponents",         "name": "Exponents and Powers",                "subject": "Mathematics", "num": 12},
-    {"id": "ch_direct_inverse",    "name": "Direct and Inverse Proportions",      "subject": "Mathematics", "num": 13},
-    {"id": "ch_factorisation",     "name": "Factorisation",                       "subject": "Mathematics", "num": 14},
-    {"id": "ch_intro_graphs",      "name": "Introduction to Graphs",              "subject": "Mathematics", "num": 15},
-    {"id": "ch_playing_numbers",   "name": "Playing with Numbers",                "subject": "Mathematics", "num": 16},
+    # ── Grade 8 Science ───────────────────────────────────────────────────────
+    {"id": "ch_crop_production",   "name": "Crop Production and Management",      "subject": "Science",     "num": 1,  "grade": 8},
+    {"id": "ch_microorganisms",    "name": "Microorganisms Friend and Foe",       "subject": "Science",     "num": 2,  "grade": 8},
+    {"id": "ch_synthetic_fibres",  "name": "Synthetic Fibres and Plastics",       "subject": "Science",     "num": 3,  "grade": 8},
+    {"id": "ch_metals_nonmetals",  "name": "Materials Metals and Non-Metals",     "subject": "Science",     "num": 4,  "grade": 8},
+    {"id": "ch_coal_petroleum",    "name": "Coal and Petroleum",                  "subject": "Science",     "num": 5,  "grade": 8},
+    {"id": "ch_combustion",        "name": "Combustion and Flame",                "subject": "Science",     "num": 6,  "grade": 8},
+    {"id": "ch_conservation",      "name": "Conservation of Plants and Animals",  "subject": "Science",     "num": 7,  "grade": 8},
+    {"id": "ch_cell",              "name": "Cell Structure and Functions",         "subject": "Science",     "num": 8,  "grade": 8},
+    {"id": "ch_reproduction",      "name": "Reproduction in Animals",             "subject": "Science",     "num": 9,  "grade": 8},
+    {"id": "ch_adolescence",       "name": "Reaching the Age of Adolescence",     "subject": "Science",     "num": 10, "grade": 8},
+    {"id": "ch_force_pressure",    "name": "Force and Pressure",                  "subject": "Science",     "num": 11, "grade": 8},
+    {"id": "ch_friction",          "name": "Friction",                            "subject": "Science",     "num": 12, "grade": 8},
+    {"id": "ch_sound",             "name": "Sound",                               "subject": "Science",     "num": 13, "grade": 8},
+    {"id": "ch_chemical_effects",  "name": "Chemical Effects of Electric Current","subject": "Science",     "num": 14, "grade": 8},
+    {"id": "ch_natural_phenomena", "name": "Some Natural Phenomena",              "subject": "Science",     "num": 15, "grade": 8},
+    {"id": "ch_light",             "name": "Light",                               "subject": "Science",     "num": 16, "grade": 8},
+    {"id": "ch_stars_solar",       "name": "Stars and the Solar System",          "subject": "Science",     "num": 17, "grade": 8},
+    {"id": "ch_pollution",         "name": "Pollution of Air and Water",          "subject": "Science",     "num": 18, "grade": 8},
+    # ── Grade 8 Mathematics ───────────────────────────────────────────────────
+    {"id": "ch_rational_numbers",  "name": "Rational Numbers",                    "subject": "Mathematics", "num": 1,  "grade": 8},
+    {"id": "ch_linear_equations",  "name": "Linear Equations in One Variable",    "subject": "Mathematics", "num": 2,  "grade": 8},
+    {"id": "ch_quadrilaterals",    "name": "Understanding Quadrilaterals",        "subject": "Mathematics", "num": 3,  "grade": 8},
+    {"id": "ch_practical_geometry","name": "Practical Geometry",                  "subject": "Mathematics", "num": 4,  "grade": 8},
+    {"id": "ch_data_handling",     "name": "Data Handling",                       "subject": "Mathematics", "num": 5,  "grade": 8},
+    {"id": "ch_squares_roots",     "name": "Squares and Square Roots",            "subject": "Mathematics", "num": 6,  "grade": 8},
+    {"id": "ch_cubes_roots",       "name": "Cubes and Cube Roots",                "subject": "Mathematics", "num": 7,  "grade": 8},
+    {"id": "ch_comparing_quantities","name": "Comparing Quantities",              "subject": "Mathematics", "num": 8,  "grade": 8},
+    {"id": "ch_algebraic_expr",    "name": "Algebraic Expressions and Identities","subject": "Mathematics", "num": 9,  "grade": 8},
+    {"id": "ch_solid_shapes",      "name": "Visualising Solid Shapes",            "subject": "Mathematics", "num": 10, "grade": 8},
+    {"id": "ch_mensuration",       "name": "Mensuration",                         "subject": "Mathematics", "num": 11, "grade": 8},
+    {"id": "ch_exponents",         "name": "Exponents and Powers",                "subject": "Mathematics", "num": 12, "grade": 8},
+    {"id": "ch_direct_inverse",    "name": "Direct and Inverse Proportions",      "subject": "Mathematics", "num": 13, "grade": 8},
+    {"id": "ch_factorisation",     "name": "Factorisation",                       "subject": "Mathematics", "num": 14, "grade": 8},
+    {"id": "ch_intro_graphs",      "name": "Introduction to Graphs",              "subject": "Mathematics", "num": 15, "grade": 8},
+    {"id": "ch_playing_numbers",   "name": "Playing with Numbers",                "subject": "Mathematics", "num": 16, "grade": 8},
+    # ── Grade 9 Science ───────────────────────────────────────────────────────
+    {"id": "ch_g9_matter",         "name": "Matter in Our Surroundings",          "subject": "Science",     "num": 1,  "grade": 9},
+    {"id": "ch_g9_matter_pure",    "name": "Is Matter Around Us Pure",            "subject": "Science",     "num": 2,  "grade": 9},
+    {"id": "ch_g9_atoms",          "name": "Atoms and Molecules",                 "subject": "Science",     "num": 3,  "grade": 9},
+    {"id": "ch_g9_atom_structure", "name": "Structure of the Atom",               "subject": "Science",     "num": 4,  "grade": 9},
+    {"id": "ch_g9_cell",           "name": "The Fundamental Unit of Life",        "subject": "Science",     "num": 5,  "grade": 9},
+    {"id": "ch_g9_tissues",        "name": "Tissues",                             "subject": "Science",     "num": 6,  "grade": 9},
+    {"id": "ch_g9_motion",         "name": "Motion",                              "subject": "Science",     "num": 7,  "grade": 9},
+    {"id": "ch_g9_force_laws",     "name": "Force and Laws of Motion",            "subject": "Science",     "num": 8,  "grade": 9},
+    {"id": "ch_g9_gravitation",    "name": "Gravitation",                         "subject": "Science",     "num": 9,  "grade": 9},
+    {"id": "ch_g9_work_energy",    "name": "Work and Energy",                     "subject": "Science",     "num": 10, "grade": 9},
+    {"id": "ch_g9_sound",          "name": "Sound",                               "subject": "Science",     "num": 11, "grade": 9},
+    {"id": "ch_g9_health",         "name": "Why Do We Fall Ill",                  "subject": "Science",     "num": 12, "grade": 9},
+    {"id": "ch_g9_natural_resources","name": "Natural Resources",                 "subject": "Science",     "num": 13, "grade": 9},
+    {"id": "ch_g9_food_resources", "name": "Improvement in Food Resources",       "subject": "Science",     "num": 14, "grade": 9},
+    # ── Grade 9 Mathematics ───────────────────────────────────────────────────
+    {"id": "ch_g9_number_systems", "name": "Number Systems",                      "subject": "Mathematics", "num": 1,  "grade": 9},
+    {"id": "ch_g9_polynomials",    "name": "Polynomials",                         "subject": "Mathematics", "num": 2,  "grade": 9},
+    {"id": "ch_g9_coordinate_geo", "name": "Coordinate Geometry",                 "subject": "Mathematics", "num": 3,  "grade": 9},
+    {"id": "ch_g9_linear_2var",    "name": "Linear Equations in Two Variables",   "subject": "Mathematics", "num": 4,  "grade": 9},
+    {"id": "ch_g9_euclid",         "name": "Introduction to Euclid's Geometry",   "subject": "Mathematics", "num": 5,  "grade": 9},
+    {"id": "ch_g9_lines_angles",   "name": "Lines and Angles",                    "subject": "Mathematics", "num": 6,  "grade": 9},
+    {"id": "ch_g9_triangles",      "name": "Triangles",                           "subject": "Mathematics", "num": 7,  "grade": 9},
+    {"id": "ch_g9_quadrilaterals", "name": "Quadrilaterals",                      "subject": "Mathematics", "num": 8,  "grade": 9},
+    {"id": "ch_g9_areas",          "name": "Areas of Parallelograms and Triangles","subject": "Mathematics","num": 9,  "grade": 9},
+    {"id": "ch_g9_circles",        "name": "Circles",                             "subject": "Mathematics", "num": 10, "grade": 9},
+    {"id": "ch_g9_constructions",  "name": "Constructions",                       "subject": "Mathematics", "num": 11, "grade": 9},
+    {"id": "ch_g9_herons",         "name": "Heron's Formula",                     "subject": "Mathematics", "num": 12, "grade": 9},
+    {"id": "ch_g9_surface_volumes","name": "Surface Areas and Volumes",           "subject": "Mathematics", "num": 13, "grade": 9},
+    {"id": "ch_g9_statistics",     "name": "Statistics",                          "subject": "Mathematics", "num": 14, "grade": 9},
+    {"id": "ch_g9_probability",    "name": "Probability",                         "subject": "Mathematics", "num": 15, "grade": 9},
+    # ── Grade 10 Science ──────────────────────────────────────────────────────
+    {"id": "ch_g10_chem_reactions","name": "Chemical Reactions and Equations",    "subject": "Science",     "num": 1,  "grade": 10},
+    {"id": "ch_g10_acids_bases",   "name": "Acids Bases and Salts",               "subject": "Science",     "num": 2,  "grade": 10},
+    {"id": "ch_g10_metals",        "name": "Metals and Non-Metals",               "subject": "Science",     "num": 3,  "grade": 10},
+    {"id": "ch_g10_carbon",        "name": "Carbon and its Compounds",            "subject": "Science",     "num": 4,  "grade": 10},
+    {"id": "ch_g10_life_processes","name": "Life Processes",                      "subject": "Science",     "num": 5,  "grade": 10},
+    {"id": "ch_g10_control",       "name": "Control and Coordination",            "subject": "Science",     "num": 6,  "grade": 10},
+    {"id": "ch_g10_reproduction",  "name": "How do Organisms Reproduce",          "subject": "Science",     "num": 7,  "grade": 10},
+    {"id": "ch_g10_heredity",      "name": "Heredity and Evolution",              "subject": "Science",     "num": 8,  "grade": 10},
+    {"id": "ch_g10_light",         "name": "Light Reflection and Refraction",     "subject": "Science",     "num": 9,  "grade": 10},
+    {"id": "ch_g10_human_eye",     "name": "The Human Eye and the Colourful World","subject": "Science",    "num": 10, "grade": 10},
+    {"id": "ch_g10_electricity",   "name": "Electricity",                         "subject": "Science",     "num": 11, "grade": 10},
+    {"id": "ch_g10_magnetism",     "name": "Magnetic Effects of Electric Current","subject": "Science",     "num": 12, "grade": 10},
+    {"id": "ch_g10_environment",   "name": "Our Environment",                     "subject": "Science",     "num": 13, "grade": 10},
+    {"id": "ch_g10_natural_mgmt",  "name": "Management of Natural Resources",     "subject": "Science",     "num": 14, "grade": 10},
+    # ── Grade 10 Mathematics ──────────────────────────────────────────────────
+    {"id": "ch_g10_real_numbers",  "name": "Real Numbers",                        "subject": "Mathematics", "num": 1,  "grade": 10},
+    {"id": "ch_g10_polynomials",   "name": "Polynomials",                         "subject": "Mathematics", "num": 2,  "grade": 10},
+    {"id": "ch_g10_linear_pair",   "name": "Pair of Linear Equations in Two Variables","subject": "Mathematics","num": 3,"grade": 10},
+    {"id": "ch_g10_quadratic",     "name": "Quadratic Equations",                 "subject": "Mathematics", "num": 4,  "grade": 10},
+    {"id": "ch_g10_ap",            "name": "Arithmetic Progressions",             "subject": "Mathematics", "num": 5,  "grade": 10},
+    {"id": "ch_g10_triangles",     "name": "Triangles",                           "subject": "Mathematics", "num": 6,  "grade": 10},
+    {"id": "ch_g10_coord_geom",    "name": "Coordinate Geometry",                 "subject": "Mathematics", "num": 7,  "grade": 10},
+    {"id": "ch_g10_trig",          "name": "Introduction to Trigonometry",        "subject": "Mathematics", "num": 8,  "grade": 10},
+    {"id": "ch_g10_trig_apps",     "name": "Some Applications of Trigonometry",   "subject": "Mathematics", "num": 9,  "grade": 10},
+    {"id": "ch_g10_circles",       "name": "Circles",                             "subject": "Mathematics", "num": 10, "grade": 10},
+    {"id": "ch_g10_circle_areas",  "name": "Areas Related to Circles",            "subject": "Mathematics", "num": 11, "grade": 10},
+    {"id": "ch_g10_surface_vol",   "name": "Surface Areas and Volumes",           "subject": "Mathematics", "num": 12, "grade": 10},
+    {"id": "ch_g10_statistics",    "name": "Statistics",                          "subject": "Mathematics", "num": 13, "grade": 10},
+    {"id": "ch_g10_probability",   "name": "Probability",                         "subject": "Mathematics", "num": 14, "grade": 10},
 ]
 
 # ── DIKSHA API ──────────────────────────────────────────────────────────────
@@ -83,12 +144,13 @@ MIME_LABELS = {
 }
 
 
-def _search_body(chapter_name: str, subject: str, limit: int = 10) -> dict:
+def _search_body(chapter_name: str, subject: str, grade: int = 8, limit: int = 10) -> dict:
+    grade_label = f"Class {grade}"
     return {
         "request": {
             "filters": {
                 "subject":     [subject],
-                "gradeLevel":  ["Class 8"],
+                "gradeLevel":  [grade_label],
                 "medium":      ["English"],
                 "status":      ["Live"],
                 "contentType": ["Resource", "ExplanationResource",
@@ -110,7 +172,7 @@ async def _search_diksha(chapter: dict, client: httpx.AsyncClient) -> list[dict]
     try:
         r = await client.post(
             DIKSHA_SEARCH_URL,
-            json=_search_body(chapter["name"], chapter["subject"]),
+            json=_search_body(chapter["name"], chapter["subject"], chapter.get("grade", 8)),
             headers={"Content-Type": "application/json"},
             timeout=12.0,
         )
@@ -250,7 +312,7 @@ async def ingest_chapter(chapter: dict, client: httpx.AsyncClient) -> list[dict]
     # Minimum fallback: chapter name + subject so RAG always returns something
     if not chunks:
         chunks.append({
-            "text":          f"NCERT Class 8 {chapter['subject']} Chapter {chapter['num']}: {chapter['name']}.",
+            "text":          f"NCERT Class {chapter.get('grade', 8)} {chapter['subject']} Chapter {chapter['num']}: {chapter['name']}.",
             "chapter_id":    chapter["id"],
             "subject":       chapter["subject"],
             "source":        "fallback",
@@ -342,8 +404,10 @@ def index_chunks(chunks: list[dict], rebuild: bool = False) -> int:
 
 
 async def run(rebuild: bool = False):
+    grades = sorted({c.get("grade", 8) for c in CHAPTERS})
     print("\n🚀 LearnGPS Batch DIKSHA Ingestor")
-    print(f"   Chapters: {len(CHAPTERS)} ({sum(1 for c in CHAPTERS if c['subject']=='Science')} Science + "
+    print(f"   Chapters: {len(CHAPTERS)} across Grade(s) {grades}")
+    print(f"   ({sum(1 for c in CHAPTERS if c['subject']=='Science')} Science + "
           f"{sum(1 for c in CHAPTERS if c['subject']=='Mathematics')} Maths)\n")
 
     print("📡 Fetching from DIKSHA...")
