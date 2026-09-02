@@ -1,9 +1,9 @@
 """
 LearnGPS Batch Content Ingestor
 ================================
-Fetches DIKSHA content for all Grade 8 Science + Maths chapters,
+Fetches DIKSHA content for all Grade 8-10 Science + Maths chapters,
 extracts text from PDFs where available, and indexes everything
-into ChromaDB for Gyaan's RAG retrieval.
+into Qdrant Cloud for Gyaan's RAG retrieval.
 
 Sources (priority order per chapter):
   1. DIKSHA PDF resources   — full text extraction via PyMuPDF
@@ -351,55 +351,72 @@ async def fetch_all_chapters(concurrency: int = 4) -> list[dict]:
 
 
 def index_chunks(chunks: list[dict], rebuild: bool = False) -> int:
-    """Embed chunks and upsert into ChromaDB."""
+    """Embed chunks and upsert into Qdrant Cloud."""
     try:
-        import chromadb
+        import uuid
+        from qdrant_client import QdrantClient
+        from qdrant_client.models import Distance, VectorParams, PointStruct
         from sentence_transformers import SentenceTransformer
     except ImportError as e:
         print(f"❌ Missing dependency: {e}")
-        print("   Run: pip install chromadb sentence-transformers --break-system-packages")
+        print("   Run: pip install qdrant-client sentence-transformers --break-system-packages")
         return 0
 
-    CHROMA_DIR = Path(__file__).parents[3] / "data" / "chroma_db"
+    from backend.config.settings import get_settings
+    cfg = get_settings()
+
     COLLECTION  = "learngps_ncert"
     EMBED_MODEL = "all-MiniLM-L6-v2"
+    VECTOR_SIZE = 384
 
-    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
-    db = chromadb.PersistentClient(path=str(CHROMA_DIR))
+    client = QdrantClient(url=cfg.qdrant_url, api_key=cfg.qdrant_api_key)
 
     if rebuild:
         try:
-            db.delete_collection(COLLECTION)
+            client.delete_collection(COLLECTION)
             print("🗑️  Deleted old collection")
         except Exception:
             pass
 
-    col = db.get_or_create_collection(COLLECTION, metadata={"hnsw:space": "cosine"})
+    existing = [c.name for c in client.get_collections().collections]
+    if COLLECTION not in existing:
+        client.create_collection(
+            collection_name=COLLECTION,
+            vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
+        )
+        print(f"✅ Created Qdrant collection '{COLLECTION}'")
 
     print(f"\n🔢 Embedding {len(chunks)} chunks with {EMBED_MODEL}...")
     model  = SentenceTransformer(EMBED_MODEL)
-    batch  = 32
+    batch  = 64
     total  = 0
     t0     = time.time()
 
     for i in range(0, len(chunks), batch):
-        b    = chunks[i : i + batch]
+        b     = chunks[i : i + batch]
         texts = [c["text"] for c in b]
         embs  = model.encode(texts, show_progress_bar=False).tolist()
-        ids   = [f"ch_{c['chapter_id']}_{i+j}" for j, c in enumerate(b)]
-        metas = [{
-            "chapter_id":    c.get("chapter_id", ""),
-            "subject":       c.get("subject", ""),
-            "source":        c.get("source", ""),
-            "subconcept_id": c.get("subconcept_id", ""),
-            "bloom_level":   c.get("bloom_level", ""),
-        } for c in b]
 
-        col.upsert(ids=ids, embeddings=embs, documents=texts, metadatas=metas)
+        points = [
+            PointStruct(
+                id=str(uuid.uuid4()),
+                vector=emb,
+                payload={
+                    "text":          c.get("text", ""),
+                    "chapter_id":    c.get("chapter_id", ""),
+                    "subject":       c.get("subject", ""),
+                    "source":        c.get("source", "unknown"),
+                    "subconcept_id": c.get("subconcept_id", ""),
+                    "bloom_level":   c.get("bloom_level", ""),
+                },
+            )
+            for c, emb in zip(b, embs)
+        ]
+        client.upsert(collection_name=COLLECTION, points=points)
         total += len(b)
         print(f"   {total}/{len(chunks)} indexed...", end="\r")
 
-    print(f"\n✅ {total} chunks indexed in {time.time()-t0:.1f}s → {CHROMA_DIR}")
+    print(f"\n✅ {total} chunks indexed in {time.time()-t0:.1f}s → Qdrant Cloud")
     return total
 
 
@@ -423,7 +440,7 @@ async def run(rebuild: bool = False):
         json.dump(chunks, f, indent=2)
     print(f"   Raw chunks saved → {out_path}")
 
-    # Index into ChromaDB
+    # Index into Qdrant Cloud
     count = index_chunks(chunks, rebuild=rebuild)
     print(f"\n🎉 Done! {count} chunks ready for Gyaan RAG.\n")
 

@@ -1,50 +1,38 @@
 """
-RAG Retriever — Day 6b
-=======================
+RAG Retriever — Qdrant Cloud
+=============================
 Given a student's question, finds the most relevant NCERT chunks
-from ChromaDB and returns them as context for Gyaan.
-
-This is the "R" in RAG — Retrieval Augmented Generation.
+from Qdrant and returns them as context for Gyaan.
 
 Flow:
   student question
        ↓
-  embed with same model (all-MiniLM-L6-v2)
+  embed with all-MiniLM-L6-v2
        ↓
-  cosine similarity search in ChromaDB
+  cosine similarity search in Qdrant Cloud
        ↓
   top-k chunks returned
        ↓
   injected into Gyaan's system prompt
-       ↓
-  Claude answers using NCERT content
-
-Usage:
-    from backend.rag.retriever import retrieve
-
-    chunks = await retrieve(
-        query="what is friction",
-        subconcept_id="sc_friction",
-        k=3,
-    )
-    # chunks = [{"text": "...", "source": "textbook", ...}, ...]
 """
 
 import asyncio
-from backend.rag.embedder import get_embed_model, get_collection, is_index_ready
+from backend.rag.embedder import get_embed_model, get_qdrant_client, is_index_ready, COLLECTION
 
 
 async def retrieve(
     query: str,
+    chapter_id: str | None = None,
     subconcept_id: str | None = None,
     k: int = 3,
-    source_filter: str | None = None,   # "textbook" | "question" | "activity" | None
+    source_filter: str | None = None,
 ) -> list[dict]:
     """
     Retrieve top-k relevant NCERT chunks for a query.
 
     Args:
         query:         student's question or Gyaan's current topic
+        chapter_id:    filter to chunks from this chapter only
         subconcept_id: filter to chunks from this SubConcept only
         k:             number of chunks to return
         source_filter: optionally limit to one source type
@@ -57,50 +45,46 @@ async def retrieve(
         return []
 
     try:
-        # Embed the query (run in thread — CPU-bound)
         model  = get_embed_model()
         q_vec  = await asyncio.to_thread(
             model.encode, [query], show_progress_bar=False
         )
-        q_vec  = q_vec[0].tolist()
+        q_vec = q_vec[0].tolist()
 
-        # Build ChromaDB where filter
-        where = {}
-        if subconcept_id and source_filter:
-            where = {"$and": [
-                {"subconcept_id": {"$eq": subconcept_id}},
-                {"source": {"$eq": source_filter}},
-            ]}
-        elif subconcept_id:
-            where = {"subconcept_id": {"$eq": subconcept_id}}
-        elif source_filter:
-            where = {"source": {"$eq": source_filter}}
+        # Build Qdrant filter
+        from qdrant_client.models import Filter, FieldCondition, MatchValue, AndCondition
 
-        collection = get_collection()
+        conditions = []
+        if chapter_id:
+            conditions.append(FieldCondition(key="chapter_id", match=MatchValue(value=chapter_id)))
+        if subconcept_id:
+            conditions.append(FieldCondition(key="subconcept_id", match=MatchValue(value=subconcept_id)))
+        if source_filter:
+            conditions.append(FieldCondition(key="source", match=MatchValue(value=source_filter)))
 
-        # Query ChromaDB
-        results = collection.query(
-            query_embeddings = [q_vec],
-            n_results        = k,
-            where            = where if where else None,
-            include          = ["documents", "metadatas", "distances"],
+        qdrant_filter = Filter(must=conditions) if conditions else None
+
+        client  = get_qdrant_client()
+        results = await asyncio.to_thread(
+            client.search,
+            collection_name = COLLECTION,
+            query_vector    = q_vec,
+            limit           = k,
+            query_filter    = qdrant_filter,
+            with_payload    = True,
         )
 
-        # Parse results
         chunks = []
-        docs      = results.get("documents", [[]])[0]
-        metadatas = results.get("metadatas", [[]])[0]
-        distances = results.get("distances", [[]])[0]
-
-        for doc, meta, dist in zip(docs, metadatas, distances):
-            score = 1 - dist   # convert cosine distance → similarity
-            if score < 0.2:    # skip very low relevance
+        for hit in results:
+            score = hit.score   # already cosine similarity (0–1)
+            if score < 0.2:
                 continue
+            payload = hit.payload or {}
             chunks.append({
-                "text":          doc,
-                "source":        meta.get("source", ""),
-                "subconcept_id": meta.get("subconcept_id", ""),
-                "bloom_level":   meta.get("bloom_level", ""),
+                "text":          payload.get("text", ""),
+                "source":        payload.get("source", ""),
+                "subconcept_id": payload.get("subconcept_id", ""),
+                "bloom_level":   payload.get("bloom_level", ""),
                 "score":         round(score, 3),
             })
 
@@ -112,17 +96,6 @@ async def retrieve(
 
 
 def format_for_prompt(chunks: list[dict]) -> str:
-    """
-    Format retrieved chunks into a string for Gyaan's system prompt.
-
-    Example output:
-        [From NCERT textbook]
-        Friction is the force that opposes motion...
-
-        [From Q&A bank — Apply level]
-        Question: A book is pushed on a table...
-        Answer: The friction force acts opposite...
-    """
     if not chunks:
         return ""
 
@@ -132,6 +105,8 @@ def format_for_prompt(chunks: list[dict]) -> str:
         bloom  = chunk.get("bloom_level", "")
 
         if source == "textbook":
+            label = "[From NCERT textbook]"
+        elif source == "diksha_pdf":
             label = "[From NCERT textbook]"
         elif source == "question" and bloom:
             label = f"[From Q&A bank — {bloom.title()} level]"

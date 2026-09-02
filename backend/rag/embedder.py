@@ -1,35 +1,33 @@
 """
-RAG Embedder — Day 6b
-======================
-Converts text chunks into vector embeddings and stores them in ChromaDB.
+RAG Embedder — Qdrant Cloud
+============================
+Converts text chunks into vector embeddings and stores them in Qdrant Cloud.
 
 Model: all-MiniLM-L6-v2 (sentence-transformers)
   - Free, runs locally — no API key needed
   - 384-dimensional vectors
-  - Fast: ~10ms per chunk on CPU
 
-ChromaDB: local persistent store
-  - Saved to learngps/data/chroma_db/
-  - Survives server restarts
-  - No cloud account needed
+Qdrant Cloud: hosted persistent vector store
+  - No local disk needed — survives Railway redeploys
+  - Web UI at cloud.qdrant.io
 
 Run to build the index:
     python -m backend.rag.embedder
 
-Run again to rebuild (it clears + re-indexes):
+Run again to rebuild (clears + re-indexes):
     python -m backend.rag.embedder --rebuild
 """
 
 import sys
 import time
-from pathlib import Path
+import uuid
 
-# ChromaDB + sentence-transformers are optional — fail gracefully if missing
 try:
-    import chromadb
-    HAS_CHROMA = True
+    from qdrant_client import QdrantClient
+    from qdrant_client.models import Distance, VectorParams, PointStruct
+    HAS_QDRANT = True
 except ImportError:
-    HAS_CHROMA = False
+    HAS_QDRANT = False
 
 try:
     from sentence_transformers import SentenceTransformer
@@ -38,35 +36,36 @@ except ImportError:
     HAS_ST = False
 
 from backend.rag.chunker import get_all_chunks
+from backend.config.settings import get_settings
 
 # ── Config ─────────────────────────────────────────────────────────────────
-
-CHROMA_DIR  = Path(__file__).parents[3] / "data" / "chroma_db"
 COLLECTION  = "learngps_ncert"
-EMBED_MODEL = "all-MiniLM-L6-v2"   # ~90MB download on first run
+EMBED_MODEL = "all-MiniLM-L6-v2"
+VECTOR_SIZE = 384
 
-# ── Lazy singletons (loaded once per process) ──────────────────────────────
-
-_chroma_client     = None
-_embed_model       = None
-_collection        = None
-
-
-def get_chroma_client():
-    global _chroma_client
-    if _chroma_client is None:
-        if not HAS_CHROMA:
-            raise RuntimeError("chromadb not installed. Run: pip install chromadb")
-        CHROMA_DIR.mkdir(parents=True, exist_ok=True)
-        _chroma_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
-    return _chroma_client
+# ── Lazy singletons ────────────────────────────────────────────────────────
+_qdrant_client  = None
+_embed_model    = None
 
 
-def get_embed_model():
+def get_qdrant_client() -> "QdrantClient":
+    global _qdrant_client
+    if _qdrant_client is None:
+        if not HAS_QDRANT:
+            raise RuntimeError("qdrant-client not installed. Run: pip install qdrant-client")
+        cfg = get_settings()
+        _qdrant_client = QdrantClient(
+            url=cfg.qdrant_url,
+            api_key=cfg.qdrant_api_key,
+        )
+    return _qdrant_client
+
+
+def get_embed_model() -> "SentenceTransformer":
     global _embed_model
     if _embed_model is None:
         if not HAS_ST:
-            raise RuntimeError("sentence-transformers not installed. Run: pip install sentence-transformers")
+            raise RuntimeError("sentence-transformers not installed.")
         print(f"🔄 Loading embedding model {EMBED_MODEL}...")
         _embed_model = SentenceTransformer(EMBED_MODEL)
         print("✅ Embedding model ready")
@@ -74,30 +73,22 @@ def get_embed_model():
 
 
 def get_collection():
-    """Get or create the ChromaDB collection."""
-    global _collection
-    if _collection is None:
-        client = get_chroma_client()
-        _collection = client.get_or_create_collection(
-            name=COLLECTION,
-            metadata={"hnsw:space": "cosine"},   # cosine similarity
+    """Ensure the Qdrant collection exists and return its name."""
+    client = get_qdrant_client()
+    existing = [c.name for c in client.get_collections().collections]
+    if COLLECTION not in existing:
+        client.create_collection(
+            collection_name=COLLECTION,
+            vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
         )
-    return _collection
+        print(f"✅ Created Qdrant collection '{COLLECTION}'")
+    return COLLECTION
 
 
 # ── Index builder ───────────────────────────────────────────────────────────
 
 def build_index(rebuild: bool = False) -> int:
-    """
-    Build (or rebuild) the ChromaDB index from all chunks.
-
-    Args:
-        rebuild: if True, delete and recreate the collection first
-
-    Returns:
-        Number of chunks indexed
-    """
-    client = get_chroma_client()
+    client = get_qdrant_client()
     model  = get_embed_model()
 
     if rebuild:
@@ -106,18 +97,16 @@ def build_index(rebuild: bool = False) -> int:
             print(f"🗑️  Deleted old collection '{COLLECTION}'")
         except Exception:
             pass
-        global _collection
-        _collection = None
 
-    collection = get_collection()
+    get_collection()
 
     # Check if already indexed
-    existing = collection.count()
+    info = client.get_collection(COLLECTION)
+    existing = info.points_count or 0
     if existing > 0 and not rebuild:
         print(f"✅ Index already has {existing} chunks. Use --rebuild to re-index.")
         return existing
 
-    # Get all chunks
     print("📦 Chunking NCERT content...")
     chunks = get_all_chunks()
     print(f"   {len(chunks)} chunks ready")
@@ -126,54 +115,50 @@ def build_index(rebuild: bool = False) -> int:
         print("⚠️  No chunks found — check source files exist")
         return 0
 
-    # Embed in batches of 32
     print("🔢 Embedding chunks...")
-    batch_size = 32
+    batch_size = 64
     total = 0
     start = time.time()
 
     for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
-        texts = [c["text"] for c in batch]
+        batch  = chunks[i : i + batch_size]
+        texts  = [c["text"] for c in batch]
+        embs   = model.encode(texts, show_progress_bar=False).tolist()
 
-        # Generate embeddings
-        embeddings = model.encode(texts, show_progress_bar=False).tolist()
-
-        # Build IDs and metadata
-        ids       = [f"chunk_{i + j}" for j in range(len(batch))]
-        metadatas = [
-            {
-                "source":        c.get("source", "unknown"),
-                "chapter_id":    c.get("chapter_id", ""),
-                "subconcept_id": c.get("subconcept_id", ""),
-                "bloom_level":   c.get("bloom_level", ""),
-                "page":          str(c.get("page", "")),
-            }
-            for c in batch
+        points = [
+            PointStruct(
+                id=str(uuid.uuid4()),
+                vector=emb,
+                payload={
+                    "text":          c.get("text", ""),
+                    "chapter_id":    c.get("chapter_id", ""),
+                    "subject":       c.get("subject", ""),
+                    "source":        c.get("source", "unknown"),
+                    "subconcept_id": c.get("subconcept_id", ""),
+                    "bloom_level":   c.get("bloom_level", ""),
+                },
+            )
+            for c, emb in zip(batch, embs)
         ]
-
-        collection.add(
-            ids        = ids,
-            embeddings = embeddings,
-            documents  = texts,
-            metadatas  = metadatas,
-        )
+        client.upsert(collection_name=COLLECTION, points=points)
         total += len(batch)
         print(f"   Indexed {total}/{len(chunks)} chunks...", end="\r")
 
     elapsed = time.time() - start
-    print(f"\n✅ Indexed {total} chunks in {elapsed:.1f}s")
-    print(f"   Stored at: {CHROMA_DIR}")
+    print(f"\n✅ Indexed {total} chunks in {elapsed:.1f}s → Qdrant Cloud")
     return total
 
 
 def is_index_ready() -> bool:
-    """Check if the ChromaDB index has been built."""
-    if not HAS_CHROMA or not CHROMA_DIR.exists():
+    if not HAS_QDRANT:
         return False
     try:
-        collection = get_collection()
-        return collection.count() > 0
+        client = get_qdrant_client()
+        existing = [c.name for c in client.get_collections().collections]
+        if COLLECTION not in existing:
+            return False
+        info = client.get_collection(COLLECTION)
+        return (info.points_count or 0) > 0
     except Exception:
         return False
 
@@ -181,6 +166,6 @@ def is_index_ready() -> bool:
 # ── CLI entry point ─────────────────────────────────────────────────────────
 if __name__ == "__main__":
     rebuild = "--rebuild" in sys.argv
-    print(f"\n{'Rebuilding' if rebuild else 'Building'} RAG index...\n")
+    print(f"\n{'Rebuilding' if rebuild else 'Building'} RAG index in Qdrant Cloud...\n")
     count = build_index(rebuild=rebuild)
-    print(f"\n🎉 Done! {count} chunks indexed and ready for retrieval.\n")
+    print(f"\n🎉 Done! {count} chunks indexed and ready for Gyaan.\n")
