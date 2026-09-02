@@ -452,15 +452,25 @@ function getChapterGridPos(ch: Chapter, visible: Chapter[]): { x: number; y: num
   if (ch.ov_x > 0) return { x: ch.ov_x, y: ch.ov_y };
   const peers = [...visible]
     .filter(c => c.subject === ch.subject)
-    .sort((a, b) => (a.ncert_chapter_num ?? 99) - (b.ncert_chapter_num ?? 99));
-  const idx  = Math.max(0, peers.findIndex(c => c.id === ch.id));
+    .sort((a, b) => {
+      const gd = (a.grade ?? 8) - (b.grade ?? 8);
+      if (gd !== 0) return gd;
+      return (a.ncert_chapter_num ?? 99) - (b.ncert_chapter_num ?? 99);
+    });
+  const idx   = Math.max(0, peers.findIndex(c => c.id === ch.id));
   const isSci = ch.subject === "Science";
-  const COLS = isSci ? 3 : 4;
-  const CW   = 285;   // cell width
-  const CH   = 195;   // cell height
-  const OX   = isSci ? 145 : 1100;
-  const OY   = 90;
+  const COLS  = isSci ? 3 : 4;
+  const CW    = 285;   // cell width
+  const CH    = 195;   // cell height
+  const OX    = isSci ? 145 : 1100;
+  const OY    = 90;
   return { x: OX + (idx % COLS) * CW, y: OY + Math.floor(idx / COLS) * CH };
+}
+
+function getOverviewSvgHeight(visible: Chapter[]): number {
+  const sciRows  = Math.ceil(visible.filter(c => c.subject === "Science").length / 3);
+  const mathRows = Math.ceil(visible.filter(c => c.subject !== "Science").length / 4);
+  return Math.max(1160, 90 + Math.max(sciRows, mathRows) * 195 + 150);
 }
 
 // ── MAP SCREEN — fully data-driven GPS-style 2D knowledge graph ──────────────
@@ -758,7 +768,7 @@ function MapScreen({ studentId, onStart }: {
             </div>
           ) : (
             <svg
-              viewBox="0 0 2000 1160"
+              viewBox={`0 0 2000 ${getOverviewSvgHeight(visibleChapters)}`}
               width="100%" height="100%"
               preserveAspectRatio="xMidYMid meet"
               style={{ display: "block", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, transformOrigin: "center center", willChange: "transform" }}
