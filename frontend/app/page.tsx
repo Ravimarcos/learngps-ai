@@ -1822,7 +1822,11 @@ export default function App() {
       setStudentName(data.name);
       setTotalXp(data.total_xp ?? 0);
       setStreakDays(data.streak_days ?? 0);
-      setMessages([{ role: "assistant", content: `Welcome back, ${data.name}! 👋 I'm Gyaan, your AI tutor. What would you like to learn today?` }]);
+      // Only show welcome message if no existing chat history in localStorage
+      const savedMessages = (() => { try { const s = localStorage.getItem("chat_messages"); return s ? JSON.parse(s) : null; } catch { return null; } })();
+      if (!savedMessages || savedMessages.length === 0) {
+        setMessages([{ role: "assistant", content: `Welcome back, ${data.name}! 👋 I'm Gyaan, your AI tutor. What would you like to learn today?` }]);
+      }
       setAuthStep(null);   // authenticated — show main app
       loadAppData(uid);
     } else {
