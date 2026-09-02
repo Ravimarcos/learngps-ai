@@ -850,7 +850,7 @@ async def seed_chapter(driver, chapter_id, concepts, subconcepts, prereqs):
                 MATCH (ch:Chapter {id: $ch_id})
                 MERGE (c:Concept {id: $id})
                 SET c.name=$name, c.weight=$weight
-                MERGE (ch)-[:HAS_CONCEPT]->(c)
+                MERGE (c)-[:PART_OF]->(ch)
                 """,
                 ch_id=chapter_id, **con
             )
@@ -862,7 +862,7 @@ async def seed_chapter(driver, chapter_id, concepts, subconcepts, prereqs):
                 MERGE (s:SubConcept {id: $id})
                 SET s.name=$name, s.bloom_target=$bloom_target,
                     s.vark_hint=$vark_hint, s.map_x=$map_x, s.map_y=$map_y
-                MERGE (c)-[:HAS_SUBCONCEPT]->(s)
+                MERGE (s)-[:PART_OF]->(c)
                 """,
                 con_id=con_id, **sc
             )
