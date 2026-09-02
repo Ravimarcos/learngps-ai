@@ -617,6 +617,7 @@ function MapScreen({ studentId, onStart }: {
         @keyframes dash-f { to { stroke-dashoffset: 0; } }
         .flow-edge { animation: dash-f 1.2s linear infinite; }
         @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.75} }
+        @keyframes xpFloat { 0%{opacity:1;transform:translateY(0) scale(1)} 60%{opacity:1;transform:translateY(-40px) scale(1.1)} 100%{opacity:0;transform:translateY(-80px) scale(0.9)} }
       `}</style>
 
       {/* Starfield */}
@@ -1244,6 +1245,68 @@ function MapScreen({ studentId, onStart }: {
   );
 }
 
+// ── GPS ORIENTATION CARD ───────────────────────────────────────────────────
+function GPSOrientationCard({ gps, onAction }: { gps: GPSRoute; onAction: (text: string) => void }) {
+  const current   = gps.current;
+  const completed = gps.completed ?? [];
+  const nextUp    = gps.route?.[0];
+  const pct       = Math.round(gps.progress_pct ?? 0);
+  const chapterLabel = (gps.chapter_id ?? "").replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
+  return (
+    <div style={{ background: "linear-gradient(135deg,#4338ca 0%,#6d28d9 100%)", borderRadius: 18, padding: 16, margin: "4px 0 8px", color: "white" }}>
+      {/* Header */}
+      <div style={{ fontSize: 10, opacity: 0.7, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>📍 Your GPS Position</div>
+      <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 1 }}>{current?.name ?? "Starting out"}</div>
+      <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 10 }}>{chapterLabel}</div>
+
+      {/* Progress bar */}
+      <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: 8, height: 6, marginBottom: 12 }}>
+        <div style={{ background: "#fbbf24", borderRadius: 8, height: 6, width: `${pct}%`, transition: "width 1s ease" }} />
+      </div>
+
+      {/* Stats row */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <div style={{ flex: 1, background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
+          <div style={{ fontSize: 20, fontWeight: 800 }}>{completed.length}</div>
+          <div style={{ fontSize: 10, opacity: 0.8 }}>✅ Done</div>
+        </div>
+        <div style={{ flex: 1, background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
+          <div style={{ fontSize: 20, fontWeight: 800 }}>{pct}%</div>
+          <div style={{ fontSize: 10, opacity: 0.8 }}>🎯 Progress</div>
+        </div>
+        {nextUp && (
+          <div style={{ flex: 2, background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "8px 10px" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextUp.name}</div>
+            <div style={{ fontSize: 10, opacity: 0.8 }}>🗺️ Up next</div>
+          </div>
+        )}
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <button
+          onClick={() => onAction(`Let's continue learning about ${current?.name ?? "this concept"}! Give me a question to test my understanding.`)}
+          style={{ flex: 1, background: "#fbbf24", color: "#78350f", border: "none", borderRadius: 12, padding: "11px 8px", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>
+          🔥 Continue Learning
+        </button>
+        <button
+          onClick={() => onAction(`Give me a quick challenge question on ${current?.name ?? "this concept"} — make it interesting!`)}
+          style={{ flex: 1, background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 12, padding: "11px 8px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          ⚡ Challenge Me!
+        </button>
+      </div>
+
+      {/* Photo upload CTA */}
+      <button
+        onClick={() => onAction("__OPEN_PHOTO__")}
+        style={{ width: "100%", background: "rgba(255,255,255,0.12)", border: "1.5px dashed rgba(255,255,255,0.4)", borderRadius: 12, padding: "10px 12px", color: "white", fontWeight: 600, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        📸 Upload homework question — Gyaan will guide you!
+      </button>
+    </div>
+  );
+}
+
 // ── CHAT SCREEN ────────────────────────────────────────────────────────────
 function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, bloomLevel, setBloomLevel, hintCount, setHintCount, activityShown, setActivityShown, autoPrompt, onAutoPromptSent, onXpEarned }: {
   gps: GPSRoute | null;
@@ -1270,6 +1333,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
   const [photoPreview, setPhotoPreview]     = useState<string | null>(null);
   const [diksha, setDiksha]         = useState<DikshaResource[]>([]);
   const [showDiksha, setShowDiksha] = useState(false);
+  const [xpFloat, setXpFloat]       = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef   = useRef<HTMLInputElement>(null);
 
@@ -1317,7 +1381,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
             const idx = bloomOrder.indexOf(bloomLevel);
             if (idx < bloomOrder.length - 1) setBloomLevel(bloomOrder[idx + 1]);
           }
-          if ((res.xp_earned ?? 0) > 0) onXpEarned(res.xp_earned);
+          if ((res.xp_earned ?? 0) > 0) { onXpEarned(res.xp_earned); setXpFloat(res.xp_earned); setTimeout(() => setXpFloat(null), 2000); }
           setMessages((m) => [...m, { role: "assistant", content: res.reply, xp: res.xp_earned }]);
         } catch {
           setMessages((m) => [...m, { role: "assistant", content: "Oops! Something went wrong. Try again." }]);
@@ -1362,7 +1426,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
         const idx = bloomOrder.indexOf(bloomLevel);
         if (idx < bloomOrder.length - 1) setBloomLevel(bloomOrder[idx + 1]);
       }
-      if ((res.xp_earned ?? 0) > 0) onXpEarned(res.xp_earned);
+      if ((res.xp_earned ?? 0) > 0) { onXpEarned(res.xp_earned); setXpFloat(res.xp_earned); setTimeout(() => setXpFloat(null), 2000); }
       setMessages((m) => [...m, { role: "assistant", content: res.reply, xp: res.xp_earned }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", content: "Oops! Something went wrong. Try again." }]);
@@ -1404,20 +1468,58 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
     } catch { setDiksha([]); }
   }
 
+  function handleOrientationAction(text: string) {
+    if (text === "__OPEN_PHOTO__") { setShowPhotoPanel(true); return; }
+    setInput(text);
+    setTimeout(() => {
+      const btn = document.getElementById("gyaan-send-btn");
+      if (btn) btn.click();
+    }, 50);
+  }
+
+  const pct = Math.round(gps?.progress_pct ?? 0);
+
   return (
-    <div className="flex flex-col h-screen max-h-screen">
-      <div className="bg-white border-b border-gray-100 p-3 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-xl">🤖</div>
-        <div className="flex-1">
-          <p className="font-bold text-gray-900 text-sm">Gyaan</p>
-          <p className="text-xs text-emerald-500 font-medium">● Active · {currentSC?.name ?? "Force & Pressure"}</p>
+    <div className="flex flex-col h-screen max-h-screen" style={{ position: "relative" }}>
+      {/* XP Float Animation */}
+      {xpFloat && (
+        <div style={{
+          position: "absolute", top: 70, right: 20, zIndex: 100,
+          background: "linear-gradient(135deg,#f59e0b,#ef4444)",
+          color: "white", fontWeight: 900, fontSize: 22, padding: "8px 18px",
+          borderRadius: 40, boxShadow: "0 4px 20px rgba(245,158,11,0.5)",
+          animation: "xpFloat 2s ease-out forwards", pointerEvents: "none",
+        }}>
+          +{xpFloat} XP 🔥
         </div>
-        <div className="flex gap-2">
-          <span className={`text-xs px-2 py-1 rounded-full font-medium ${VARK_COLORS[varkStyle] ?? "bg-indigo-100 text-indigo-700"}`}>
-            {VARK_LABELS[varkStyle] ?? "🤸 Kinesthetic"}
-          </span>
-          <button onClick={loadDiksha} className="text-xs px-2 py-1 bg-orange-50 text-orange-600 rounded-full font-medium">📚 NCERT</button>
+      )}
+
+      {/* Gyaan Header */}
+      <div style={{ background: "white", borderBottom: "1px solid #f0f0f0" }}>
+        <div className="p-3 flex items-center gap-3">
+          {/* Animated avatar */}
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#4338ca,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, boxShadow: "0 4px 12px rgba(99,102,241,0.4)", flexShrink: 0 }}>
+            🧠
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontWeight: 800, color: "#1e1b4b", fontSize: 15, marginBottom: 1 }}>Gyaan <span style={{ fontSize: 10, fontWeight: 500, color: "#10b981", background: "#d1fae5", borderRadius: 8, padding: "1px 6px" }}>● Active</span></p>
+            <p style={{ fontSize: 11, color: "#6366f1", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              📍 {currentSC?.name ?? "Force & Pressure"}
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${VARK_COLORS[varkStyle] ?? "bg-indigo-100 text-indigo-700"}`}>
+              {VARK_LABELS[varkStyle] ?? "🤸 Kinesthetic"}
+            </span>
+            <button onClick={loadDiksha} className="text-xs px-2 py-1 bg-orange-50 text-orange-600 rounded-full font-medium">📚 NCERT</button>
+          </div>
         </div>
+        {/* Progress strip */}
+        {gps && (
+          <div style={{ height: 4, background: "#e0e7ff" }}>
+            <div style={{ height: 4, background: "linear-gradient(90deg,#6366f1,#8b5cf6)", width: `${pct}%`, transition: "width 1s ease" }} />
+          </div>
+        )}
       </div>
 
       {showDiksha && (
@@ -1444,6 +1546,10 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
       )}
 
       <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-4 bg-indigo-50/30 flex flex-col gap-3">
+        {/* GPS Orientation Card — shown when chat is fresh */}
+        {messages.length === 1 && gps && gps.current && (
+          <GPSOrientationCard gps={gps} onAction={handleOrientationAction} />
+        )}
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} fade-up`}>
             {msg.role === "assistant" && (
@@ -1480,28 +1586,49 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
 
       {/* ── Suggestion chips — shown at start and after each Gyaan reply ── */}
       {!loading && messages.length > 0 && messages[messages.length - 1].role === "assistant" && (() => {
-        const sc   = currentSC?.name ?? "this concept";
-        const lvl  = bloomLevel.toLowerCase();
-        const chips: string[] =
-          lvl === "remember"  ? [`What is ${sc}?`, "Explain it simply", "Give me a hint"] :
-          lvl === "understand" ? [`Give me an example of ${sc}`, "Why does this happen?", "Explain in my own words"] :
-          lvl === "apply"      ? ["Give me a question to solve", `Where do we see ${sc} in real life?`, "Test me"] :
-          lvl === "analyse"    ? [`How does ${sc} connect to other forces?`, "Why does this work?", "Give me a harder question"] :
-                                  ["Challenge me with a tough question", "Quiz me", "Give me a real-world problem"];
+        const sc  = currentSC?.name ?? "this concept";
+        const lvl = bloomLevel.toLowerCase();
+        const chips: { label: string; action: string }[] =
+          lvl === "remember"   ? [
+            { label: "🤔 What is " + sc + "?", action: "What is " + sc + "? Explain simply." },
+            { label: "💡 Give me a hint", action: "Give me a hint to understand " + sc },
+            { label: "🎯 Quick quiz me!", action: "Give me a quick quiz question on " + sc },
+          ] :
+          lvl === "understand" ? [
+            { label: "📖 Real-life example", action: "Give me a real-life example of " + sc },
+            { label: "🤔 Why does this happen?", action: "Why does " + sc + " happen? Explain the reason." },
+            { label: "⚡ Challenge me!", action: "Give me a challenging question on " + sc },
+          ] :
+          lvl === "apply"      ? [
+            { label: "🧮 Give me a problem", action: "Give me a problem to solve on " + sc },
+            { label: "🌍 Real-world use", action: "Where do we see " + sc + " in real life?" },
+            { label: "🔥 Test me hard!", action: "Give me a harder question on " + sc },
+          ] :
+          lvl === "analyse"    ? [
+            { label: "🔗 How does it connect?", action: "How does " + sc + " connect to other concepts?" },
+            { label: "🤯 Harder question!", action: "Give me a much harder analytical question on " + sc },
+            { label: "🎓 Explain like a teacher", action: "I want to explain " + sc + " like a teacher. Help me." },
+          ] : [
+            { label: "🏆 Toughest question!", action: "Give me the toughest question you can on " + sc },
+            { label: "🌐 Real-world problem", action: "Give me a real-world problem involving " + sc },
+            { label: "🎯 Evaluate my answer", action: "I want you to evaluate my understanding of " + sc },
+          ];
         return (
-          <div style={{ padding: "8px 12px 4px", display: "flex", gap: "8px", flexWrap: "wrap", background: "white", borderTop: "0.5px solid #f0f0f0" }}>
-            {chips.map((chip) => (
-              <button key={chip}
-                onClick={() => { setInput(chip); }}
-                style={{
-                  fontSize: "12px", padding: "6px 12px", borderRadius: "20px",
-                  background: "#eef2ff", color: "#4338ca", border: "1px solid #c7d2fe",
-                  cursor: "pointer", whiteSpace: "nowrap", fontWeight: 500,
-                  transition: "background 0.15s",
-                }}>
-                {chip}
+          <div style={{ padding: "8px 12px 4px", background: "white", borderTop: "0.5px solid #f0f0f0" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+              {chips.map((chip) => (
+                <button key={chip.label}
+                  onClick={() => { setInput(chip.action); setTimeout(() => document.getElementById("gyaan-send-btn")?.click(), 50); }}
+                  style={{ fontSize: 12, padding: "7px 13px", borderRadius: 20, background: "#eef2ff", color: "#4338ca", border: "1px solid #c7d2fe", cursor: "pointer", whiteSpace: "nowrap", fontWeight: 600 }}>
+                  {chip.label}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowPhotoPanel(true)}
+                style={{ fontSize: 12, padding: "7px 13px", borderRadius: 20, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a", cursor: "pointer", whiteSpace: "nowrap", fontWeight: 700 }}>
+                📸 Upload Homework
               </button>
-            ))}
+            </div>
           </div>
         );
       })()}
@@ -1542,8 +1669,8 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
 
       <div className="bg-white border-t border-gray-100 p-3 pb-20 flex items-center gap-2">
         <button onClick={() => setShowPhotoPanel(!showPhotoPanel)}
-          className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-lg shrink-0 active:bg-indigo-100">
-          📷
+          style={{ display: "flex", alignItems: "center", gap: 4, padding: "7px 12px", borderRadius: 20, background: showPhotoPanel ? "#fef3c7" : "#f5f3ff", border: "1px solid " + (showPhotoPanel ? "#fde68a" : "#ddd6fe"), cursor: "pointer", fontSize: 12, fontWeight: 700, color: showPhotoPanel ? "#92400e" : "#5b21b6", whiteSpace: "nowrap", flexShrink: 0 }}>
+          📸 <span>Photo</span>
         </button>
         <input
           value={input}
@@ -1552,7 +1679,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
           placeholder="Type your answer..."
           className="flex-1 bg-gray-50 rounded-full px-4 py-2.5 text-sm border border-gray-100 outline-none focus:border-indigo-300"
         />
-        <button onClick={handleSend} disabled={loading}
+        <button id="gyaan-send-btn" onClick={handleSend} disabled={loading}
           className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white text-lg shrink-0 disabled:opacity-50 active:scale-95 transition-transform">
           ↑
         </button>
