@@ -1762,25 +1762,25 @@ export default function App() {
   // ── Persistent chat state (survives tab switches + page reloads) ─────────
   const [messages,   setMessages]   = useState<Message[]>(() => {
     try {
-      const saved = sessionStorage.getItem("chat_messages");
+      const saved = localStorage.getItem("chat_messages");
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
   const [bloomLevel, setBloomLevel] = useState(() => {
-    try { return sessionStorage.getItem("bloom_level") ?? "Remember"; }
+    try { return localStorage.getItem("bloom_level") ?? "Remember"; }
     catch { return "Remember"; }
   });
   const [hintCount,  setHintCount]  = useState(0);
   const [activityShown, setActivityShown] = useState(false);
   const [autoPrompt, setAutoPrompt] = useState<string | null>(null);
 
-  // Sync messages + bloom to sessionStorage on every change
+  // Sync messages + bloom to localStorage on every change
   useEffect(() => {
-    try { sessionStorage.setItem("chat_messages", JSON.stringify(messages)); }
+    try { localStorage.setItem("chat_messages", JSON.stringify(messages)); }
     catch { /* storage full or unavailable */ }
   }, [messages]);
   useEffect(() => {
-    try { sessionStorage.setItem("bloom_level", bloomLevel); }
+    try { localStorage.setItem("bloom_level", bloomLevel); }
     catch { /* ignore */ }
   }, [bloomLevel]);
 
@@ -1854,7 +1854,7 @@ export default function App() {
     setActivityShown(false);
     setTotalXp(0);
     setStreakDays(0);
-    try { sessionStorage.removeItem("chat_messages"); sessionStorage.removeItem("bloom_level"); } catch { /* ignore */ }
+    try { localStorage.removeItem("chat_messages"); localStorage.removeItem("bloom_level"); } catch { /* ignore */ }
   }
 
   // ── Loading splash ───────────────────────────────────────────────────────
