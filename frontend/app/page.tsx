@@ -460,9 +460,9 @@ function getChapterGridPos(ch: Chapter, visible: Chapter[]): { x: number; y: num
   const idx   = Math.max(0, peers.findIndex(c => c.id === ch.id));
   const isSci = ch.subject === "Science";
   const COLS  = isSci ? 3 : 4;
-  const CW    = 285;   // cell width
-  const CH    = 195;   // cell height
-  const OX    = isSci ? 145 : 1100;
+  const CW    = 220;   // cell width  (tighter → less scale-down → crisper text)
+  const CH    = 185;   // cell height
+  const OX    = isSci ? 120 : 760;
   const OY    = 90;
   return { x: OX + (idx % COLS) * CW, y: OY + Math.floor(idx / COLS) * CH };
 }
@@ -470,7 +470,7 @@ function getChapterGridPos(ch: Chapter, visible: Chapter[]): { x: number; y: num
 function getOverviewSvgHeight(visible: Chapter[]): number {
   const sciRows  = Math.ceil(visible.filter(c => c.subject === "Science").length / 3);
   const mathRows = Math.ceil(visible.filter(c => c.subject !== "Science").length / 4);
-  return Math.max(1160, 90 + Math.max(sciRows, mathRows) * 195 + 150);
+  return Math.max(900, 90 + Math.max(sciRows, mathRows) * 185 + 150);
 }
 
 // ── MAP SCREEN — fully data-driven GPS-style 2D knowledge graph ──────────────
@@ -768,7 +768,7 @@ function MapScreen({ studentId, onStart }: {
             </div>
           ) : (
             <svg
-              viewBox={`0 0 2000 ${getOverviewSvgHeight(visibleChapters)}`}
+              viewBox={`0 0 1500 ${getOverviewSvgHeight(visibleChapters)}`}
               width="100%" height="100%"
               preserveAspectRatio="xMidYMid meet"
               style={{ display: "block", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, transformOrigin: "center center", willChange: "transform" }}
@@ -787,11 +787,11 @@ function MapScreen({ studentId, onStart }: {
 
               {/* Section labels + divider (only when both subjects visible) */}
               {subjects.length > 1 && (<>
-                <text x="572" y="44" textAnchor="middle"
+                <text x="340" y="44" textAnchor="middle"
                   fill="rgba(255,255,255,0.12)" fontSize="14" fontWeight="900" letterSpacing="5">SCIENCE</text>
-                <text x="1527" y="44" textAnchor="middle"
+                <text x="1090" y="44" textAnchor="middle"
                   fill="rgba(255,255,255,0.12)" fontSize="14" fontWeight="900" letterSpacing="5">MATHEMATICS</text>
-                <line x1="920" y1="0" x2="920" y2="1160"
+                <line x1="660" y1="0" x2="660" y2="99999"
                   stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="6 6" />
               </>)}
 
@@ -833,27 +833,27 @@ function MapScreen({ studentId, onStart }: {
                 const py      = pos.y;
                 const hasContent = ch.subconcept_count > 0;
 
-                /* Coming-soon: render as a small compact pill — no ring, no halo, no ETA */
+                /* Coming-soon: render as a small compact orb */
                 if (!hasContent) {
-                  const cr = 26;
+                  const cr = 36;
                   const nameWords = ch.name.split(" ").slice(0, 3); // max 3 words
                   const nLines  = nameWords.length;
-                  const nStartY = py - ((nLines - 1) * 10) / 2;
+                  const nStartY = py - ((nLines - 1) * 13) / 2;
                   return (
                     <g key={ch.id} onClick={() => drillInto(ch.id)} style={{ cursor: "pointer" }} opacity="0.55">
                       <circle cx={px} cy={py} r={cr}
-                        fill={hexToRgba(ch.color, 0.06)}
-                        stroke={ch.color} strokeWidth="1"
+                        fill={hexToRgba(ch.color, 0.08)}
+                        stroke={ch.color} strokeWidth="1.5"
                         strokeDasharray="4 3" />
                       {nameWords.map((word, wi) => (
-                        <text key={wi} x={px} y={nStartY + wi * 11}
+                        <text key={wi} x={px} y={nStartY + wi * 13}
                           textAnchor="middle" dominantBaseline="middle"
-                          fill="rgba(255,255,255,0.5)" fontSize="8" fontWeight="700">
+                          fill="rgba(255,255,255,0.65)" fontSize="11" fontWeight="700">
                           {word}
                         </text>
                       ))}
-                      <text x={px} y={py + cr + 10} textAnchor="middle"
-                        fill={ch.color} fontSize="7.5" fontWeight="600" opacity="0.7">{ch.subject}</text>
+                      <text x={px} y={py + cr + 12} textAnchor="middle"
+                        fill={ch.color} fontSize="10" fontWeight="600" opacity="0.7">{ch.subject}</text>
                     </g>
                   );
                 }
