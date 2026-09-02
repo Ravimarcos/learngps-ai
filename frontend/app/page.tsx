@@ -440,37 +440,42 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// Fallback auto-layout for chapters that don't yet have ov_x / ov_y in Neo4j.
-// Arranges chapters on an ellipse centred in the 760×590 viewBox.
-/**
- * Graph-based chapter positions.
- * Science → 3-col grid on the left; Maths → 4-col grid on the right.
- * Ordered by ncert_chapter_num within each subject.
- * Chapters with stored ov_x/ov_y use those instead (manual override).
- */
+// ── Radial galaxy layout ───────────────────────────────────────────────────
+// Science hub on the left, Maths hub on the right.
+// Chapters orbit their hub in concentric grade rings (G8 inner, G10 outer).
+// A 60° gap faces the other cluster so both sides look like separate galaxies.
+const SCI_CX = 500,  MATH_CX = 1240, HUB_CY = 580;
+const RING_R: Record<number, number> = { 8: 225, 9: 365, 10: 490 };
+
 function getChapterGridPos(ch: Chapter, visible: Chapter[]): { x: number; y: number } {
-  if (ch.ov_x > 0) return { x: ch.ov_x, y: ch.ov_y };
+  const grade   = ch.grade ?? 8;
+  const isSci   = ch.subject === "Science";
+  const CX      = isSci ? SCI_CX : MATH_CX;
+  const ringR   = RING_R[grade] ?? 225;
+
+  // Peers = chapters of same subject + grade, sorted by chapter number
   const peers = [...visible]
-    .filter(c => c.subject === ch.subject)
-    .sort((a, b) => {
-      const gd = (a.grade ?? 8) - (b.grade ?? 8);
-      if (gd !== 0) return gd;
-      return (a.ncert_chapter_num ?? 99) - (b.ncert_chapter_num ?? 99);
-    });
+    .filter(c => c.subject === ch.subject && (c.grade ?? 8) === grade)
+    .sort((a, b) => (a.ncert_chapter_num ?? 99) - (b.ncert_chapter_num ?? 99));
   const idx   = Math.max(0, peers.findIndex(c => c.id === ch.id));
-  const isSci = ch.subject === "Science";
-  const COLS  = isSci ? 3 : 4;
-  const CW    = 220;   // cell width  (tighter → less scale-down → crisper text)
-  const CH    = 185;   // cell height
-  const OX    = isSci ? 120 : 760;
-  const OY    = 90;
-  return { x: OX + (idx % COLS) * CW, y: OY + Math.floor(idx / COLS) * CH };
+  const total = peers.length;
+
+  // 300° arc; 60° gap faces the other cluster
+  // Science gap → east (0 rad), Maths gap → west (π rad)
+  const GAP_RAD  = Math.PI / 3;            // 60°
+  const SPREAD   = 2 * Math.PI - GAP_RAD;  // 300°
+  const gapCentre = isSci ? 0 : Math.PI;
+  const startAngle = gapCentre + GAP_RAD / 2;
+  const angle = total > 1
+    ? startAngle + (idx / (total - 1)) * SPREAD
+    : startAngle + SPREAD / 2;
+
+  return { x: CX + Math.cos(angle) * ringR, y: HUB_CY + Math.sin(angle) * ringR };
 }
 
-function getOverviewSvgHeight(visible: Chapter[]): number {
-  const sciRows  = Math.ceil(visible.filter(c => c.subject === "Science").length / 3);
-  const mathRows = Math.ceil(visible.filter(c => c.subject !== "Science").length / 4);
-  return Math.max(900, 90 + Math.max(sciRows, mathRows) * 185 + 150);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getOverviewSvgHeight(_visible: Chapter[]): number {
+  return 1200; // fixed — outer ring (490) + hub (580) + bottom label space = 1150
 }
 
 // ── MAP SCREEN — fully data-driven GPS-style 2D knowledge graph ──────────────
@@ -768,7 +773,7 @@ function MapScreen({ studentId, onStart }: {
             </div>
           ) : (
             <svg
-              viewBox={`0 0 1500 ${getOverviewSvgHeight(visibleChapters)}`}
+              viewBox={`0 0 1760 ${getOverviewSvgHeight(visibleChapters)}`}
               width="100%" height="100%"
               preserveAspectRatio="xMidYMid meet"
               style={{ display: "block", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, transformOrigin: "center center", willChange: "transform" }}
@@ -786,14 +791,65 @@ function MapScreen({ studentId, onStart }: {
               </defs>
 
               {/* Section labels + divider (only when both subjects visible) */}
-              {subjects.length > 1 && (<>
-                <text x="340" y="44" textAnchor="middle"
-                  fill="rgba(255,255,255,0.12)" fontSize="14" fontWeight="900" letterSpacing="5">SCIENCE</text>
-                <text x="1090" y="44" textAnchor="middle"
-                  fill="rgba(255,255,255,0.12)" fontSize="14" fontWeight="900" letterSpacing="5">MATHEMATICS</text>
-                <line x1="660" y1="0" x2="660" y2="99999"
-                  stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="6 6" />
-              </>)}
+              {/* ── Grade rings — faint concentric orbit circles ── */}
+              {(subjects.includes("Science") ? [SCI_CX] : []).concat(subjects.includes("Maths") ? [MATH_CX] : []).map(cx =>
+                ([8, 9, 10] as const).map(g => (
+                  <circle key={`ring-${cx}-${g}`}
+                    cx={cx} cy={HUB_CY} r={RING_R[g]}
+                    fill="none" stroke="rgba(255,255,255,0.04)"
+                    strokeWidth="1" strokeDasharray="6 8" />
+                ))
+              )}
+              {/* Grade labels on rings */}
+              {(subjects.includes("Science") ? [{ cx: SCI_CX, isSci: true }] : [])
+                .concat(subjects.includes("Maths") ? [{ cx: MATH_CX, isSci: false }] : [])
+                .map(({ cx, isSci }) =>
+                  ([8, 9, 10] as const).map(g => {
+                    const labelAngle = isSci ? Math.PI : 0; // left for sci, right for maths
+                    const lx = cx + Math.cos(labelAngle) * (RING_R[g] - 10);
+                    const ly = HUB_CY - 8;
+                    return (
+                      <text key={`glabel-${cx}-${g}`} x={lx} y={ly}
+                        textAnchor="middle" fill="rgba(255,255,255,0.12)"
+                        fontSize="11" fontWeight="700" letterSpacing="2">G{g}</text>
+                    );
+                  })
+                )}
+              {/* ── Subject hub orbs ── */}
+              {subjects.includes("Science") && (
+                <g>
+                  <circle cx={SCI_CX} cy={HUB_CY} r={72}
+                    fill="rgba(41,121,255,0.08)" stroke="rgba(41,121,255,0.35)" strokeWidth="2" />
+                  <circle cx={SCI_CX} cy={HUB_CY} r={56}
+                    fill="rgba(41,121,255,0.15)" stroke="rgba(41,121,255,0.6)" strokeWidth="2.5" />
+                  <text x={SCI_CX} y={HUB_CY - 8} textAnchor="middle" dominantBaseline="middle"
+                    fill="#fff" fontSize="22" fontWeight="900">🔬</text>
+                  <text x={SCI_CX} y={HUB_CY + 16} textAnchor="middle" dominantBaseline="middle"
+                    fill="rgba(255,255,255,0.9)" fontSize="14" fontWeight="900" letterSpacing="2">SCIENCE</text>
+                </g>
+              )}
+              {subjects.includes("Maths") && (
+                <g>
+                  <circle cx={MATH_CX} cy={HUB_CY} r={72}
+                    fill="rgba(156,39,176,0.08)" stroke="rgba(156,39,176,0.35)" strokeWidth="2" />
+                  <circle cx={MATH_CX} cy={HUB_CY} r={56}
+                    fill="rgba(156,39,176,0.15)" stroke="rgba(156,39,176,0.6)" strokeWidth="2.5" />
+                  <text x={MATH_CX} y={HUB_CY - 8} textAnchor="middle" dominantBaseline="middle"
+                    fill="#fff" fontSize="22" fontWeight="900">📐</text>
+                  <text x={MATH_CX} y={HUB_CY + 16} textAnchor="middle" dominantBaseline="middle"
+                    fill="rgba(255,255,255,0.9)" fontSize="14" fontWeight="900" letterSpacing="2">MATHS</text>
+                </g>
+              )}
+              {/* ── Spoke lines: hub → active chapter orbs ── */}
+              {visibleChapters.filter(c => c.subconcept_count > 0).map(ch => {
+                const pos = getChapterGridPos(ch, visibleChapters);
+                const cx  = ch.subject === "Science" ? SCI_CX : MATH_CX;
+                return (
+                  <line key={`spoke-${ch.id}`}
+                    x1={cx} y1={HUB_CY} x2={pos.x} y2={pos.y}
+                    stroke={hexToRgba(ch.color, 0.18)} strokeWidth="0.8" />
+                );
+              })}
 
               {/* Cross-chapter prerequisite edges (CHAPTER_LINK from Neo4j) */}
               {chapterEdges.map((oe, i) => {
@@ -833,75 +889,69 @@ function MapScreen({ studentId, onStart }: {
                 const py      = pos.y;
                 const hasContent = ch.subconcept_count > 0;
 
-                /* Coming-soon: render as a small compact orb */
+                /* Coming-soon: small dashed orb with chapter number + first word */
                 if (!hasContent) {
-                  const cr = 36;
-                  const nameWords = ch.name.split(" ").slice(0, 3); // max 3 words
-                  const nLines  = nameWords.length;
-                  const nStartY = py - ((nLines - 1) * 13) / 2;
+                  const cr   = 22;
+                  const lbl  = ch.name.split(" ").slice(0, 2).join(" ");
                   return (
-                    <g key={ch.id} onClick={() => drillInto(ch.id)} style={{ cursor: "pointer" }} opacity="0.55">
+                    <g key={ch.id} onClick={() => drillInto(ch.id)} style={{ cursor: "pointer" }} opacity="0.5">
                       <circle cx={px} cy={py} r={cr}
-                        fill={hexToRgba(ch.color, 0.08)}
-                        stroke={ch.color} strokeWidth="1.5"
+                        fill={hexToRgba(ch.color, 0.06)}
+                        stroke={ch.color} strokeWidth="1"
                         strokeDasharray="4 3" />
-                      {nameWords.map((word, wi) => (
-                        <text key={wi} x={px} y={nStartY + wi * 13}
-                          textAnchor="middle" dominantBaseline="middle"
-                          fill="rgba(255,255,255,0.65)" fontSize="11" fontWeight="700">
-                          {word}
-                        </text>
-                      ))}
-                      <text x={px} y={py + cr + 12} textAnchor="middle"
-                        fill={ch.color} fontSize="10" fontWeight="600" opacity="0.7">{ch.subject}</text>
+                      <text x={px} y={py} textAnchor="middle" dominantBaseline="central"
+                        fill="rgba(255,255,255,0.5)" fontSize="11" fontWeight="800">
+                        {ch.ncert_chapter_num ?? ""}
+                      </text>
+                      <text x={px} y={py + cr + 13} textAnchor="middle"
+                        fill="rgba(255,255,255,0.45)" fontSize="10" fontWeight="600">{lbl}</text>
                     </g>
                   );
                 }
 
-                /* Active chapter: full orb with ring, halo, mastery % */
-                const r       = ch.ov_radius > 0 ? ch.ov_radius : 46;
-                const ringR   = r + 8;
+                /* Active chapter: galaxy orb — grade-scaled, ring shows mastery */
+                const grade   = ch.grade ?? 8;
+                const r       = grade === 8 ? 30 : grade === 9 ? 34 : 36;
+                const ringR   = r + 6;
                 const circumf = 2 * Math.PI * ringR;
                 const pct     = ch.mastery_pct;
-                const words   = ch.name.split(" ");
-                const startY  = py - ((words.length - 1) * 13) / 2;
+                // Two-line label below orb
+                const ws      = ch.name.split(" ");
+                const mid     = Math.ceil(ws.length / 2);
+                const ln1     = ws.slice(0, mid).join(" ");
+                const ln2     = ws.slice(mid).join(" ");
                 return (
                   <g key={ch.id} onClick={() => drillInto(ch.id)} style={{ cursor: "pointer" }}>
                     {/* Glow halo */}
-                    <circle cx={px} cy={py} r={r + 22} fill={`url(#ogr-${ch.id})`} />
-                    {/* Ring track */}
+                    <circle cx={px} cy={py} r={r + 18} fill={`url(#ogr-${ch.id})`} />
+                    {/* Mastery ring track */}
                     <circle cx={px} cy={py} r={ringR}
-                      fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3"
+                      fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5"
                       transform={`rotate(-90 ${px} ${py})`} />
-                    {/* Ring progress */}
+                    {/* Mastery ring progress */}
                     {pct > 0 && (
                       <circle cx={px} cy={py} r={ringR}
-                        fill="none" stroke={ch.color} strokeWidth="3"
-                        strokeDasharray={`${circumf}`} strokeDashoffset={circumf * (1 - pct / 100)}
+                        fill="none" stroke={ch.color} strokeWidth="2.5"
+                        strokeDasharray={`${circumf}`}
+                        strokeDashoffset={circumf * (1 - pct / 100)}
                         strokeLinecap="round"
                         transform={`rotate(-90 ${px} ${py})`} />
                     )}
                     {/* Orb body */}
                     <circle cx={px} cy={py} r={r}
-                      fill={hexToRgba(ch.color, 0.18)}
+                      fill={hexToRgba(ch.color, 0.22)}
                       stroke={ch.color} strokeWidth="2" />
-                    {/* Chapter name */}
-                    {words.map((word, wi) => (
-                      <text key={wi} x={px} y={startY + wi * 14}
-                        textAnchor="middle" dominantBaseline="middle"
-                        fill="#fff" fontSize={r > 48 ? "12" : "11"} fontWeight="800">
-                        {word}
-                      </text>
-                    ))}
-                    {/* Subject + ETA below orb */}
-                    <text x={px} y={py + ringR + 13} textAnchor="middle"
-                      fill={ch.color} fontSize="10" fontWeight="700">{ch.subject}</text>
-                    <text x={px} y={py + ringR + 25} textAnchor="middle"
-                      fill="rgba(255,255,255,0.3)" fontSize="9">{ch.eta}</text>
-                    {/* Mastery % inside orb */}
-                    {pct > 0 && (
-                      <text x={px} y={py + r - 9} textAnchor="middle" dominantBaseline="middle"
-                        fill={ch.color} fontSize="15" fontWeight="900">{pct}%</text>
+                    {/* Chapter number inside */}
+                    <text x={px} y={py} textAnchor="middle" dominantBaseline="central"
+                      fill="#fff" fontSize={r > 33 ? "15" : "13"} fontWeight="900">
+                      {pct > 0 ? `${pct}%` : (ch.ncert_chapter_num ?? "")}
+                    </text>
+                    {/* Chapter name below orb */}
+                    <text x={px} y={py + ringR + 14} textAnchor="middle"
+                      fill="#fff" fontSize="11" fontWeight="800">{ln1}</text>
+                    {ln2 && (
+                      <text x={px} y={py + ringR + 27} textAnchor="middle"
+                        fill="rgba(255,255,255,0.7)" fontSize="10" fontWeight="700">{ln2}</text>
                     )}
                   </g>
                 );
