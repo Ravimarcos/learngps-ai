@@ -444,8 +444,8 @@ function hexToRgba(hex: string, alpha: number): string {
 // Science hub on the left, Maths hub on the right.
 // Chapters orbit their hub in concentric grade rings (G8 inner, G10 outer).
 // A 60° gap faces the other cluster so both sides look like separate galaxies.
-const SCI_CX = 500,  MATH_CX = 1240, HUB_CY = 580;
-const RING_R: Record<number, number> = { 8: 225, 9: 365, 10: 490 };
+const SCI_CX = 720,  MATH_CX = 1800, HUB_CY = 880;
+const RING_R: Record<number, number> = { 8: 340, 9: 530, 10: 700 };
 
 function getChapterGridPos(ch: Chapter, visible: Chapter[]): { x: number; y: number } {
   const grade   = ch.grade ?? 8;
@@ -475,7 +475,7 @@ function getChapterGridPos(ch: Chapter, visible: Chapter[]): { x: number; y: num
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getOverviewSvgHeight(_visible: Chapter[]): number {
-  return 1200; // fixed — outer ring (490) + hub (580) + bottom label space = 1150
+  return 1820; // outer ring (700) + hub_cy (880) + bottom label space = 1730
 }
 
 // ── MAP SCREEN — fully data-driven GPS-style 2D knowledge graph ──────────────
@@ -773,7 +773,7 @@ function MapScreen({ studentId, onStart }: {
             </div>
           ) : (
             <svg
-              viewBox={`0 0 1760 ${getOverviewSvgHeight(visibleChapters)}`}
+              viewBox={`0 0 2600 ${getOverviewSvgHeight(visibleChapters)}`}
               width="100%" height="100%"
               preserveAspectRatio="xMidYMid meet"
               style={{ display: "block", transform: `translate(${pan.x}px,${pan.y}px) scale(${scale})`, transformOrigin: "center center", willChange: "transform" }}
@@ -818,26 +818,26 @@ function MapScreen({ studentId, onStart }: {
               {/* ── Subject hub orbs ── */}
               {subjects.includes("Science") && (
                 <g>
-                  <circle cx={SCI_CX} cy={HUB_CY} r={72}
-                    fill="rgba(41,121,255,0.08)" stroke="rgba(41,121,255,0.35)" strokeWidth="2" />
-                  <circle cx={SCI_CX} cy={HUB_CY} r={56}
-                    fill="rgba(41,121,255,0.15)" stroke="rgba(41,121,255,0.6)" strokeWidth="2.5" />
-                  <text x={SCI_CX} y={HUB_CY - 8} textAnchor="middle" dominantBaseline="middle"
-                    fill="#fff" fontSize="22" fontWeight="900">🔬</text>
-                  <text x={SCI_CX} y={HUB_CY + 16} textAnchor="middle" dominantBaseline="middle"
-                    fill="rgba(255,255,255,0.9)" fontSize="14" fontWeight="900" letterSpacing="2">SCIENCE</text>
+                  <circle cx={SCI_CX} cy={HUB_CY} r={100}
+                    fill="rgba(41,121,255,0.06)" stroke="rgba(41,121,255,0.25)" strokeWidth="2" />
+                  <circle cx={SCI_CX} cy={HUB_CY} r={76}
+                    fill="rgba(41,121,255,0.14)" stroke="rgba(41,121,255,0.55)" strokeWidth="2.5" />
+                  <text x={SCI_CX} y={HUB_CY - 12} textAnchor="middle" dominantBaseline="middle"
+                    fill="#fff" fontSize="30" fontWeight="900">🔬</text>
+                  <text x={SCI_CX} y={HUB_CY + 22} textAnchor="middle" dominantBaseline="middle"
+                    fill="rgba(255,255,255,0.9)" fontSize="18" fontWeight="900" letterSpacing="3">SCIENCE</text>
                 </g>
               )}
               {subjects.includes("Maths") && (
                 <g>
-                  <circle cx={MATH_CX} cy={HUB_CY} r={72}
-                    fill="rgba(156,39,176,0.08)" stroke="rgba(156,39,176,0.35)" strokeWidth="2" />
-                  <circle cx={MATH_CX} cy={HUB_CY} r={56}
-                    fill="rgba(156,39,176,0.15)" stroke="rgba(156,39,176,0.6)" strokeWidth="2.5" />
-                  <text x={MATH_CX} y={HUB_CY - 8} textAnchor="middle" dominantBaseline="middle"
-                    fill="#fff" fontSize="22" fontWeight="900">📐</text>
-                  <text x={MATH_CX} y={HUB_CY + 16} textAnchor="middle" dominantBaseline="middle"
-                    fill="rgba(255,255,255,0.9)" fontSize="14" fontWeight="900" letterSpacing="2">MATHS</text>
+                  <circle cx={MATH_CX} cy={HUB_CY} r={100}
+                    fill="rgba(156,39,176,0.06)" stroke="rgba(156,39,176,0.25)" strokeWidth="2" />
+                  <circle cx={MATH_CX} cy={HUB_CY} r={76}
+                    fill="rgba(156,39,176,0.14)" stroke="rgba(156,39,176,0.55)" strokeWidth="2.5" />
+                  <text x={MATH_CX} y={HUB_CY - 12} textAnchor="middle" dominantBaseline="middle"
+                    fill="#fff" fontSize="30" fontWeight="900">📐</text>
+                  <text x={MATH_CX} y={HUB_CY + 22} textAnchor="middle" dominantBaseline="middle"
+                    fill="rgba(255,255,255,0.9)" fontSize="18" fontWeight="900" letterSpacing="3">MATHS</text>
                 </g>
               )}
               {/* ── Spoke lines: hub → active chapter orbs ── */}
@@ -891,28 +891,28 @@ function MapScreen({ studentId, onStart }: {
 
                 /* Coming-soon: small dashed orb with chapter number + first word */
                 if (!hasContent) {
-                  const cr   = 22;
+                  const cr   = 28;
                   const lbl  = ch.name.split(" ").slice(0, 2).join(" ");
                   return (
                     <g key={ch.id} onClick={() => drillInto(ch.id)} style={{ cursor: "pointer" }} opacity="0.5">
                       <circle cx={px} cy={py} r={cr}
                         fill={hexToRgba(ch.color, 0.06)}
-                        stroke={ch.color} strokeWidth="1"
+                        stroke={ch.color} strokeWidth="1.5"
                         strokeDasharray="4 3" />
                       <text x={px} y={py} textAnchor="middle" dominantBaseline="central"
-                        fill="rgba(255,255,255,0.5)" fontSize="11" fontWeight="800">
+                        fill="rgba(255,255,255,0.5)" fontSize="14" fontWeight="800">
                         {ch.ncert_chapter_num ?? ""}
                       </text>
-                      <text x={px} y={py + cr + 13} textAnchor="middle"
-                        fill="rgba(255,255,255,0.45)" fontSize="10" fontWeight="600">{lbl}</text>
+                      <text x={px} y={py + cr + 16} textAnchor="middle"
+                        fill="rgba(255,255,255,0.45)" fontSize="13" fontWeight="600">{lbl}</text>
                     </g>
                   );
                 }
 
                 /* Active chapter: galaxy orb — grade-scaled, ring shows mastery */
                 const grade   = ch.grade ?? 8;
-                const r       = grade === 8 ? 30 : grade === 9 ? 34 : 36;
-                const ringR   = r + 6;
+                const r       = grade === 8 ? 36 : grade === 9 ? 40 : 44;
+                const ringR   = r + 7;
                 const circumf = 2 * Math.PI * ringR;
                 const pct     = ch.mastery_pct;
                 // Two-line label below orb
@@ -943,15 +943,15 @@ function MapScreen({ studentId, onStart }: {
                       stroke={ch.color} strokeWidth="2" />
                     {/* Chapter number inside */}
                     <text x={px} y={py} textAnchor="middle" dominantBaseline="central"
-                      fill="#fff" fontSize={r > 33 ? "15" : "13"} fontWeight="900">
+                      fill="#fff" fontSize={r > 40 ? "20" : "17"} fontWeight="900">
                       {pct > 0 ? `${pct}%` : (ch.ncert_chapter_num ?? "")}
                     </text>
                     {/* Chapter name below orb */}
-                    <text x={px} y={py + ringR + 14} textAnchor="middle"
-                      fill="#fff" fontSize="11" fontWeight="800">{ln1}</text>
+                    <text x={px} y={py + ringR + 18} textAnchor="middle"
+                      fill="#fff" fontSize="14" fontWeight="800">{ln1}</text>
                     {ln2 && (
-                      <text x={px} y={py + ringR + 27} textAnchor="middle"
-                        fill="rgba(255,255,255,0.7)" fontSize="10" fontWeight="700">{ln2}</text>
+                      <text x={px} y={py + ringR + 35} textAnchor="middle"
+                        fill="rgba(255,255,255,0.75)" fontSize="13" fontWeight="700">{ln2}</text>
                     )}
                   </g>
                 );
