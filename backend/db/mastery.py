@@ -51,7 +51,8 @@ def _supabase() -> Client:
 BLOOM_ORDER = ["remember", "understand", "apply", "analyse", "evaluate", "create"]
 
 # mastery_score threshold to count a subconcept as GPS-state "done"
-MASTERY_DONE_THRESHOLD = 70
+# Raised from 70 → 80: student must show real evidence (multiple correct answers)
+MASTERY_DONE_THRESHOLD = 80
 
 
 def bloom_idx(level: str) -> int:
@@ -104,12 +105,25 @@ def calc_retention(
 def calc_confidence(correct_count: int, total_attempts: int) -> int:
     """
     Accuracy-based confidence proxy (0–100).
-    Defaults to 50 (neutral) before any attempts.
-    Future: incorporate student self-reported confidence ratings.
+
+    Two components:
+      1. Accuracy  : correct_count / total_attempts (quality)
+      2. Evidence  : min(total_attempts / 3, 1.0)  (need ≥3 attempts for full weight)
+
+    confidence = accuracy × evidence × 100
+
+    Examples:
+      0 attempts           → 0   (no evidence at all — was 50, too generous)
+      1 correct / 1 total  → 33  (1/1 * 1/3 * 100 — one lucky answer proves nothing)
+      2 correct / 2 total  → 67
+      3 correct / 3 total  → 100
+      2 correct / 4 total  → 50  (50% accuracy, full evidence weight)
     """
     if total_attempts == 0:
-        return 50
-    return min(100, round(correct_count / total_attempts * 100))
+        return 0
+    accuracy = correct_count / total_attempts
+    evidence = min(total_attempts / 3, 1.0)
+    return min(100, round(accuracy * evidence * 100))
 
 
 def calc_transfer(transfer_contexts: int) -> int:

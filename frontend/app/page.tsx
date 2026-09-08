@@ -1878,10 +1878,12 @@ function ProgressScreen({ vark, studentId, gps, streakDays }: {
 }
 
 // ── PROFILE SCREEN ─────────────────────────────────────────────────────────
-function ProfileScreen({ vark, studentName, studentId, onLogout }: {
+function ProfileScreen({ vark, studentName, studentId, totalXp, streakDays, onLogout }: {
   vark: VARKProfile | null;
   studentName: string;
   studentId: string;
+  totalXp: number;
+  streakDays: number;
   onLogout: () => void;
 }) {
   return (
@@ -1893,8 +1895,8 @@ function ProfileScreen({ vark, studentName, studentId, onLogout }: {
         <h2 className="font-bold text-xl text-gray-900">{studentName}</h2>
         <p className="text-gray-400 text-sm">Grade 8 · LearnGPS Student</p>
         <div className="flex gap-3 mt-3">
-          <span className="bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1 rounded-full">340 XP</span>
-          <span className="bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1 rounded-full">🔥 7 Streak</span>
+          <span className="bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1 rounded-full">{totalXp} XP</span>
+          <span className="bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1 rounded-full">🔥 {streakDays} Streak</span>
           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${VARK_COLORS[vark?.dominant ?? "K"]}`}>
             {VARK_LABELS[vark?.dominant ?? "K"]}
           </span>
@@ -2155,7 +2157,7 @@ export default function App() {
         {screen === "profile" && (
           <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
             <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-              <ProfileScreen vark={vark} studentName={studentName} studentId={studentId} onLogout={handleLogout} />
+              <ProfileScreen vark={vark} studentName={studentName} studentId={studentId} totalXp={totalXp} streakDays={streakDays} onLogout={handleLogout} />
             </div>
           </div>
         )}
