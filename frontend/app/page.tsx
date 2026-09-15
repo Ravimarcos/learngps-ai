@@ -493,6 +493,7 @@ function MapScreen({ studentId, onStart }: {
   const [chapters,      setChapters]      = useState<Chapter[]>([]);
   const [chapterEdges,  setChapterEdges]  = useState<ChapterEdge[]>([]);
   const [loadingChaps,  setLoadingChaps]  = useState(true);
+  const [chapError,     setChapError]     = useState<string | null>(null);
 
   // ── per-chapter GPS cache (fetched on drill-in) ───────────────────────────
   const [gpsCache,   setGpsCache]   = useState<Record<string, GPSRoute>>({});
@@ -515,9 +516,13 @@ function MapScreen({ studentId, onStart }: {
   // ── Fetch all chapters on mount ────────────────────────────────────────────
   useEffect(() => {
     setLoadingChaps(true);
+    setChapError(null);
     getChapters({ studentId })
       .then(res => { setChapters(res.chapters); setChapterEdges(res.edges); })
-      .catch(console.error)
+      .catch((err) => {
+        console.error("Chapters fetch failed:", err);
+        setChapError("Could not connect to the learning server. Please check your connection or try again.");
+      })
       .finally(() => setLoadingChaps(false));
   }, [studentId]);
 
@@ -769,6 +774,27 @@ function MapScreen({ studentId, onStart }: {
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontSize: "28px", marginBottom: "10px" }}>🧭</p>
                 <p style={{ fontSize: "13px" }}>Loading chapters…</p>
+              </div>
+            </div>
+          ) : chapError ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "rgba(255,255,255,0.5)" }}>
+              <div style={{ textAlign: "center", maxWidth: "320px", padding: "24px" }}>
+                <p style={{ fontSize: "36px", marginBottom: "12px" }}>⚠️</p>
+                <p style={{ fontSize: "14px", fontWeight: 700, color: "rgba(255,100,100,0.9)", marginBottom: "8px" }}>Map unavailable</p>
+                <p style={{ fontSize: "12px", lineHeight: 1.6, marginBottom: "16px" }}>{chapError}</p>
+                <button
+                  onClick={() => {
+                    setChapError(null);
+                    setLoadingChaps(true);
+                    getChapters({ studentId })
+                      .then(res => { setChapters(res.chapters); setChapterEdges(res.edges); })
+                      .catch((err) => { console.error(err); setChapError("Still unavailable. Please try again later."); })
+                      .finally(() => setLoadingChaps(false));
+                  }}
+                  style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "10px", padding: "8px 20px", fontSize: "12px", cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  🔄 Retry
+                </button>
               </div>
             </div>
           ) : (
