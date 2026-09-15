@@ -57,7 +57,15 @@ async def lifespan(app: FastAPI):
         settings.neo4j_uri,
         auth=(settings.neo4j_username, settings.neo4j_password)
     )
-    await create_constraints(_driver)
+    # Apply constraints — non-fatal if Neo4j is temporarily unreachable
+    # (e.g. AuraDB free tier paused). The server still starts; map endpoints
+    # will return errors until Neo4j resumes, but chat/auth keep working.
+    try:
+        await create_constraints(_driver)
+        print("✅ Neo4j connected")
+    except Exception as neo_err:
+        print(f"⚠️  Neo4j unavailable at startup (non-fatal): {neo_err}")
+        print("   Knowledge Map will be unavailable until Neo4j resumes.")
     print("✅ LearnGPS API started")
     yield
     await _driver.close()
