@@ -201,16 +201,27 @@ async def get_chapters_endpoint(
 # DIKSHA content endpoint (Day 6)
 # ---------------------------------------------------------------------------
 @app.get("/diksha/{subconcept_id}")
-async def get_diksha_content(subconcept_id: str, limit: int = 5):
+async def get_diksha_content(
+    subconcept_id: str,
+    limit:   int = 5,
+    name:    str | None = None,   # subconcept display name for dynamic search
+    grade:   int | None = None,   # NCERT grade number
+    subject: str | None = None,   # "Science" or "Maths"
+):
     """
     Fetch NCERT learning resources from DIKSHA for a SubConcept.
+
+    Falls back to dynamic keyword search using ?name=&grade=&subject=
+    when the subconcept_id is not in the hardcoded map.
 
     Returns list of {title, description, content_type, url, source}
     content_type: "video" | "pdf" | "activity" | "resource"
     """
     from backend.content.diksha_client import fetch_diksha_content
 
-    results = await fetch_diksha_content(subconcept_id, limit=limit)
+    results = await fetch_diksha_content(
+        subconcept_id, limit=limit, name=name, grade=grade, subject=subject
+    )
     return {
         "subconcept_id": subconcept_id,
         "count":         len(results),

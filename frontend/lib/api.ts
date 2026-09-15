@@ -208,9 +208,15 @@ export async function getVARKProfile(studentId: string): Promise<VARKProfile> {
 }
 
 export async function getDikshaContent(
-  subconceptId: string
+  subconceptId: string,
+  opts?: { name?: string; grade?: number; subject?: string }
 ): Promise<{ resources: DikshaResource[]; count: number }> {
-  const res = await fetch(`${API}/diksha/${subconceptId}`);
+  const q = new URLSearchParams();
+  if (opts?.name)    q.set("name",    opts.name);
+  if (opts?.grade)   q.set("grade",   String(opts.grade));
+  if (opts?.subject) q.set("subject", opts.subject);
+  const qs  = q.toString();
+  const res = await fetch(`${API}/diksha/${subconceptId}${qs ? `?${qs}` : ""}`);
   if (!res.ok) throw new Error("DIKSHA fetch failed");
   return res.json();
 }

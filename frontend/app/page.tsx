@@ -500,6 +500,10 @@ function MapScreen({ studentId, bloomLevel, onStart }: {
   const [gpsCache,   setGpsCache]   = useState<Record<string, GPSRoute>>({});
   const [loadingGps, setLoadingGps] = useState(false);
 
+  // ── DIKSHA resources for selected subconcept ───────────────────────────────
+  const [dikshaResources, setDikshaResources] = useState<DikshaResource[]>([]);
+  const [loadingDiksha,   setLoadingDiksha]   = useState(false);
+
   // ── navigation ─────────────────────────────────────────────────────────────
   const [view,       setView]       = useState<"overview" | string>("overview");
   const [detailNode, setDetailNode] = useState<{ id: string; name: string; state: string; bloomTarget?: string; varkHint?: string } | null>(null);
@@ -526,6 +530,22 @@ function MapScreen({ studentId, bloomLevel, onStart }: {
       })
       .finally(() => setLoadingChaps(false));
   }, [studentId]);
+
+  // ── Fetch DIKSHA resources when a subconcept node is selected ─────────────
+  useEffect(() => {
+    if (!detailNode) { setDikshaResources([]); return; }
+    setLoadingDiksha(true);
+    setDikshaResources([]);
+    getDikshaContent(detailNode.id, {
+      name:    detailNode.name,
+      grade:   activeChap?.grade,
+      subject: activeChap?.subject,
+    })
+      .then(res => setDikshaResources(res.resources ?? []))
+      .catch(() => setDikshaResources([]))
+      .finally(() => setLoadingDiksha(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailNode?.id]);
 
   // ── Drill-in: fetch GPS for selected chapter (cached after first fetch) ────
   async function drillInto(chapId: string) {
@@ -1325,6 +1345,46 @@ function MapScreen({ studentId, bloomLevel, onStart }: {
                  detailNode.state === "ready"   ? "All prerequisites done! You can start this concept right now." :
                                                   "Jump here anytime — Gyaan automatically bridges any knowledge gaps for you."}
               </p>
+
+              {/* ── DIKSHA Learning Resources ─────────────────────────────── */}
+              <div style={{ marginBottom: "16px" }}>
+                <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.28)", marginBottom: "8px", fontWeight: 700, letterSpacing: "0.8px" }}>
+                  📚 LEARNING RESOURCES
+                </p>
+                {loadingDiksha ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 0" }}>
+                    <div style={{ width: "12px", height: "12px", border: "2px solid rgba(255,255,255,0.15)", borderTopColor: "#4f46e5", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                    <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>Fetching NCERT content…</p>
+                  </div>
+                ) : dikshaResources.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {dikshaResources.slice(0, 4).map((r, i) => {
+                      const icon = r.content_type === "video" ? "▶" : r.content_type === "pdf" ? "📄" : r.content_type === "activity" ? "🎮" : "📖";
+                      const color = r.content_type === "video" ? "#ff5252" : r.content_type === "pdf" ? "#ff9100" : r.content_type === "activity" ? "#00e676" : "#82b1ff";
+                      return (
+                        <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
+                          style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "8px 10px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", textDecoration: "none", transition: "background 0.15s" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}>
+                          <span style={{ fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>{icon}</span>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ fontSize: "10px", fontWeight: 600, color: "#fff", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</p>
+                            {r.description && (
+                              <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{r.description}</p>
+                            )}
+                            <p style={{ fontSize: "8px", fontWeight: 700, color, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{r.content_type} · DIKSHA</p>
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", fontStyle: "italic", padding: "6px 0" }}>
+                    No DIKSHA content mapped yet for this subconcept.
+                  </p>
+                )}
+              </div>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
               {/* Action button */}
               <div style={{ marginTop: "auto" }}>

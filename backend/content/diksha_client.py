@@ -45,12 +45,14 @@ MIME_LABELS = {
 }
 
 
-def _build_request_body(keywords: list[str], grade: str, limit: int = 5) -> dict:
+def _build_request_body(keywords: list[str], grade: str, limit: int = 5, subject: str = "Science") -> dict:
     """Build DIKSHA search request body."""
+    # DIKSHA uses "Mathematics" not "Maths"
+    diksha_subject = "Mathematics" if subject.lower() in ("maths", "math", "mathematics") else subject
     return {
         "request": {
             "filters": {
-                "subject":      ["Science"],
+                "subject":      [diksha_subject],
                 "gradeLevel":   [grade],
                 "medium":       ["English"],
                 "status":       ["Live"],
@@ -104,24 +106,44 @@ async def fetch_diksha_content(
     subconcept_id: str,
     limit: int = 5,
     timeout: float = 8.0,
+    name: str | None = None,
+    grade: int | None = None,
+    subject: str | None = None,
 ) -> list[dict]:
     """
     Fetch NCERT content from DIKSHA for a SubConcept.
+
+    Priority:
+      1. Hardcoded mapping (SUBCONCEPT_TO_DIKSHA) — curated keywords
+      2. Dynamic search using `name` + `grade` + `subject` params (for all other subconcepts)
 
     Args:
         subconcept_id: e.g. "sc_friction"
         limit: max results to return
         timeout: seconds before giving up
+        name: subconcept display name e.g. "Production of Sound"
+        grade: NCERT grade number e.g. 9
+        subject: "Science" or "Maths"
 
     Returns:
         List of {title, description, content_type, url, identifier, source}
-        Empty list if DIKSHA is unreachable or subconcept not mapped.
+        Empty list if DIKSHA is unreachable.
     """
     mapping = SUBCONCEPT_TO_DIKSHA.get(subconcept_id)
-    if not mapping:
-        return []
 
-    body = _build_request_body(mapping["keywords"], mapping["grade"], limit)
+    if not mapping:
+        # Dynamic fallback: build keywords from the subconcept name
+        if not name:
+            return []
+        grade_label = f"Class {grade}" if grade else "Class 8"
+        # Use the subconcept name words as keywords (drop short words)
+        words = [w for w in name.lower().split() if len(w) > 2]
+        keywords = [name] + words[:2]
+        mapping = {"keywords": keywords, "grade": grade_label}
+
+    # Override subject filter if provided
+    diksha_subject = subject if subject else "Science"
+    body = _build_request_body(mapping["keywords"], mapping["grade"], limit, diksha_subject)
 
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
