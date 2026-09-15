@@ -485,8 +485,9 @@ function getOverviewSvgHeight(_visible: Chapter[]): number {
 //
 // Adding a new chapter = seed Neo4j (color, ov_x, ov_y, ov_radius, eta properties).
 // Zero frontend changes required. Grade/subject filters work automatically.
-function MapScreen({ studentId, onStart }: {
+function MapScreen({ studentId, bloomLevel, onStart }: {
   studentId: string;
+  bloomLevel: string;
   onStart: (gps: GPSRoute) => void;
 }) {
   // ── overview data (from /chapters API) ────────────────────────────────────
@@ -1259,27 +1260,45 @@ function MapScreen({ studentId, onStart }: {
               </p>
               <p style={{ fontSize: "19px", fontWeight: 800, color: "#fff", marginBottom: "14px", lineHeight: 1.2 }}>{detailNode.name}</p>
 
-              {/* Bloom's taxonomy bars */}
-              {detailNode.bloomTarget && (
-                <div style={{ marginBottom: "14px" }}>
-                  <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.28)", marginBottom: "7px", fontWeight: 700, letterSpacing: "0.8px" }}>BLOOM&apos;S TAXONOMY</p>
-                  {(["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"] as const).map((b, bi) => {
-                    const targetIdx = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"].indexOf(detailNode.bloomTarget ?? "Remember");
-                    const pct    = bi <= targetIdx ? Math.max(8, 100 - bi * 14) : 0;
-                    const active = bi <= targetIdx;
-                    const barColor = bi < 2 ? "#00e676" : bi < 4 ? "#ff9100" : "#ef5350";
-                    return (
-                      <div key={b} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
-                        <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.45)", width: "68px", flexShrink: 0 }}>{b}</p>
-                        <div style={{ flex: 1, height: "4px", background: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}>
-                          <div style={{ width: `${pct}%`, height: "100%", background: active ? barColor : "transparent", borderRadius: "3px", transition: "width 0.4s ease" }} />
+              {/* Bloom's taxonomy bars — only shown for current/done nodes */}
+              {detailNode.bloomTarget && (detailNode.state === "current" || detailNode.state === "done") && (() => {
+                const BLOOM = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"] as const;
+                const targetIdx  = BLOOM.indexOf(detailNode.bloomTarget as typeof BLOOM[number]);
+                // For "done" nodes: student reached bloom_target → show full bars up to target
+                // For "current" node: use the student's actual bloomLevel from chat state
+                const achievedLevel = detailNode.state === "done"
+                  ? detailNode.bloomTarget
+                  : bloomLevel;  // live bloom level from chat state
+                const achievedIdx = BLOOM.indexOf(achievedLevel as typeof BLOOM[number]);
+                return (
+                  <div style={{ marginBottom: "14px" }}>
+                    <p style={{ fontSize: "8px", color: "rgba(255,255,255,0.28)", marginBottom: "7px", fontWeight: 700, letterSpacing: "0.8px" }}>BLOOM&apos;S TAXONOMY</p>
+                    {BLOOM.map((b, bi) => {
+                      const isTarget   = bi === targetIdx;
+                      const isAchieved = bi <= achievedIdx;
+                      const isBeyond   = bi > targetIdx;
+                      const barColor   = bi < 2 ? "#00e676" : bi < 4 ? "#ff9100" : "#ef5350";
+                      const pct        = isAchieved ? 100 : 0;
+                      return (
+                        <div key={b} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px", opacity: isBeyond ? 0.25 : 1 }}>
+                          <p style={{ fontSize: "10px", color: isTarget ? "#fff" : "rgba(255,255,255,0.45)", width: "68px", flexShrink: 0, fontWeight: isTarget ? 700 : 400 }}>
+                            {b}{isTarget ? " ★" : ""}
+                          </p>
+                          <div style={{ flex: 1, height: "4px", background: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", background: isAchieved ? barColor : "transparent", borderRadius: "3px", transition: "width 0.4s ease" }} />
+                          </div>
+                          <p style={{ fontSize: "9px", color: isAchieved ? "rgba(255,255,255,0.4)" : "transparent", width: "26px", textAlign: "right" }}>
+                            {isAchieved ? "✓" : ""}
+                          </p>
                         </div>
-                        <p style={{ fontSize: "9px", color: active ? "rgba(255,255,255,0.4)" : "transparent", width: "26px", textAlign: "right" }}>{active ? `${pct}%` : ""}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                    <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.25)", marginTop: "5px" }}>
+                      {detailNode.state === "done" ? "Target reached" : `${achievedIdx + 1} of ${targetIdx + 1} levels reached`}
+                    </p>
+                  </div>
+                );
+              })()}
 
               {/* Best learning mode */}
               {detailNode.varkHint && (
@@ -2160,7 +2179,7 @@ export default function App() {
           </div>
         )}
         {screen === "map" && (
-          <MapScreen studentId={studentId} onStart={(g) => { setGPS(g); setScreen("chat"); }} />
+          <MapScreen studentId={studentId} bloomLevel={bloomLevel} onStart={(g) => { setGPS(g); setScreen("chat"); }} />
         )}
         {screen === "chat" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", maxWidth: "920px", width: "100%", margin: "0 auto" }}>
