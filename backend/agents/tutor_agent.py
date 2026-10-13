@@ -195,11 +195,11 @@ def _adaptive_jump_block(prereq_names: list[str]) -> str:
         )
     else:
         bridge = (
-            f"The student skipped {n} prerequisite topics ({prereq_list}). "
-            "This is a significant gap. Start the session at Bloom Remember level regardless of their stored level. "
-            "Begin with: 'Let me quickly lay the foundation before we explore this topic.' "
-            "Give 2 calibration questions to check existing knowledge. "
-            "If they show prior knowledge, fast-track to their Bloom level. "
+            f"The student is exploring this topic and hasn't yet covered {n} related topics ({prereq_list}). "
+            "That's perfectly fine — they chose to explore freely. "
+            "Give 1-2 light calibration questions to gauge their existing knowledge on those topics. "
+            "If they show prior knowledge, proceed normally. If they struggle, weave in a brief bridge (1-2 sentences per gap) as you teach. "
+            "Never tell the student they 'must' complete something first. "
             "If not, build up step by step from Remember."
         )
     return f"""

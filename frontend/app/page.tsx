@@ -485,10 +485,12 @@ function getOverviewSvgHeight(_visible: Chapter[]): number {
 //
 // Adding a new chapter = seed Neo4j (color, ov_x, ov_y, ov_radius, eta properties).
 // Zero frontend changes required. Grade/subject filters work automatically.
+type JumpTarget = { id: string; name: string; bloom_target?: string; vark_hint?: string };
+
 function MapScreen({ studentId, bloomLevel, onStart }: {
   studentId: string;
   bloomLevel: string;
-  onStart: (gps: GPSRoute) => void;
+  onStart: (gps: GPSRoute, jumpTo?: JumpTarget) => void;
 }) {
   // ── overview data (from /chapters API) ────────────────────────────────────
   const [chapters,      setChapters]      = useState<Chapter[]>([]);
@@ -1224,14 +1226,12 @@ function MapScreen({ studentId, bloomLevel, onStart }: {
                       }}
                       style={{ cursor: "pointer" }}
                     >
-                      {/* Status label above node */}
-                      {!isGh && (
-                        <text x={node.x} y={node.y - R - 14} textAnchor="middle"
-                          fill={state === "done" ? "#00e676" : state === "current" ? "#82b1ff" : "#ffd740"}
-                          fontSize="7.5" fontWeight="800">
-                          {state === "done" ? "✓ MASTERED" : state === "current" ? "📍 YOU ARE HERE" : "Ready ▶"}
-                        </text>
-                      )}
+                      {/* Status label above node — always visible */}
+                      <text x={node.x} y={node.y - R - 14} textAnchor="middle"
+                        fill={state === "done" ? "#00e676" : state === "current" ? "#82b1ff" : state === "ready" ? "#ffd740" : "rgba(255,255,255,0.28)"}
+                        fontSize="7.5" fontWeight="800" opacity={isGh ? 0.7 : 1}>
+                        {state === "done" ? "✓ MASTERED" : state === "current" ? "📍 YOU ARE HERE" : state === "ready" ? "Ready ▶" : "Explore ▶"}
+                      </text>
                       {isCur && (
                         <circle cx={node.x} cy={node.y} r={R}
                           fill="none" stroke="rgba(41,121,255,0.4)" strokeWidth="2"
@@ -1389,7 +1389,13 @@ function MapScreen({ studentId, bloomLevel, onStart }: {
               {/* Action button */}
               <div style={{ marginTop: "auto" }}>
                 {activeGps && (
-                  <button onClick={() => { setDetailNode(null); onStart(activeGps); }}
+                  <button onClick={() => {
+                      const jt: JumpTarget | undefined = detailNode.state !== "current"
+                        ? { id: detailNode.id, name: detailNode.name, bloom_target: detailNode.bloomTarget, vark_hint: detailNode.varkHint }
+                        : undefined;
+                      setDetailNode(null);
+                      onStart(activeGps, jt);
+                    }}
                     style={{ width: "100%", padding: "12px", borderRadius: "12px", fontFamily: "inherit", cursor: "pointer", border: "none", color: "#fff", fontSize: "13px", fontWeight: 700,
                       background: detailNode.state === "done"
                         ? "linear-gradient(135deg,#00695c,#00897b)"
@@ -1398,7 +1404,7 @@ function MapScreen({ studentId, bloomLevel, onStart }: {
                     {detailNode.state === "done"    ? "🔄 Review & Reinforce" :
                      detailNode.state === "current" ? "▶ Continue Practice"  :
                      detailNode.state === "ready"   ? "🚀 Start Learning"    :
-                                                      "▶ Jump here — Gyaan adapts"}
+                                                      "▶ Explore — Gyaan adapts for you"}
                   </button>
                 )}
               </div>
@@ -1473,9 +1479,10 @@ function GPSOrientationCard({ gps, onAction }: { gps: GPSRoute; onAction: (text:
 }
 
 // ── CHAT SCREEN ────────────────────────────────────────────────────────────
-function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, bloomLevel, setBloomLevel, hintCount, setHintCount, activityShown, setActivityShown, autoPrompt, onAutoPromptSent, onXpEarned }: {
+function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, bloomLevel, setBloomLevel, hintCount, setHintCount, activityShown, setActivityShown, autoPrompt, onAutoPromptSent, onXpEarned, jumpTo }: {
   gps: GPSRoute | null;
   vark: VARKProfile | null;
+  jumpTo: JumpTarget | null;
   studentId: string;
   studentName: string;
   messages: Message[];
@@ -1502,8 +1509,20 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef   = useRef<HTMLInputElement>(null);
 
-  const currentSC = gps?.current;
+  // Use the node the student explicitly selected; fall back to GPS-recommended current
+  const activeSC  = jumpTo ?? gps?.current;
   const varkStyle = vark?.dominant ?? "K";
+
+  // Only pass direct (uncompleted) prereqs of the jumped-to node — not all locked nodes
+  function directPrereqs(): string[] {
+    if (!gps || !jumpTo) return [];
+    const completedIds = new Set(gps.completed.map(n => n.id));
+    const prereqIds = gps.edges
+      .filter(e => e.to_id === jumpTo.id)
+      .map(e => e.from_id)
+      .filter(id => !completedIds.has(id));
+    return gps.nodes.filter(n => prereqIds.includes(n.id)).map(n => n.name);
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1523,22 +1542,21 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
         setLoading(true);
         try {
           const history = messages.slice(-20).map((m) => ({ role: m.role, content: m.content }));
-          const currentSCLocal = gps?.current;
           const bloomOrder = ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"];
           const res = await sendChat({
             studentId, studentName,
             message: autoPrompt,
             conversationHistory: history,
-            subconcept_id:   currentSCLocal?.id           ?? "sc_contact_force",
-            subconcept_name: currentSCLocal?.name         ?? "Contact Force",
-            chapter_id:      gps?.chapter_id              ?? "",
-            chapter_name:    gps?.chapter_id              ?? "Force & Pressure",
+            subconcept_id:   activeSC?.id           ?? "sc_contact_force",
+            subconcept_name: activeSC?.name         ?? "Contact Force",
+            chapter_id:      gps?.chapter_id        ?? "",
+            chapter_name:    gps?.chapter_id        ?? "Force & Pressure",
             bloom_level:     bloomLevel,
-            bloom_target:    currentSCLocal?.bloom_target ?? "apply",
+            bloom_target:    activeSC?.bloom_target ?? "apply",
             vark_style:      varkStyle,
             hint_count:      hintCount,
             activity_shown:  activityShown,
-            prereq_names:    gps?.locked?.map((n) => n.name) ?? [],
+            prereq_names:    directPrereqs(),
           });
           setHintCount(res.hint_count ?? 0);
           setActivityShown(res.activity_shown ?? false);
@@ -1574,16 +1592,16 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
         studentName,
         message: userMsg,
         conversationHistory: history,
-        subconcept_id:   currentSC?.id           ?? "sc_contact_force",
-        subconcept_name: currentSC?.name         ?? "Contact Force",
+        subconcept_id:   activeSC?.id            ?? "sc_contact_force",
+        subconcept_name: activeSC?.name          ?? "Contact Force",
         chapter_id:      gps?.chapter_id         ?? "",
         chapter_name:    gps?.chapter_id         ?? "Force & Pressure",
         bloom_level:     bloomLevel,
-        bloom_target:    currentSC?.bloom_target ?? "apply",
+        bloom_target:    activeSC?.bloom_target ?? "apply",
         vark_style:      varkStyle,
         hint_count:      hintCount,
         activity_shown:  activityShown,
-        prereq_names:    gps?.locked?.map((n) => n.name) ?? [],
+        prereq_names:    directPrereqs(),
       });
       setHintCount(res.hint_count ?? 0);
       setActivityShown(res.activity_shown ?? false);
@@ -1625,10 +1643,10 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
   }
 
   async function loadDiksha() {
-    if (!currentSC) return;
+    if (!activeSC) return;
     setShowDiksha(true);
     try {
-      const res = await getDikshaContent(currentSC.id);
+      const res = await getDikshaContent(activeSC.id);
       setDiksha(res.resources);
     } catch { setDiksha([]); }
   }
@@ -1669,7 +1687,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontWeight: 800, color: "#1e1b4b", fontSize: 15, marginBottom: 1 }}>Gyaan <span style={{ fontSize: 10, fontWeight: 500, color: "#10b981", background: "#d1fae5", borderRadius: 8, padding: "1px 6px" }}>● Active</span></p>
             <p style={{ fontSize: 11, color: "#6366f1", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              📍 {currentSC?.name ?? "Force & Pressure"}
+              📍 {activeSC?.name ?? "Force & Pressure"}
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -1690,7 +1708,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
       {showDiksha && (
         <div className="bg-orange-50 border-b border-orange-100 p-3">
           <div className="flex justify-between mb-2">
-            <p className="text-xs font-bold text-orange-700">📚 NCERT Resources for {currentSC?.name}</p>
+            <p className="text-xs font-bold text-orange-700">📚 NCERT Resources for {activeSC?.name}</p>
             <button onClick={() => setShowDiksha(false)} className="text-orange-400 text-xs">✕</button>
           </div>
           {diksha.length === 0 ? (
@@ -1751,7 +1769,7 @@ function ChatScreen({ gps, vark, studentId, studentName, messages, setMessages, 
 
       {/* ── Suggestion chips — shown at start and after each Gyaan reply ── */}
       {!loading && messages.length > 0 && messages[messages.length - 1].role === "assistant" && (() => {
-        const sc  = currentSC?.name ?? "this concept";
+        const sc  = activeSC?.name ?? "this concept";
         const lvl = bloomLevel.toLowerCase();
         const chips: { label: string; action: string }[] =
           lvl === "remember"   ? [
@@ -2067,6 +2085,7 @@ export default function App() {
   const [hintCount,  setHintCount]  = useState(0);
   const [activityShown, setActivityShown] = useState(false);
   const [autoPrompt, setAutoPrompt] = useState<string | null>(null);
+  const [jumpTo,     setJumpTo]     = useState<JumpTarget | null>(null);
 
   // Sync messages + bloom to localStorage on every change
   useEffect(() => {
@@ -2239,7 +2258,7 @@ export default function App() {
           </div>
         )}
         {screen === "map" && (
-          <MapScreen studentId={studentId} bloomLevel={bloomLevel} onStart={(g) => { setGPS(g); setScreen("chat"); }} />
+          <MapScreen studentId={studentId} bloomLevel={bloomLevel} onStart={(g, jt) => { setGPS(g); setJumpTo(jt ?? null); setScreen("chat"); }} />
         )}
         {screen === "chat" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", maxWidth: "920px", width: "100%", margin: "0 auto" }}>
@@ -2249,7 +2268,8 @@ export default function App() {
               hintCount={hintCount} setHintCount={setHintCount}
               activityShown={activityShown} setActivityShown={setActivityShown}
               autoPrompt={autoPrompt} onAutoPromptSent={() => setAutoPrompt(null)}
-              onXpEarned={(xp) => setTotalXp((prev) => prev + xp)} />
+              onXpEarned={(xp) => setTotalXp((prev) => prev + xp)}
+              jumpTo={jumpTo} />
           </div>
         )}
         {screen === "progress" && (
